@@ -907,7 +907,7 @@ function toDocx(lec, only){
 
 /* PDF: uses the jsPDF library, fetched the first time you export */
 const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-const loadScript = url => new Promise((res, rej) => { if (window.jspdf) return res(); const s = document.createElement("script"); s.src = url; s.onload = res; s.onerror = () => { s.remove(); rej(new Error("offline")); }; document.head.append(s); });
+const loadScript = (url, ready) => new Promise((res, rej) => { if (ready ? ready() : window.jspdf) return res(); const s = document.createElement("script"); s.src = url; s.onload = res; s.onerror = () => { s.remove(); rej(new Error("offline")); }; document.head.append(s); });
 async function toPdf(lec, only){
   const SUBS = { "\u2265": ">=", "\u2264": "<=", "\u2192": "->", "\u2190": "<-", "\u2248": "~", "\u2260": "!=", "\u2212": "-", "\u03B1": "alpha", "\u03B2": "beta", "\u03B3": "gamma", "\u03B4": "delta", "\u0394": "Delta", "\u03BB": "lambda", "\u03BC": "\u00B5", "\u03C3": "sigma", "\u03A3": "Sigma", "\u03C7": "chi", "\u03C0": "pi", "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u00A0": " ", "\u2009": " ", "\u202F": " ", "\u2011": "-", "\u2010": "-" };
   const BAD = /[^\u0000-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2122]/g;
@@ -1033,6 +1033,31 @@ async function audioFiles(lec, note){
   }
   for (let i = 0; i < sessions.length; i++){ const b = await DB.getAudio(lec.id, "s" + sessions[i].n); if (b) files.push({ name: name + (sessions.length > 1 ? " part " + (i + 1) : "") + "." + extFor(sessions[i].mime), blob: b }); }
   return files;
+}
+
+/* MP3: plays on every phone and computer. Converted on this device, part by part, so long lectures stay light on memory. */
+const LAME_URL = "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js";
+async function toMp3(lec, note){
+  try { await loadScript(LAME_URL, () => !!window.lamejs); } catch (e){ throw new AppError("The MP3 converter could not load. Check the internet connection, or download the original recording instead."); }
+  const RATE = 24000, enc = new window.lamejs.Mp3Encoder(1, RATE, 48), out = [], Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const parts = (lec.audio || []).slice().sort((a, b) => a.offset - b.offset);
+  let done = 0;
+  for (let i = 0; i < parts.length; i++){
+    note("Converting to MP3, " + Math.round(i / parts.length * 100) + "% done…");
+    const blob = await DB.getAudio(lec.id, parts[i].n); if (!blob) continue;
+    let d; try { d = await new Ctx(1, RATE, RATE).decodeAudioData(await blob.arrayBuffer()); } catch (e){ continue; }
+    const n = d.length, ch = d.numberOfChannels, mono = d.getChannelData(0), other = ch > 1 ? d.getChannelData(1) : null, BLOCK = 1152 * 40;
+    for (let at = 0; at < n; at += BLOCK){
+      const end = Math.min(n, at + BLOCK), pcm = new Int16Array(end - at);
+      for (let k = at; k < end; k++){ let x = other ? (mono[k] + other[k]) / 2 : mono[k]; x = x < -1 ? -1 : x > 1 ? 1 : x; pcm[k - at] = x < 0 ? x * 0x8000 : x * 0x7FFF; }
+      const buf = enc.encodeBuffer(pcm); if (buf.length) out.push(new Uint8Array(buf));
+      if ((at / BLOCK) % 8 === 7) await sleep(0);
+    }
+    done++;
+  }
+  if (!done) throw new AppError("This browser could not read the saved audio to convert it. Download the original recording instead.");
+  const tail = enc.flush(); if (tail.length) out.push(new Uint8Array(tail));
+  return new Blob(out, { type: "audio/mpeg" });
 }
 
 function saveFile(name, data, type){
@@ -1475,14 +1500,18 @@ async function exportAs(kind){
     $("exportDlg").close();
   } catch (e){ err.hidden = false; err.textContent = e.message; }
 }
-async function downloadAudio(){
+async function downloadAudio(asMp3){
   const lec = S.cur; if (!lec || S.busy.audio) return;
+  const say = t => { S.note = t; const n = $("audioNote"); if (n) n.textContent = t; };
   S.busy.audio = true; S.err = ""; S.note = "Preparing the audio…"; render();
   try {
-    const files = await audioFiles(lec, t => { S.note = t; const n = $("audioNote"); if (n) n.textContent = t; });
-    if (!files.length) throw new AppError("There is no audio saved for this lecture on this device.");
-    if (files.length === 1) saveFile(files[0].name, files[0].blob);
-    else { const entries = []; for (const f of files) entries.push({ name: f.name, data: new Uint8Array(await f.blob.arrayBuffer()) }); entries.mime = "application/zip"; saveFile(fileBase(lec) + " audio.zip", zipStore(entries)); }
+    if (asMp3) saveFile(fileBase(lec) + ".mp3", await toMp3(lec, say));
+    else {
+      const files = await audioFiles(lec, say);
+      if (!files.length) throw new AppError("There is no audio saved for this lecture on this device.");
+      if (files.length === 1) saveFile(files[0].name, files[0].blob);
+      else { const entries = []; for (const f of files) entries.push({ name: f.name, data: new Uint8Array(await f.blob.arrayBuffer()) }); entries.mime = "application/zip"; saveFile(fileBase(lec) + " audio.zip", zipStore(entries)); }
+    }
   } catch (e){ S.err = e.message; }
   S.busy.audio = false; S.note = ""; render();
 }
@@ -1900,7 +1929,8 @@ function renderMain(){
   const hasAudio = (lec.audio && lec.audio.length > 0) || (lec.sessions && lec.sessions.length > 0);
   const audioMenu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Audio"),
     h("div", { class: "menu-list" },
-      h("button", { onclick: () => { audioMenu.open = false; downloadAudio(); } }, "Download the audio"),
+      lec.audio && lec.audio.length ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
+      h("button", { onclick: () => { audioMenu.open = false; downloadAudio(false); } }, "Download the original recording"),
       h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text")));
   main.append(h("div", { class: "head" },
     isNote ? null : h("div", { class: "row course-row" },
@@ -1999,8 +2029,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.0", RELEASED = "20 September 2026";
+const VERSION = "2.2.1", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.1", "20 Sep 2026", ["Download the audio as an MP3 file, which plays on every phone and computer"]],
   ["2.2.0", "20 Sep 2026", ["My notes: write your own notes with bold, italics, headings and lists, then let the AI polish, structure or shorten them", "Stand-alone notes that are not tied to a recording", "Folders, drag to move, an archive, and a recycle bin that keeps deleted items for 30 days", "Download the audio of a lecture, or delete the audio and keep the text", "Export only the parts you want, plus flashcards as a file for Anki or Quizlet, and the quiz with an answer key"]],
   ["2.1.1", "19 Sep 2026", ["A hosted copy checks for new versions by itself"]],
   ["2.1.0", "19 Sep 2026", ["Use any OpenAI-compatible AI service, or change the model, in Settings", "Version number, this list, and an optional check for newer versions"]],

@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0",
+  "version": "2.2.1",
   "url": "./",
-  "notes": "My notes with AI polish, folders, archive, recycle bin, audio download, export by section."
+  "notes": "Audio now downloads as MP3."
 }
