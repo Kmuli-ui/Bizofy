@@ -64,6 +64,23 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .lec small{display:block;color:var(--slate);font-weight:400;font-size:var(--t-2);margin-top:1px}
 .hit{font-family:var(--read);font-size:var(--t-1);color:var(--slate);padding:4px 10px 4px 22px}
 .hit-t{font-family:var(--display);font-size:var(--t-2);font-variant-numeric:tabular-nums;margin-right:6px;color:var(--ink)}
+.new-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.new-row .btn{padding:9px 6px;white-space:nowrap;text-align:center}
+.linkish{border:0;background:none;padding:0;color:var(--slate);font-size:var(--t-2);text-decoration:underline;text-underline-offset:2px;text-align:left}
+.linkish:hover{color:var(--ink)}
+.views{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.folder{border-radius:8px}
+.folder.over{outline:2px dashed var(--ink);outline-offset:2px;background:var(--hi-soft)}
+.folder summary{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:var(--t-2);color:var(--slate);font-weight:600;padding:12px 2px 4px;list-style:none}
+.folder summary::-webkit-details-marker{display:none}
+.folder summary::before{content:"";border:4px solid transparent;border-left-color:currentColor;transition:transform .12s}
+.folder[open] summary::before{transform:rotate(90deg) translateX(2px)}
+.folder-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-n{font-weight:400;font-variant-numeric:tabular-nums}
+.folder-edit{visibility:hidden}
+.folder summary:hover .folder-edit,.folder summary:focus-within .folder-edit{visibility:visible}
+.folder-empty{padding:2px 10px 6px;margin:0;font-size:var(--t-2)}
+.kind{font-size:var(--t-2);font-weight:600;background:var(--hi-soft);border-radius:4px;padding:0 5px;margin-right:6px}
 .store{margin-top:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .keynote{font-size:var(--t-2);background:var(--hi-soft);border-radius:8px;padding:8px 10px;line-height:1.4}
 
@@ -84,6 +101,9 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .head input:hover,.head input:focus{box-shadow:0 1.5px 0 var(--rule)}
 .meta{color:var(--slate);font-size:var(--t-1);margin:8px 0 20px;justify-content:space-between}
 .meta-bits{display:flex;gap:18px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.actions{justify-content:flex-end}
+.folder-pick{display:flex;align-items:center;gap:6px;font-size:var(--t-1)}
+.folder-sel{border:1.5px solid var(--rule);border-radius:8px;background:transparent;padding:5px 8px;font-size:var(--t-1);max-width:170px}
 .menu{position:relative}
 .menu summary{list-style:none;cursor:pointer}
 .menu summary::-webkit-details-marker{display:none}
@@ -92,7 +112,8 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .menu-list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:var(--t-1)}
 .menu-list button:hover{background:var(--hi-soft)}
 
-.deck{background:#14233B;color:#F2F5F8;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;position:sticky;top:10px;z-index:3}
+.deck{background:#14233B;color:#F2F5F8;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.deck.is-live{position:sticky;top:10px;z-index:3}
 .recbtn{width:64px;height:64px;border-radius:50%;border:2px solid #F2F5F8;background:transparent;display:grid;place-items:center}
 .recbtn i{display:block;width:26px;height:26px;border-radius:50%;background:#E0483D;transition:border-radius .15s,transform .15s}
 .recbtn[aria-pressed="true"] i{border-radius:5px;transform:scale(.8)}
@@ -194,6 +215,30 @@ textarea{width:100%;border:1.5px solid var(--rule);border-radius:8px;background:
 .why{font-family:var(--read);color:var(--slate);margin:8px 0 0;max-width:66ch}
 .score{font-weight:700;margin-top:12px}
 
+/* my notes */
+.tools{display:flex;flex-wrap:wrap;gap:4px;align-items:center;position:sticky;top:0;background:var(--sheet);padding:0 0 10px;border-bottom:1px solid var(--rule);margin-bottom:16px;z-index:1}
+.tool{border:1.5px solid transparent;background:none;border-radius:6px;padding:4px 9px;font-size:var(--t-1);min-width:32px}
+.tool:hover{border-color:var(--rule);background:var(--paper)}
+.tb{font-weight:800}.ti{font-style:italic;font-family:var(--read)}.tu{text-decoration:underline}
+.tools-gap{width:1px;height:20px;background:var(--rule);margin:0 4px}
+.tools .hint{margin-left:auto;font-size:var(--t-2)}
+.editor{min-height:42vh;outline:none;max-width:70ch}
+.panel.solo{border-top:1px solid var(--rule);border-radius:14px;margin-top:8px}
+.panel.solo .editor{min-height:58vh}
+.editor:empty::before{content:attr(data-placeholder);color:var(--slate);font-family:var(--read);font-size:var(--read-size)}
+.editor h2:first-child{margin-top:0}
+.editor mark,.editor span[style*="background"]{background:var(--hi-soft)!important;color:inherit}
+.editor blockquote{margin:0 0 10px;padding-left:14px;border-left:3px solid var(--rule)}
+.polish{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px dashed var(--rule);margin-top:26px;padding-top:16px}
+.polish h3{width:100%;margin:0;font-size:var(--t1);font-weight:800;letter-spacing:-.015em}
+.polish .notes,.polish>.hint:first-of-type{width:100%}
+.polish .notes{background:var(--paper);border-radius:10px;padding:18px 20px}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin:14px 0 4px}
+dialog label.check{display:flex;align-items:center;gap:8px;font-weight:500;margin:0}
+dialog label.check input{width:auto;margin:0;display:inline-block}
+label.check.off{color:var(--slate)}
+.exp-formats{margin-top:16px}
+
 /* Pambizo */
 .pam-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .pam-head h2{margin:0;font-size:var(--t2);font-weight:800;letter-spacing:-.03em;line-height:1.1}
@@ -253,7 +298,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 }
 @media (prefers-reduced-motion:reduce){.pam,.side{transition:none}}
 @media print{
-  .side,.pam,.deck,.tabs,.add,.drop,.note-row,.toolbar,.topbar,.meta .row,.mk,.del,.gate,.dropveil{display:none!important}
+  .side,.pam,.deck,.tabs,.add,.drop,.note-row,.toolbar,.topbar,.tools,.polish,.meta .row,.mk,.del,.gate,.dropveil{display:none!important}
   .app{display:block}.panel{border:0;padding:0}main{max-width:none;padding:0}
   body{background:#fff}
 }
@@ -271,10 +316,11 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <div class="brand"><span>Bizofy</span> <em>Ai Notes</em></div>
       <div class="brand-sub">Record a class. Get the notes.</div>
     </div>
-    <button class="btn solid" id="newBtn">New lecture</button>
+    <div class="new-row"><button class="btn solid" id="newBtn">New lecture</button><button class="btn" id="newNoteBtn">New note</button></div>
     <input class="search" id="search" type="search" placeholder="Search every transcript" aria-label="Search every transcript">
-    <select class="search" id="courseFilter" aria-label="Show one course" hidden></select>
-    <nav id="list" aria-label="Lectures"></nav>
+    <nav id="list" aria-label="Lectures and notes"></nav>
+    <button class="linkish" id="newFolderBtn">New folder</button>
+    <div class="views" id="views"></div>
     <div class="store">
       <div id="update" class="keynote" hidden></div>
       <div id="keyNote" class="keynote" hidden></div>
@@ -341,6 +387,30 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <button class="btn quiet" value="cancel" formnovalidate>Cancel</button>
       <button class="btn solid" id="setSave" value="save">Save settings</button>
     </div>
+  </form>
+</dialog>
+
+<dialog id="exportDlg" aria-labelledby="expTitle">
+  <form method="dialog">
+    <h2 id="expTitle">Export</h2>
+    <p class="hint">Tick what to include, then pick a format.</p>
+    <div class="checks" id="expParts"></div>
+    <div class="row exp-formats">
+      <button type="button" class="btn solid" data-exp="pdf">PDF</button>
+      <button type="button" class="btn solid" data-exp="docx">Word</button>
+      <button type="button" class="btn" data-exp="txt">Text</button>
+      <button type="button" class="btn" data-exp="md">Markdown</button>
+    </div>
+    <div class="backup">
+      <p class="hint">On their own:</p>
+      <div class="row">
+        <button type="button" class="btn quiet" id="expCsv" data-exp="csv">Flashcards for Anki or Quizlet (.csv)</button>
+        <button type="button" class="btn quiet" id="expSrt" data-exp="srt">Subtitles (.srt)</button>
+        <button type="button" class="btn quiet" id="expVtt" data-exp="vtt">Subtitles (.vtt)</button>
+      </div>
+    </div>
+    <p class="notice err" id="expErr" hidden></p>
+    <div class="row end"><button class="btn quiet" value="cancel">Close</button></div>
   </form>
 </dialog>
 
@@ -420,11 +490,12 @@ const DB = {
   save(lec){ lec.updatedAt = Date.now(); return this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); },
   async remove(lec){
     await this.tx("lectures", "readwrite", s => s.delete(lec.id));
-    await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); });
+    await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); });
     this.lectures.delete(lec.id);
   },
   async putAudio(id, n, blob){ const buf = await blob.arrayBuffer(); return this.tx("audio", "readwrite", s => s.put({ buf, type: blob.type }, id + ":" + n)); },
   async getAudio(id, n){ const r = await this.tx("audio", "readonly", s => s.get(id + ":" + n)); return r ? new Blob([r.buf], { type: r.type }) : null; },
+  async dropAudio(lec){ await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); }); },
   saveSettings(){ return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
 };
 function cfg(){
@@ -624,8 +695,10 @@ function parseJson(text){
 }
 
 const transcriptText = lec => lec.segments.map(s => (s.flag ? "[!] " : "") + (s.t != null ? "[" + fmt(s.t) + "] " : "") + s.text).join("\n");
-const fullText = lec => transcriptText(lec) + ((lec.marks || []).length ? "\n\nThe student's own notes taken during the lecture:\n" + lec.marks.map(m => (m.t != null ? "[" + fmt(m.t) + "] " : "") + m.text).join("\n") : "");
-const headerText = lec => "Course: " + (lec.course || "not given") + "\nLecture: " + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n";
+const myNotesMd = lec => (lec.myNotes && lec.myNotes.html ? htmlToMd(lec.myNotes.html).trim() : "");
+const hasContent = lec => !!lec && (lec.segments.length > 0 || myNotesMd(lec).length > 40);
+const fullText = lec => transcriptText(lec) + (myNotesMd(lec) ? "\n\nThe student's own written notes:\n" + myNotesMd(lec) : "") + ((lec.marks || []).length ? "\n\nThe student's own notes taken during the lecture:\n" + lec.marks.map(m => (m.t != null ? "[" + fmt(m.t) + "] " : "") + m.text).join("\n") : "");
+const headerText = lec => "Course: " + (lec.course || "not given") + "\n" + (lec.kind === "note" ? "Note: " : "Lecture: ") + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n";
 const strs = a => (Array.isArray(a) ? a.map(String).filter(Boolean) : []);
 function chunkText(text, size){
   const out = []; let buf = "";
@@ -733,30 +806,40 @@ function mdBlocks(md){
   }
   return out;
 }
-const runsOf = t => String(t).split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(x => (/^\*\*[^*]+\*\*$/.test(x) ? { b: true, t: x.slice(2, -2) } : { t: x }));
-const plain = t => String(t).replace(/\*\*/g, "");
-function buildDoc(lec){
+const runsOf = t => String(t).split(/(\*\*[^*]+\*\*|(?<![*\w])\*[^*\n]+\*(?![*\w]))/).filter(Boolean).map(x => (/^\*\*[^*]+\*\*$/.test(x) ? { b: true, t: x.slice(2, -2) } : /^\*[^*]+\*$/.test(x) ? { i: true, t: x.slice(1, -1) } : { t: x }));
+const plain = t => runsOf(t).map(r => r.t).join("");
+const SECTIONS = [["notes", "AI notes"], ["summary", "Summary"], ["mine", "My notes"], ["marks", "Timestamped notes"], ["cards", "Flashcards"], ["quiz", "Quiz"], ["transcript", "Transcript"]];
+const hasSection = (lec, k) => k === "notes" ? !!(lec.notes && lec.notes.md.trim()) : k === "summary" ? !!lec.summary : k === "mine" ? !!myNotesMd(lec) : k === "marks" ? (lec.marks || []).length > 0
+  : k === "cards" ? !!(lec.study && lec.study.flashcards.length) : k === "quiz" ? !!(lec.study && lec.study.quiz.length) : lec.segments.length > 0;
+function buildDoc(lec, only){
+  const want = k => (!only || only.includes(k)) && hasSection(lec, k);
   const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) }];
-  if (lec.notes && lec.notes.md.trim()) B.push({ k: "h1", t: "Notes" }, ...mdBlocks(lec.notes.md));
+  if (want("mine")) B.push({ k: "h1", t: "My notes" }, ...mdBlocks(myNotesMd(lec)));
+  if (want("notes")) B.push({ k: "h1", t: "AI notes" }, ...mdBlocks(lec.notes.md));
   const s = lec.summary;
-  if (s){
+  if (want("summary")){
     B.push({ k: "h1", t: "Summary" }, { k: "p", t: s.overview }, { k: "h2", t: "Key points" }, ...s.keyPoints.map(t => ({ k: "li", t })));
     if (s.definitions.length) B.push({ k: "h2", t: "Definitions" }, ...s.definitions.map(d => ({ k: "li", t: "**" + d.term + "**: " + d.meaning })));
     if (s.actionItems.length) B.push({ k: "h2", t: "To do" }, ...s.actionItems.map(t => ({ k: "todo", t })));
     if (s.examHints.length) B.push({ k: "h2", t: "Exam hints" }, ...s.examHints.map(t => ({ k: "li", t })));
   }
-  if ((lec.marks || []).length) B.push({ k: "h1", t: "My notes" }, ...lec.marks.slice().sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t)).map(m => ({ k: "seg", ts: m.t != null ? fmt(m.t) : "", t: m.text })));
-  if (lec.study && lec.study.flashcards.length){ B.push({ k: "h1", t: "Flashcards" }); lec.study.flashcards.forEach(c => B.push({ k: "p", t: "**" + c.q.replace(/\*\*/g, "") + "**" }, { k: "p", t: c.a })); }
-  if (lec.segments.length) B.push({ k: "h1", t: "Transcript" }, ...lec.segments.map(x => ({ k: "seg", ts: x.t != null ? fmt(x.t) : "", t: x.text, b: !!x.flag })));
+  if (want("marks")) B.push({ k: "h1", t: "Timestamped notes" }, ...lec.marks.slice().sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t)).map(m => ({ k: "seg", ts: m.t != null ? fmt(m.t) : "", t: m.text })));
+  if (want("cards")){ B.push({ k: "h1", t: "Flashcards" }); lec.study.flashcards.forEach(c => B.push({ k: "p", t: "**" + c.q.replace(/\*/g, "") + "**" }, { k: "p", t: c.a })); }
+  if (want("quiz")){
+    B.push({ k: "h1", t: "Quiz" });
+    lec.study.quiz.forEach((q, i) => B.push({ k: "p", t: "**" + (i + 1) + ". " + q.q.replace(/\*/g, "") + "**" }, ...q.options.map((o, j) => ({ k: "li", t: "abcdef"[j] + ") " + o }))));
+    B.push({ k: "h2", t: "Answer key" }, ...lec.study.quiz.map((q, i) => ({ k: "li", t: (i + 1) + ". " + "abcdef"[q.answer] + ") " + q.options[q.answer] + (q.why ? " — " + q.why : "") })));
+  }
+  if (want("transcript")) B.push({ k: "h1", t: "Transcript" }, ...lec.segments.map(x => ({ k: "seg", ts: x.t != null ? fmt(x.t) : "", t: x.text, b: !!x.flag })));
   return B;
 }
 const indent = b => "  ".repeat(b.lvl || 0);
-function toTxt(lec){
-  return buildDoc(lec).map(b => b.k === "title" ? b.t + "\n" + "=".repeat(Math.min(70, b.t.length)) : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n\n" + b.t + "\n" + "-".repeat(b.t.length) : b.k === "h2" ? "\n" + b.t : b.k === "h3" ? "\n  " + b.t
+function toTxt(lec, only){
+  return buildDoc(lec, only).map(b => b.k === "title" ? b.t + "\n" + "=".repeat(Math.min(70, b.t.length)) : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n\n" + b.t + "\n" + "-".repeat(b.t.length) : b.k === "h2" ? "\n" + b.t : b.k === "h3" ? "\n  " + b.t
     : b.k === "li" ? indent(b) + "  - " + plain(b.t) : b.k === "todo" ? indent(b) + "  [" + (b.done ? "x" : " ") + "] " + plain(b.t) : b.k === "seg" ? (b.ts ? "[" + b.ts + "] " : "") + b.t + "\n" : plain(b.t)).join("\n") + "\n";
 }
-function toMarkdown(lec){
-  return buildDoc(lec).map(b => b.k === "title" ? "# " + b.t + "\n" : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n## " + b.t + "\n" : b.k === "h2" ? "\n### " + b.t + "\n" : b.k === "h3" ? "\n#### " + b.t + "\n"
+function toMarkdown(lec, only){
+  return buildDoc(lec, only).map(b => b.k === "title" ? "# " + b.t + "\n" : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n## " + b.t + "\n" : b.k === "h2" ? "\n### " + b.t + "\n" : b.k === "h3" ? "\n#### " + b.t + "\n"
     : b.k === "li" ? indent(b) + "- " + b.t : b.k === "todo" ? indent(b) + "- [" + (b.done ? "x" : " ") + "] " + b.t : b.k === "seg" ? (b.ts ? "`" + b.ts + "` " : "") + (b.b ? "**" + b.t + "**" : b.t) + "\n" : b.t + "\n").join("\n") + "\n";
 }
 function cues(lec){
@@ -787,7 +870,7 @@ function crc32(u8){ let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = 
 function zipStore(files){
   const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
   for (const f of files){
-    const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    const name = enc.encode(f.name), data = f.data || enc.encode(f.text), crc = crc32(data);
     const head = new DataView(new ArrayBuffer(30));
     head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true); head.setUint16(8, 0, true); head.setUint16(10, 0, true); head.setUint16(12, 0x21, true);
     head.setUint32(14, crc, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true); head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
@@ -800,14 +883,14 @@ function zipStore(files){
   }
   const cenSize = central.reduce((n, p) => n + p.length, 0), end = new DataView(new ArrayBuffer(22));
   end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cenSize, true); end.setUint32(16, offset, true);
-  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: files.mime || "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
 }
-function toDocx(lec){
+function toDocx(lec, only){
   const esc = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const run = (t, b, grey) => "<w:r><w:rPr>" + (b ? "<w:b/>" : "") + (grey ? '<w:color w:val="6B7A8C"/><w:sz w:val="18"/>' : "") + '</w:rPr><w:t xml:space="preserve">' + esc(t) + "</w:t></w:r>";
   const para = (style, inner, left) => "<w:p><w:pPr>" + (style ? '<w:pStyle w:val="' + style + '"/>' : "") + (left ? '<w:ind w:left="' + left + '" w:hanging="300"/>' : "") + "</w:pPr>" + inner + "</w:p>";
-  const rich = (t, all) => runsOf(t).map(r => run(r.t, all || r.b)).join("");
-  const body = buildDoc(lec).map(b => b.k === "title" ? para("Title", run(b.t)) : b.k === "meta" ? para("Meta", run(b.t)) : b.k === "h1" ? para("Heading1", run(b.t)) : b.k === "h2" ? para("Heading2", run(b.t)) : b.k === "h3" ? para("Heading3", run(b.t))
+  const rich = (t, all) => runsOf(t).map(r => run(r.t, all || r.b).replace("<w:rPr>", r.i ? "<w:rPr><w:i/>" : "<w:rPr>")).join("");
+  const body = buildDoc(lec, only).map(b => b.k === "title" ? para("Title", run(b.t)) : b.k === "meta" ? para("Meta", run(b.t)) : b.k === "h1" ? para("Heading1", run(b.t)) : b.k === "h2" ? para("Heading2", run(b.t)) : b.k === "h3" ? para("Heading3", run(b.t))
     : b.k === "li" ? para("", run("•\t") + rich(b.t), 360 + 360 * (b.lvl || 0)) : b.k === "todo" ? para("", run((b.done ? "☑" : "☐") + "\t") + rich(b.t), 360 + 360 * (b.lvl || 0))
     : b.k === "seg" ? para("", (b.ts ? run(b.ts + "   ", false, true) : "") + run(b.t, b.b)) : para("", rich(b.t))).join("");
   const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
@@ -825,10 +908,10 @@ function toDocx(lec){
 /* PDF: uses the jsPDF library, fetched the first time you export */
 const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
 const loadScript = url => new Promise((res, rej) => { if (window.jspdf) return res(); const s = document.createElement("script"); s.src = url; s.onload = res; s.onerror = () => { s.remove(); rej(new Error("offline")); }; document.head.append(s); });
-async function toPdf(lec){
+async function toPdf(lec, only){
   const SUBS = { "\u2265": ">=", "\u2264": "<=", "\u2192": "->", "\u2190": "<-", "\u2248": "~", "\u2260": "!=", "\u2212": "-", "\u03B1": "alpha", "\u03B2": "beta", "\u03B3": "gamma", "\u03B4": "delta", "\u0394": "Delta", "\u03BB": "lambda", "\u03BC": "\u00B5", "\u03C3": "sigma", "\u03A3": "Sigma", "\u03C7": "chi", "\u03C0": "pi", "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u00A0": " ", "\u2009": " ", "\u202F": " ", "\u2011": "-", "\u2010": "-" };
   const BAD = /[^\u0000-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2122]/g;
-  const blocks = buildDoc(lec).map(b => ({ ...b, t: String(b.t).replace(BAD, ch => (SUBS[ch] != null ? SUBS[ch] : ch)) }));
+  const blocks = buildDoc(lec, only).map(b => ({ ...b, t: String(b.t).replace(BAD, ch => (SUBS[ch] != null ? SUBS[ch] : ch)) }));
   const all = blocks.map(b => b.t).join(""), odd = (all.match(BAD) || []).length;
   if (odd > all.length * 0.02) throw new AppError("print");   // mostly non-Latin text: the browser's own PDF printing handles it better
   if (odd) blocks.forEach(b => (b.t = b.t.replace(BAD, "?")));
@@ -859,6 +942,99 @@ async function toPdf(lec){
   return doc.output("blob");
 }
 
+/* flashcards as a spreadsheet file that Anki and Quizlet can import */
+const toCsv = lec => "\uFEFF" + lec.study.flashcards.map(c => [c.q, c.a].map(x => '"' + String(x).replace(/"/g, '""') + '"').join(",")).join("\r\n") + "\r\n";
+
+/* ---------- my notes: rich text kept as clean HTML ---------- */
+const OK_TAGS = { B: "strong", STRONG: "strong", I: "em", EM: "em", U: "u", MARK: "mark", H1: "h2", H2: "h2", H3: "h3", H4: "h3", UL: "ul", OL: "ol", LI: "li", P: "p", DIV: "p", BLOCKQUOTE: "blockquote", BR: "br" };
+// rebuild pasted or typed HTML from an allow-list: no attributes, no scripts, nothing unexpected
+function cleanNodes(src, into){
+  src.childNodes.forEach(n => {
+    if (n.nodeType === 3) return void into.append(n.nodeValue);
+    if (n.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|TEMPLATE|NOSCRIPT)$/.test(n.tagName)) return;
+    let tag = OK_TAGS[n.tagName];
+    if (!tag && n.tagName === "SPAN"){ const st = n.getAttribute("style") || ""; tag = /background/i.test(st) ? "mark" : /font-weight:\s*(bold|[6-9]00)/i.test(st) ? "strong" : /italic/i.test(st) ? "em" : null; }
+    if (!tag) return void cleanNodes(n, into);
+    const el = document.createElement(tag); if (tag !== "br") cleanNodes(n, el); into.append(el);
+  });
+}
+function cleanHtml(html){
+  const doc = new DOMParser().parseFromString("<body>" + String(html || "") + "</body>", "text/html"), box = document.createElement("div");
+  cleanNodes(doc.body, box); return box;
+}
+function htmlToMd(html){
+  const out = [];
+  const inl = node => [...node.childNodes].map(n => n.nodeType === 3 ? n.nodeValue.replace(/\s+/g, " ") : n.nodeType !== 1 ? "" : n.tagName === "BR" ? "\n"
+    : /^(UL|OL)$/.test(n.tagName) ? "" : n.tagName === "STRONG" ? wrap("**", inl(n)) : n.tagName === "EM" ? wrap("*", inl(n)) : inl(n)).join("");
+  const wrap = (m, t) => (t.trim() ? t.replace(/^(\s*)([\s\S]*?)(\s*)$/, (x, a, b, c) => a + m + b + m + c) : t);
+  const walk = (node, depth) => node.childNodes.forEach(n => {
+    if (n.nodeType === 3){ if (n.nodeValue.trim()) out.push(n.nodeValue.trim()); return; }
+    if (n.nodeType !== 1) return;
+    const t = n.tagName;
+    if (t === "H2") out.push("", "## " + inl(n).replace(/\*/g, "").trim());
+    else if (t === "H3") out.push("", "### " + inl(n).replace(/\*/g, "").trim());
+    else if (t === "UL" || t === "OL") [...n.children].forEach((li, i) => { if (li.tagName !== "LI") return; const txt = inl(li).trim(); const todo = /^[☐☑]\s*/.exec(txt);
+      out.push("  ".repeat(depth) + (todo ? "- [" + (todo[0][0] === "☑" ? "x" : " ") + "] " + txt.slice(todo[0].length) : t === "OL" ? "- " + (i + 1) + ". " + txt : "- " + txt)); walk({ childNodes: [...li.children].filter(c => /^(UL|OL)$/.test(c.tagName)) }, depth + 1); });
+    else if (t === "P" || t === "BLOCKQUOTE"){ const txt = inl(n).trim(); if (txt) out.push("", ...txt.split("\n")); if ([...n.children].some(c => /^(UL|OL|H2|H3|P)$/.test(c.tagName))) walk({ childNodes: [...n.children].filter(c => /^(UL|OL|H2|H3|P)$/.test(c.tagName)) }, depth); }
+    else { const txt = inl(n).trim(); if (txt) out.push(txt); }
+  });
+  walk(cleanHtml(html), 0);
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function mdToNodes(md){
+  const box = document.createElement("div"); let stack = [];
+  const runs = (t, el) => { runsOf(t).forEach(r => { if (r.b || r.i){ const x = document.createElement(r.b ? "strong" : "em"); x.textContent = r.t; el.append(x); } else el.append(r.t); }); return el; };
+  for (const b of mdBlocks(md)){
+    if (b.k === "li" || b.k === "todo"){
+      const L = b.lvl || 0;
+      if (!stack.length){ const ul = document.createElement("ul"); box.append(ul); stack = [ul]; }
+      while (stack.length - 1 > L) stack.pop();
+      while (stack.length - 1 < L){ const parent = stack[stack.length - 1], host = parent.lastElementChild || parent.appendChild(document.createElement("li")), ul = document.createElement("ul"); host.append(ul); stack.push(ul); }
+      stack[stack.length - 1].append(runs((b.k === "todo" ? (b.done ? "☑ " : "☐ ") : "") + b.t, document.createElement("li")));
+    } else { stack = []; box.append(runs(b.t, document.createElement(b.k === "h2" ? "h2" : b.k === "h3" ? "h3" : "p"))); }
+  }
+  return box;
+}
+const POLISH = {
+  polish: ["Polish", "Fix the grammar, spelling and clarity of these notes. Keep the student's meaning, order and voice. Do not add new facts."],
+  structure: ["Structure", "Reorganise these notes into a clear structure: main topics, subtopics and bullet points, with action points collected at the end as '- [ ] ' items. Keep every idea; do not add new facts."],
+  shorten: ["Shorten", "Tighten these notes to roughly half the length. Keep every key idea, term, number and deadline."],
+  enrich: ["Fill gaps from the transcript", "Improve these notes using the lecture transcript: correct anything that contradicts it and add important points the notes missed, marking each addition with the [m:ss] time it came from. Keep the student's structure where it works."]
+};
+async function polishNotes(lec, mode, note){
+  const mine = myNotesMd(lec);
+  if (mine.length < 20) throw new AppError("Write a few lines first, then run the AI over them.");
+  const useTranscript = mode === "enrich" && lec.segments.length;
+  const run = ctx => llm({ max: 4000, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."), context: ctx || undefined,
+    system: "You edit a student's own notes. " + POLISH[mode][1] + " Reply with the notes only, in Markdown: '## ' main topics, '### ' subtopics, '- ' bullets (two spaces to nest), **bold** key terms, *italics* sparingly. No preamble, no commentary.",
+    messages: [{ role: "user", content: "My notes:\n\n" + mine.slice(0, 24000) }] });
+  const md = useTranscript ? await withContext(lec, "lecture", run, note) : await run("");
+  return md.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim();
+}
+
+/* ---------- audio download ---------- */
+async function audioFiles(lec, note){
+  const name = ((lec.title || "lecture").replace(/[^\w\- ]+/g, "").trim().slice(0, 50) || "lecture"), files = [];
+  const sessions = (lec.sessions || []).slice().sort((a, b) => a.offset - b.offset);
+  const covered = p => sessions.some(s => s.offset <= p.offset + 0.5 && p.offset < s.offset + s.dur);
+  const loose = (lec.audio || []).filter(p => !covered(p)).sort((a, b) => a.offset - b.offset);
+  if (loose.length === 1){ const b = await DB.getAudio(lec.id, loose[0].n); if (b) files.push({ name: name + "." + extFor(loose[0].mime, loose[0].file), blob: b }); }
+  else if (loose.length){
+    // many short parts (older recordings, split uploads): join them into one WAV file
+    const RATE = 16000, Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext, chunks = []; let total = 0;
+    for (let i = 0; i < loose.length; i++){
+      note("Joining the recording, part " + (i + 1) + " of " + loose.length + "…");
+      const b = await DB.getAudio(lec.id, loose[i].n); if (!b) continue;
+      try { const d = await new Ctx(1, RATE, RATE).decodeAudioData(await b.arrayBuffer()), mono = new Float32Array(d.length);
+        for (let c = 0; c < d.numberOfChannels; c++){ const ch = d.getChannelData(c); for (let k = 0; k < d.length; k++) mono[k] += ch[k] / d.numberOfChannels; }
+        chunks.push(mono); total += mono.length; } catch (e){}
+    }
+    if (total){ const all = new Float32Array(total); let at = 0; chunks.forEach(c => { all.set(c, at); at += c.length; }); files.push({ name: name + (sessions.length ? " earlier" : "") + ".wav", blob: wavBlob(all, RATE) }); }
+  }
+  for (let i = 0; i < sessions.length; i++){ const b = await DB.getAudio(lec.id, "s" + sessions[i].n); if (b) files.push({ name: name + (sessions.length > 1 ? " part " + (i + 1) : "") + "." + extFor(sessions[i].mime), blob: b }); }
+  return files;
+}
+
 function saveFile(name, data, type){
   const a = document.createElement("a");
   a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: type || "text/plain" })); a.download = name;
@@ -886,8 +1062,9 @@ async function api(method, url, body, note){
     const q = (u.searchParams.get("q") || "").trim().toLowerCase(), course = u.searchParams.get("course") || "", groups = [];
     let total = 0;
     if (q.length < 2) return { groups, total };
+    const view = u.searchParams.get("view") || "main";
     for (const l of [...DB.lectures.values()].sort((a, b) => b.createdAt - a.createdAt)){
-      if (course && courseKey(l.course) !== courseKey(course)) continue;
+      if (view === "bin" ? !l.deletedAt : l.deletedAt || (view === "archive") !== !!l.archived) continue;
       const hits = []; let count = 0;
       const scan = (text, sid, t, own) => {
         const low = text.toLowerCase(); let i = low.indexOf(q), first = i;
@@ -896,6 +1073,8 @@ async function api(method, url, body, note){
       };
       l.segments.forEach(s => scan(s.text, s.id, s.t, false));
       (l.marks || []).forEach(m => scan(m.text, m.id, m.t, true));
+      if (l.myNotes && l.myNotes.html) scan(cleanHtml(l.myNotes.html).textContent, "mynotes", null, true);
+      if (l.title.toLowerCase().includes(q) && !count) count = 1;
       if (count){ groups.push({ id: l.id, title: l.title, course: l.course, count, hits }); total += count; }
     }
     return { groups, total };
@@ -903,14 +1082,22 @@ async function api(method, url, body, note){
   if (p[0] !== "lectures") throw new AppError("Not found.");
   if (!p[1]){
     if (method === "GET") return [...DB.lectures.values()].map(metaOf).sort((a, b) => b.createdAt - a.createdAt);
-    const lec = { id: newId("l"), course: String(b.course || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), language: "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], summary: null, study: null, notes: null, chat: [] };
+    const lec = { id: newId("l"), course: String(b.course || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", folder: String(b.folder || "").slice(0, 80), archived: false, language: "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
     DB.lectures.set(lec.id, lec); await DB.save(lec); return lec;
   }
   const lec = getLec(p[1]);
   if (!p[2]){
-    if (method === "DELETE"){ await DB.remove(lec); return { ok: true }; }
+    if (method === "DELETE"){
+      if (u.searchParams.get("forever") || lec.deletedAt){ await DB.remove(lec); return { ok: true, gone: true }; }
+      lec.deletedAt = Date.now(); await DB.save(lec); return { ok: true };   // to the recycle bin first
+    }
     if (method === "PATCH"){
-      if (typeof b.course === "string") lec.course = b.course.trim().slice(0, 120);
+      if (typeof b.course === "string"){ const was = lec.course; lec.course = b.course.trim().slice(0, 120); if (lec.folder && lec.folder === was) lec.folder = ""; }
+      if (typeof b.folder === "string") lec.folder = b.folder.trim().slice(0, 80);
+      if (typeof b.archived === "boolean") lec.archived = b.archived;
+      if (b.restore) delete lec.deletedAt;
+      if (typeof b.myNotes === "string"){ const box = cleanHtml(b.myNotes); if (lec.myNotes && b.keepPrev) lec.myNotesPrev = lec.myNotes.html; lec.myNotes = box.textContent.trim() ? { html: box.innerHTML, updatedAt: Date.now() } : null; }
+      if (b.dropAudio){ await DB.dropAudio(lec); lec.audio = []; lec.sessions = []; }
       if (typeof b.title === "string") lec.title = b.title.trim().slice(0, 200) || "Untitled lecture";
       if (typeof b.language === "string") lec.language = b.language.slice(0, 8);
       if (typeof b.notes === "string") lec.notes = b.notes.trim() ? { md: b.notes, madeAt: (lec.notes && lec.notes.madeAt) || Date.now(), edited: true } : null;
@@ -947,11 +1134,12 @@ async function api(method, url, body, note){
 }
 
 /* ---------- state ---------- */
-const S = { list: [], cur: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
+const S = { list: [], cur: null, view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
 let askCtl = null;
 
+const folderOf = l => (l.folder ? l.folder : l.course || "Unfiled");
 function metaOf(l){
-  return { id: l.id, course: l.course, title: l.title, createdAt: l.createdAt, duration: l.duration || 0,
+  return { id: l.id, course: l.course, title: l.title, createdAt: l.createdAt, duration: l.duration || 0, kind: l.kind || "lecture", folder: folderOf(l), archived: !!l.archived, deletedAt: l.deletedAt || 0,
     words: l.segments.reduce((n, s) => n + s.text.split(/\s+/).filter(Boolean).length, 0) };
 }
 function adopt(lec, soft){
@@ -965,6 +1153,7 @@ async function openLecture(id){
   stopPlayer();
   S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
   S.cur = await api("GET", "/api/lectures/" + id);
+  if (S.cur.kind === "note") S.tab = "mynotes";
   render();
 }
 async function newLecture(seed){
@@ -972,7 +1161,9 @@ async function newLecture(seed){
   stopPlayer();
   const lec = await api("POST", "/api/lectures", seed || {});
   S.list.unshift(metaOf(lec)); S.cur = lec; S.tab = "transcript"; S.err = ""; S.pamErr = ""; S.search = null; S.hl = ""; S.q = ""; S.editNotes = false; $("search").value = "";
+  if (lec.kind === "note") S.tab = "mynotes";
   render();
+  if (lec.kind === "note"){ const t = document.querySelector(".title-in"); if (t){ t.focus(); t.select(); } }
   return lec;
 }
 function fail(e){ S.err = e.message || String(e); render(); }
@@ -1003,6 +1194,21 @@ async function startRec(){
   REC.on = true; REC.lecId = lec.id; REC.flags = [];
   REC.base = Math.ceil(lec.duration || 0); REC.startMs = performance.now();
   startPart();
+  try {
+    const full = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 }), bits = [], base = REC.base, lecId = lec.id;
+    full.ondataavailable = e => { if (e.data && e.data.size) bits.push(e.data); };
+    full.onstop = async () => {
+      try {
+        const blob = new Blob(bits, { type: (full.mimeType || MIME || "audio/webm").split(";")[0] }), l = getLec(lecId), dur = (full._endAbs || nowAbs()) - base;
+        if (blob.size < 2000 || dur < 1) return;
+        l.sessions = l.sessions || [];
+        const n = l.sessions.reduce((m, x) => Math.max(m, x.n), 0) + 1;
+        await DB.putAudio(lecId, "s" + n, blob);
+        l.sessions.push({ n, mime: blob.type, offset: base, dur, size: blob.size }); await DB.save(l);
+      } catch (e){}
+    };
+    full.start(10000); REC.full = full;
+  } catch (e){ REC.full = null; }
   REC.tick = setInterval(liveLine, 500);
   try {
     REC.ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1040,6 +1246,8 @@ function stopRec(){
   REC.on = false;
   clearTimeout(REC.rot); clearInterval(REC.tick); cancelAnimationFrame(REC.raf);
   if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr.stop(); }
+  if (REC.full && REC.full.state !== "inactive"){ REC.full._endAbs = nowAbs(); REC.full.stop(); }
+  REC.full = null;
   const stream = REC.stream;
   setTimeout(() => stream && stream.getTracks().forEach(t => t.stop()), 300);
   if (REC.ctx){ REC.ctx.close().catch(() => {}); REC.ctx = null; }
@@ -1233,53 +1441,121 @@ async function ask(text, label){
   S.busy.ask = false; renderPam();
   const inp = $("pamIn"); if (inp && window.innerWidth > 760) inp.focus();
 }
+const fileBase = lec => ((lec.title || "lecture").replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "lecture");
+function openExport(){
+  const lec = S.cur; if (!lec) return;
+  const have = SECTIONS.filter(([k]) => hasSection(lec, k));
+  if (!S.exportSel) S.exportSel = SECTIONS.map(s => s[0]);
+  $("expParts").replaceChildren(...SECTIONS.map(([k, label]) => { const on = have.some(x => x[0] === k);
+    const box = h("input", { type: "checkbox", value: k, disabled: !on }); box.checked = on && S.exportSel.includes(k);
+    return h("label", { class: "check" + (on ? "" : " off") }, box, label + (on ? "" : " (none yet)")); }));
+  $("expSrt").disabled = $("expVtt").disabled = !lec.segments.some(s => s.t != null);
+  $("expCsv").disabled = !hasSection(lec, "cards");
+  $("expErr").hidden = true; $("exportDlg").showModal();
+}
 async function exportAs(kind){
   const lec = S.cur; if (!lec) return;
-  const name = ((lec.title || "lecture").replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "lecture");
-  S.err = "";
+  const name = fileBase(lec), picked = [...$("expParts").querySelectorAll("input:checked")].map(i => i.value), err = $("expErr");
+  err.hidden = true;
   try {
-    if (kind === "txt") saveFile(name + ".txt", toTxt(lec));
-    else if (kind === "md") saveFile(name + ".md", toMarkdown(lec), "text/markdown");
-    else if (kind === "srt" || kind === "vtt"){
-      if (!lec.segments.some(s => s.t != null)) throw new AppError("Subtitle files need timestamps. This lecture's text has none.");
-      saveFile(name + "." + kind, kind === "srt" ? toSrt(lec) : toVtt(lec), kind === "vtt" ? "text/vtt" : "application/x-subrip");
+    if (kind === "srt" || kind === "vtt") saveFile(name + "." + kind, kind === "srt" ? toSrt(lec) : toVtt(lec), kind === "vtt" ? "text/vtt" : "application/x-subrip");
+    else if (kind === "csv") saveFile(name + " flashcards.csv", toCsv(lec), "text/csv");
+    else {
+      if (!picked.length) throw new AppError("Tick at least one part to export.");
+      S.exportSel = SECTIONS.map(s => s[0]).filter(k => picked.includes(k) || !hasSection(lec, k));
+      const tag = picked.length === 1 ? " " + SECTIONS.find(s => s[0] === picked[0])[1].toLowerCase() : "";
+      if (kind === "txt") saveFile(name + tag + ".txt", toTxt(lec, picked));
+      else if (kind === "md") saveFile(name + tag + ".md", toMarkdown(lec, picked), "text/markdown");
+      else if (kind === "docx") saveFile(name + tag + ".docx", toDocx(lec, picked));
+      else if (kind === "pdf"){
+        try { saveFile(name + tag + ".pdf", await toPdf(lec, picked)); }
+        catch (e){ if (e.message !== "print") throw e; $("exportDlg").close(); S.err = "The PDF maker could not load, so the print window is open instead. Choose Save as PDF there."; render(); return void window.print(); }
+      }
     }
-    else if (kind === "docx") saveFile(name + ".docx", toDocx(lec));
-    else if (kind === "pdf"){
-      try { saveFile(name + ".pdf", await toPdf(lec)); }
-      catch (e){ if (e.message !== "print") throw e; S.err = "The PDF maker could not load, so the print window is open instead. Choose Save as PDF there."; render(); window.print(); }
-    }
-  } catch (e){ fail(e); }
+    $("exportDlg").close();
+  } catch (e){ err.hidden = false; err.textContent = e.message; }
+}
+async function downloadAudio(){
+  const lec = S.cur; if (!lec || S.busy.audio) return;
+  S.busy.audio = true; S.err = ""; S.note = "Preparing the audio…"; render();
+  try {
+    const files = await audioFiles(lec, t => { S.note = t; const n = $("audioNote"); if (n) n.textContent = t; });
+    if (!files.length) throw new AppError("There is no audio saved for this lecture on this device.");
+    if (files.length === 1) saveFile(files[0].name, files[0].blob);
+    else { const entries = []; for (const f of files) entries.push({ name: f.name, data: new Uint8Array(await f.blob.arrayBuffer()) }); entries.mime = "application/zip"; saveFile(fileBase(lec) + " audio.zip", zipStore(entries)); }
+  } catch (e){ S.err = e.message; }
+  S.busy.audio = false; S.note = ""; render();
 }
 
 /* ---------- rendering ---------- */
 const courses = () => [...new Set(S.list.map(l => l.course).filter(Boolean))].sort();
+const folders = () => [...new Set([...S.list.filter(l => !l.deletedAt && !l.archived).map(l => l.folder), ...(DB.settings.folders || [])])].filter(Boolean).sort((a, b) => (a === "Unfiled") - (b === "Unfiled") || a.localeCompare(b));
+const inView = l => (S.view === "bin" ? !!l.deletedAt : !l.deletedAt && (S.view === "archive") === !!l.archived);
+async function moveTo(id, folder){
+  try {
+    const out = await api("PATCH", "/api/lectures/" + id, { folder });
+    DB.settings.folders = (DB.settings.folders || []).filter(f => f !== folder); await DB.saveSettings();
+    adopt(out, true); if (S.cur && S.cur.id === id) render(); else renderList();
+  } catch (e){ fail(e); }
+}
+async function newFolder(thenMove){
+  const name = (prompt("Name the new folder") || "").trim().slice(0, 80); if (!name) return;
+  if (thenMove) return moveTo(thenMove, name);
+  DB.settings.folders = [...new Set([...(DB.settings.folders || []), name])]; await DB.saveSettings(); renderList();
+}
+async function renameFolder(old){
+  const name = (prompt("Rename the folder", old) || "").trim().slice(0, 80); if (!name || name === old) return;
+  for (const l of [...DB.lectures.values()]) if (folderOf(l) === old){ l.folder = name; await DB.save(l); }
+  DB.settings.folders = (DB.settings.folders || []).map(f => (f === old ? name : f)); await DB.saveSettings();
+  S.list = await api("GET", "/api/lectures"); render();
+}
+function lecButton(l){
+  const b = h("button", { class: "lec", draggable: S.view === "main" ? "true" : null, "aria-current": S.cur && l.id === S.cur.id ? "true" : null, onclick: () => { S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); } },
+    l.kind === "note" ? h("span", { class: "kind" }, "Note") : null, l.title,
+    h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" || l.words ? "" : ", empty")));
+  b.addEventListener("dragstart", e => { e.dataTransfer.setData("text/bizofy-lecture", l.id); e.dataTransfer.effectAllowed = "move"; });
+  return b;
+}
 function renderList(){
   const nav = $("list"); nav.replaceChildren();
-  const cs = courses(), filter = $("courseFilter");
-  filter.hidden = cs.length < 2;
-  if (!filter.hidden){
-    if (S.course && !cs.includes(S.course)) S.course = "";
-    filter.replaceChildren(h("option", { value: "" }, "All courses"), ...cs.map(c => { const o = h("option", { value: c }, c); if (c === S.course) o.selected = true; return o; }));
-  }
+  const counts = { archive: S.list.filter(l => !l.deletedAt && l.archived).length, bin: S.list.filter(l => l.deletedAt).length };
+  const go = v => () => { S.view = v; S.search = null; runSearch(); renderList(); };
+  $("views").replaceChildren(...[
+    S.view !== "main" ? h("button", { class: "linkish", onclick: go("main") }, "Back to all lectures") : null,
+    S.view !== "archive" && counts.archive ? h("button", { class: "linkish", onclick: go("archive") }, "Archive (" + counts.archive + ")") : null,
+    S.view !== "bin" && counts.bin ? h("button", { class: "linkish", onclick: go("bin") }, "Recycle bin (" + counts.bin + ")") : null].filter(Boolean));
+  $("newFolderBtn").hidden = S.view !== "main";
   if (S.search){
     const n = S.search.total;
-    nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " lecture" : " lectures") : "Nothing found for that search"));
+    nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " item" : " items") : "Nothing found for that search"));
     S.search.groups.forEach(g => {
-      const go = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); else { S.tab = "transcript"; render(); } closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
+      const go = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); if (sid === "mynotes") S.tab = "mynotes"; else if (S.cur.kind !== "note") S.tab = "transcript"; render(); closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
       nav.append(h("button", { class: "lec", onclick: () => go(g.hits[0] && g.hits[0].sid) }, g.title, h("small", null, (g.course ? g.course + ", " : "") + g.count + (g.count === 1 ? " match" : " matches"))));
-      g.hits.forEach(hit => nav.append(h("button", { class: "hit", onclick: () => go(hit.sid) }, hit.t != null ? h("span", { class: "hit-t" }, fmt(hit.t)) : null, hit.before, h("mark", null, hit.match), hit.after)));
+      g.hits.forEach(hit => nav.append(h("button", { class: "hit", onclick: () => go(hit.sid) }, hit.t != null ? h("span", { class: "hit-t" }, fmt(hit.t)) : hit.sid === "mynotes" ? h("span", { class: "hit-t" }, "My notes") : null, hit.before, h("mark", null, hit.match), hit.after)));
     });
     return;
   }
-  const groups = {};
-  S.list.filter(l => !S.course || l.course === S.course).sort((a, b) => b.createdAt - a.createdAt).forEach(l => (groups[l.course || "No course"] = groups[l.course || "No course"] || []).push(l));
-  Object.keys(groups).sort().forEach(c => {
-    nav.append(h("div", { class: "course" }, c));
-    groups[c].forEach(l => nav.append(h("button", { class: "lec", "aria-current": S.cur && l.id === S.cur.id ? "true" : null, onclick: () => { S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); } },
-      l.title, h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.words ? "" : ", empty")))));
+  const items = S.list.filter(inView).sort((a, b) => b.createdAt - a.createdAt);
+  if (S.view !== "main"){
+    nav.append(h("div", { class: "course" }, S.view === "bin" ? "Recycle bin. Items are removed for good after 30 days." : "Archive"));
+    items.forEach(l => nav.append(lecButton(l)));
+    if (!items.length) nav.append(h("p", { class: "hint" }, "Nothing here."));
+    return;
+  }
+  const shut = new Set(DB.settings.shut || []);
+  folders().forEach(f => {
+    const mine = items.filter(l => l.folder === f);
+    const box = h("details", { class: "folder", open: !shut.has(f) },
+      h("summary", null, h("span", { class: "folder-name" }, f), h("span", { class: "folder-n" }, mine.length), f !== "Unfiled" ? h("button", { class: "linkish folder-edit", title: "Rename this folder", onclick: e => { e.preventDefault(); renameFolder(f); } }, "Rename") : null),
+      mine.map(lecButton),
+      !mine.length ? h("p", { class: "hint folder-empty" }, "Empty. Drag a lecture here, or ", h("button", { class: "linkish", onclick: async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== f); await DB.saveSettings(); renderList(); } }, "remove it"), ".") : null);
+    box.addEventListener("toggle", () => { const s2 = new Set(DB.settings.shut || []); box.open ? s2.delete(f) : s2.add(f); DB.settings.shut = [...s2]; DB.saveSettings().catch(() => {}); });
+    box.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); box.classList.add("over"); } });
+    box.addEventListener("dragleave", () => box.classList.remove("over"));
+    box.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); box.classList.remove("over"); if (id){ e.preventDefault(); e.stopPropagation(); moveTo(id, f); } });
+    nav.append(box);
   });
-  if (!S.list.length) nav.append(h("p", { class: "hint" }, "Your lectures will be listed here by course."));
+  if (!items.length && !folders().length) nav.append(h("p", { class: "hint" }, "Your lectures and notes will be listed here in folders."));
 }
 function renderKeys(){
   const n = $("keyNote"), st = S.status;
@@ -1358,7 +1634,7 @@ function softRefresh(){
     if (REC.on && atEnd && box.lastChild) box.lastChild.scrollIntoView({ block: "nearest" });
   }
   const w = $("metaLine"); if (w && lec) w.replaceChildren(...metaBits(lec).filter(Boolean));
-  if (lec && lec.segments.length && $("pam").querySelector(".pam-empty") && document.activeElement !== $("pamIn")) renderPam();
+  if (lec && hasContent(lec) && $("pam").querySelector(".pam-empty") && document.activeElement !== $("pamIn")) renderPam();
 }
 function jumpSeg(test){
   let hit = null; document.querySelectorAll(".seg, .mark-row").forEach(n => { if (!hit && test(n)) hit = n; });
@@ -1416,7 +1692,7 @@ function inline(text){
       const m = part.match(/^\[(\d{1,2}:\d\d(?::\d\d)?)\]$/);
       return m ? h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(parseTs(m[1])) }, m[1]) : part;
     });
-    out.push(r.b ? h("strong", null, bits) : bits);
+    out.push(r.b ? h("strong", null, bits) : r.i ? h("em", null, bits) : bits);
   });
   return out;
 }
@@ -1443,14 +1719,14 @@ function notesPanel(lec){
         h("button", { class: "btn quiet", onclick: () => { S.editNotes = false; render(); } }, "Cancel")));
     return box;
   }
-  const gate = aiGate(lec, "notes", "Write structured notes", "Write the notes again", has);
+  const gate = aiGate(lec, "notes", "Write AI notes", "Write the AI notes again", has);
   if (!S.busy.notes){
     gate.append(h("button", { class: "btn quiet", onclick: () => { S.editNotes = true; S.notesDraft = has ? lec.notes.md : ""; render(); } }, has ? "Edit" : "Write them yourself"));
     if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"));
   }
   box.append(gate);
   if (has) box.append(notesView(lec.notes.md));
-  else if (!S.busy.notes && lec.segments.length) box.append(h("p", { class: "hint" }, "Notes break the lecture into topics, subtopics, bullet points and action points. The summary stays short; this is the full version."));
+  else if (!S.busy.notes && lec.segments.length) box.append(h("p", { class: "hint" }, "AI notes break the lecture into topics, subtopics, bullet points and action points. The summary stays short; this is the full version. Your own writing lives in My notes."));
   return box;
 }
 function summaryPanel(lec){
@@ -1515,8 +1791,8 @@ function renderPam(){
   pam.append(h("div", { class: "pam-head" },
     h("div", null, h("h2", null, "Pambizo"), h("p", { class: "hint" }, "Your margin. Ask, draft, translate; it reads the lecture with you.")),
     h("button", { class: "btn quiet pam-close", onclick: closeDrawers }, "Close")));
-  if (!lec || !lec.segments.length){
-    pam.append(h("p", { class: "hint pam-empty" }, lec ? "Once this lecture has a transcript, ask anything about it here." : "Open or record a lecture, then ask anything about it here."));
+  if (!lec || !hasContent(lec)){
+    pam.append(h("p", { class: "hint pam-empty" }, lec ? (lec.kind === "note" ? "Once this note has some text, ask anything about it here." : "Once this lecture has a transcript, ask anything about it here.") : "Open or record a lecture, then ask anything about it here."));
     return;
   }
   const off = S.busy.ask || !S.status.ai;
@@ -1543,6 +1819,58 @@ function renderPam(){
   if (log.lastChild) log.scrollTop = log.scrollHeight;
 }
 
+/* My notes: a small rich-text editor, with the AI as an editor you can overrule */
+let notesTimer = null;
+function saveMyNotes(lec, ed, now){
+  clearTimeout(notesTimer);
+  const go = () => api("PATCH", "/api/lectures/" + lec.id, { myNotes: ed.innerHTML }).then(() => { const n = $("savedNote"); if (n) n.textContent = "Saved"; }).catch(fail);
+  if (now) return go();
+  const n = $("savedNote"); if (n) n.textContent = "Saving…";
+  notesTimer = setTimeout(go, 700);
+}
+function myNotesPanel(lec){
+  const box = h("div", { class: "mynotes" });
+  const ed = h("div", { class: "editor read", id: "editor", contenteditable: "true", spellcheck: "true", role: "textbox", "aria-multiline": "true", "aria-label": "My notes", "data-placeholder": lec.kind === "note" ? "Start writing…" : "Write your own notes for this lecture…" });
+  if (lec.myNotes && lec.myNotes.html) ed.append(...cleanHtml(lec.myNotes.html).childNodes);
+  const cmd = (name, arg) => () => { ed.focus(); document.execCommand(name, false, arg || null); saveMyNotes(lec, ed); };
+  const tool = (label, title, fn, cls) => h("button", { class: "tool" + (cls ? " " + cls : ""), title, "aria-label": title, onmousedown: e => e.preventDefault(), onclick: fn }, label);
+  ed.addEventListener("input", () => saveMyNotes(lec, ed));
+  ed.addEventListener("blur", () => saveMyNotes(lec, ed, true));
+  ed.addEventListener("paste", e => { e.preventDefault(); const t = (e.clipboardData || window.clipboardData).getData("text/plain"); document.execCommand("insertText", false, t); });
+  ed.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && !e.shiftKey){ const k = e.key.toLowerCase(); if (k === "b" || k === "i" || k === "u"){ e.preventDefault(); cmd(k === "b" ? "bold" : k === "i" ? "italic" : "underline")(); } } });
+  box.append(h("div", { class: "tools", role: "toolbar", "aria-label": "Formatting" },
+    tool("B", "Bold", cmd("bold"), "tb"), tool("I", "Italic", cmd("italic"), "ti"), tool("U", "Underline", cmd("underline"), "tu"),
+    tool("Highlight", "Highlight", cmd("hiliteColor", "#FFF1B0")),
+    h("span", { class: "tools-gap" }),
+    tool("Heading", "Main heading", cmd("formatBlock", "h2")), tool("Subheading", "Subheading", cmd("formatBlock", "h3")), tool("Text", "Normal text", cmd("formatBlock", "p")),
+    h("span", { class: "tools-gap" }),
+    tool("• List", "Bullet list", cmd("insertUnorderedList")), tool("1. List", "Numbered list", cmd("insertOrderedList")), tool("☐ To do", "Add a to-do box", cmd("insertText", "☐ ")),
+    tool("Clear", "Remove formatting", cmd("removeFormat")),
+    h("span", { class: "hint", id: "savedNote", role: "status" }, "")));
+  box.append(ed);
+
+  // AI pass: the suggestion is shown beside your notes; nothing is replaced until you say so
+  const ai = h("div", { class: "polish" });
+  if (S.polish && S.polish.id === lec.id){
+    ai.append(h("h3", null, "Suggested version"), h("p", { class: "hint" }, "Your notes above are unchanged. Use the suggestion to replace them, or discard it."), notesView(S.polish.md),
+      h("div", { class: "row" },
+        h("button", { class: "btn solid", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: mdToNodes(S.polish.md).innerHTML, keepPrev: true }); S.polish = null; adopt(out); } catch (e){ fail(e); } } }, "Use this version"),
+        h("button", { class: "btn quiet", onclick: () => { S.polish = null; render(); } }, "Discard")));
+  } else if (S.busy.polish) ai.append(h("p", { class: "hint", id: "aiNote", role: "status" }, S.note || "Reading your notes…"));
+  else {
+    ai.append(h("span", { class: "hint" }, "Let the AI work on your notes:"),
+      ...Object.keys(POLISH).filter(k => k !== "enrich" || lec.segments.length).map(k => h("button", { class: "chip", disabled: !S.status.ai, onclick: async () => {
+        S.busy.polish = true; S.err = ""; S.note = ""; await saveMyNotes(lec, ed, true); render();
+        try { S.polish = { id: lec.id, md: await polishNotes(lec, k, aiNote) }; } catch (e){ S.err = e.message; }
+        S.busy.polish = false; render();
+      } }, POLISH[k][0])),
+      lec.myNotesPrev ? h("button", { class: "linkish", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: lec.myNotesPrev }); delete out.myNotesPrev; await DB.save(out); adopt(out); } catch (e){ fail(e); } } }, "Bring back my earlier version") : null);
+    if (!S.status.ai) ai.append(h("span", { class: "hint" }, "Add an AI key in Settings first."));
+  }
+  box.append(ai);
+  return box;
+}
+
 const LANGS = [["auto", "Detect language"], ["en", "English"], ["sw", "Kiswahili"], ["fr", "Français"], ["es", "Español"], ["ar", "العربية"], ["pt", "Português"], ["de", "Deutsch"]];
 const RATES = [1, 1.25, 1.5, 2];
 function renderMain(){
@@ -1553,70 +1881,87 @@ function renderMain(){
       h("h1", null, "Listen to the lecturer. Bizofy writes it down."),
       h("p", null, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
       S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
-      h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture")),
+      h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note")),
       dropZone(null, false)));
     return;
   }
+  const isNote = lec.kind === "note";
   const patch = (field, fallback) => async ev => {
     const v = ev.target.value.trim() || fallback || "";
-    try { const out = await api("PATCH", "/api/lectures/" + lec.id, { [field]: v }); lec[field] = out[field]; adopt(lec, true); ev.target.value = out[field]; if (field === "course") render(); } catch (e){ fail(e); }
+    try { const out = await api("PATCH", "/api/lectures/" + lec.id, { [field]: v }); adopt(out, true); ev.target.value = out[field]; if (field === "course") render(); } catch (e){ fail(e); }
   };
-  const menu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Export"),
-    h("div", { class: "menu-list" }, [["pdf", "PDF"], ["docx", "Word (.docx)"], ["txt", "Plain text (.txt)"], ["md", "Markdown (.md)"], ["srt", "Subtitles (.srt)"], ["vtt", "Subtitles (.vtt)"]].map(([k, t]) =>
-      h("button", { onclick: () => { menu.open = false; exportAs(k); } }, t))));
+  if (lec.deletedAt) main.append(h("div", { class: "failed row" }, h("span", null, "This is in the recycle bin. It will be removed for good " + Math.max(1, 30 - Math.floor((Date.now() - lec.deletedAt) / 864e5)) + " days from now."),
+    h("span", { class: "row" }, h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { restore: true }); S.view = "main"; adopt(out); } catch (e){ fail(e); } } }, "Restore"),
+      h("button", { class: "btn quiet", onclick: async () => { if (!confirm("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + lec.id + "?forever=1"); S.list = S.list.filter(l => l.id !== lec.id); S.cur = null; render(); } catch (e){ fail(e); } } }, "Delete forever"))));
+
+  const here = folderOf(lec);
+  const folderSel = h("select", { class: "folder-sel", "aria-label": "Folder", onchange: e => (e.target.value === "\u0000new" ? newFolder(lec.id) : moveTo(lec.id, e.target.value)) },
+    [...new Set([here, ...folders()])].map(f => { const o = h("option", { value: f }, f); if (f === here) o.selected = true; return o; }), h("option", { value: "\u0000new" }, "New folder…"));
+  const hasAudio = (lec.audio && lec.audio.length > 0) || (lec.sessions && lec.sessions.length > 0);
+  const audioMenu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Audio"),
+    h("div", { class: "menu-list" },
+      h("button", { onclick: () => { audioMenu.open = false; downloadAudio(); } }, "Download the audio"),
+      h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text")));
   main.append(h("div", { class: "head" },
-    h("div", { class: "row course-row" },
+    isNote ? null : h("div", { class: "row course-row" },
       h("input", { class: "course-in", value: lec.course, placeholder: "Course code or name", "aria-label": "Course", list: "courses", onchange: patch("course") }),
       h("button", { class: "btn quiet", disabled: !lec.course, title: lec.course ? null : "Name the course first", onclick: () => openVocab(lec.course) }, "Course vocabulary")),
     h("datalist", { id: "courses" }, courses().map(c => h("option", { value: c }))),
-    h("input", { class: "title-in", value: lec.title, "aria-label": "Lecture title", onchange: patch("title", "Untitled lecture") }),
+    h("input", { class: "title-in", value: lec.title, "aria-label": isNote ? "Note title" : "Lecture title", onchange: patch("title", isNote ? "Untitled note" : "Untitled lecture") }),
     h("div", { class: "row meta" },
       h("span", { class: "meta-bits", id: "metaLine" }, metaBits(lec)),
-      h("span", { class: "row" }, menu,
-        h("button", { class: "btn quiet", onclick: async () => {
-          if (!confirm('Delete "' + lec.title + '" and its recording? This cannot be undone.')) return;
+      h("span", { class: "row actions" },
+        h("label", { class: "folder-pick" }, "Folder", folderSel),
+        h("button", { class: "btn quiet", onclick: openExport }, "Export"),
+        hasAudio && !REC.on ? audioMenu : null,
+        lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { archived: !lec.archived }); adopt(out, true); if (out.archived) S.cur = null; else S.view = "main"; render(); } catch (e){ fail(e); } } }, lec.archived ? "Move out of archive" : "Archive"),
+        lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => {
           if (REC.on) stopRec(); stopPlayer();
-          try { await api("DELETE", "/api/lectures/" + lec.id); S.list = S.list.filter(l => l.id !== lec.id); S.cur = null; render(); } catch (e){ fail(e); }
-        } }, "Delete lecture")))));
+          try { await api("DELETE", "/api/lectures/" + lec.id); lec.deletedAt = Date.now(); adopt(lec, true); S.cur = null; S.err = ""; render(); } catch (e){ fail(e); }
+        } }, "Delete")))));
+  if (S.busy.audio) main.append(h("p", { class: "notice", id: "audioNote", role: "status" }, S.note || "Preparing the audio…"));
 
-  const hasAudio = lec.audio && lec.audio.length > 0;
-  const seek = h("input", { type: "range", id: "seek", min: 0, max: Math.max(1, Math.floor(lec.duration || 0)), step: 1, value: P.lecId === lec.id ? playAbs() : 0, "aria-label": "Position in the recording",
-    oninput: e => { e.target._drag = true; }, onchange: e => { e.target._drag = false; playFrom(+e.target.value); } });
-  main.append(h("div", { class: "deck" },
-    h("button", { class: "recbtn", id: "recBtn", "aria-pressed": REC.on ? "true" : "false", "aria-label": REC.on ? "Stop recording" : "Start recording", onclick: () => (REC.on ? stopRec() : startRec()) }, h("i")),
-    h("div", { style: "min-width:0" },
-      h("div", { class: "clock", id: "clock" }, fmt(REC.on ? nowAbs() : lec.duration)),
-      h("div", { class: "live", id: "live", role: "status" }),
-      REC.on ? h("div", { class: "meter", "aria-hidden": "true" }, h("b", { id: "level" })) : null),
-    h("div", { class: "side-ctl" },
-      h("button", { class: "flag", id: "flagBtn", disabled: !REC.on, onclick: markImportant }, "Mark as important"),
-      h("select", { "aria-label": "Spoken language", disabled: REC.on, onchange: async e => { lec.language = e.target.value; api("PATCH", "/api/lectures/" + lec.id, { language: lec.language }).catch(fail); } },
-        LANGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (lec.language || "auto")) o.selected = true; return o; }))),
-    hasAudio && !REC.on ? h("div", { class: "player" },
-      h("button", { id: "playBtn", onclick: () => (P.a.paused ? (P.lecId === lec.id && P.a.src ? P.a.play() : playFrom(+seek.value || 0)) : P.a.pause()) }, P.a.paused ? "Play" : "Pause"),
-      h("button", { "aria-label": "Back 10 seconds", title: "Back 10 seconds", onclick: () => playFrom(Math.max(0, (P.lecId === lec.id ? playAbs() : +seek.value || 0) - 10)) }, "−10s"),
-      seek,
-      h("select", { "aria-label": "Playback speed", onchange: e => { S.rate = +e.target.value; P.a.playbackRate = S.rate; P.a.defaultPlaybackRate = S.rate; } }, RATES.map(r => { const o = h("option", { value: r }, r + "×"); if (r === S.rate) o.selected = true; return o; }))) : null));
-  main.append(h("p", { class: "notice err", id: "recMsg", role: "alert", hidden: !REC.msg }, REC.msg));
-  if (REC.on) main.append(h("p", { class: "notice" }, "Check that your lecturer allows recording. Keep this page open and the screen on while it records." + (S.status.transcribe ? "" : " No speech-to-text key is set, so the audio is saved now and you can transcribe it afterwards.")));
+  if (!isNote){
+    const canPlay = lec.audio && lec.audio.length > 0;
+    const seek = h("input", { type: "range", id: "seek", min: 0, max: Math.max(1, Math.floor(lec.duration || 0)), step: 1, value: P.lecId === lec.id ? playAbs() : 0, "aria-label": "Position in the recording",
+      oninput: e => { e.target._drag = true; }, onchange: e => { e.target._drag = false; playFrom(+e.target.value); } });
+    main.append(h("div", { class: "deck" + (REC.on ? " is-live" : "") },
+      h("button", { class: "recbtn", id: "recBtn", "aria-pressed": REC.on ? "true" : "false", "aria-label": REC.on ? "Stop recording" : "Start recording", onclick: () => (REC.on ? stopRec() : startRec()) }, h("i")),
+      h("div", { style: "min-width:0" },
+        h("div", { class: "clock", id: "clock" }, fmt(REC.on ? nowAbs() : lec.duration)),
+        h("div", { class: "live", id: "live", role: "status" }),
+        REC.on ? h("div", { class: "meter", "aria-hidden": "true" }, h("b", { id: "level" })) : null),
+      h("div", { class: "side-ctl" },
+        h("button", { class: "flag", id: "flagBtn", disabled: !REC.on, onclick: markImportant }, "Mark as important"),
+        h("select", { "aria-label": "Spoken language", disabled: REC.on, onchange: async e => { lec.language = e.target.value; api("PATCH", "/api/lectures/" + lec.id, { language: lec.language }).catch(fail); } },
+          LANGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (lec.language || "auto")) o.selected = true; return o; }))),
+      canPlay && !REC.on ? h("div", { class: "player" },
+        h("button", { id: "playBtn", onclick: () => (P.a.paused ? (P.lecId === lec.id && P.a.src ? P.a.play() : playFrom(+seek.value || 0)) : P.a.pause()) }, P.a.paused ? "Play" : "Pause"),
+        h("button", { "aria-label": "Back 10 seconds", title: "Back 10 seconds", onclick: () => playFrom(Math.max(0, (P.lecId === lec.id ? playAbs() : +seek.value || 0) - 10)) }, "−10s"),
+        seek,
+        h("select", { "aria-label": "Playback speed", onchange: e => { S.rate = +e.target.value; P.a.playbackRate = S.rate; P.a.defaultPlaybackRate = S.rate; } }, RATES.map(r => { const o = h("option", { value: r }, r + "×"); if (r === S.rate) o.selected = true; return o; }))) : null));
+    main.append(h("p", { class: "notice err", id: "recMsg", role: "alert", hidden: !REC.msg }, REC.msg));
+    if (REC.on) main.append(h("p", { class: "notice" }, "Check that your lecturer allows recording. Keep this page open and the screen on while it records." + (S.status.transcribe ? "" : " No speech-to-text key is set, so the audio is saved now and you can transcribe it afterwards.")));
 
-  // your own note, pinned to the current moment
-  const pinT = () => (REC.on ? nowAbs() : P.lecId === lec.id && P.n != null ? playAbs() : null);
-  const noteIn = h("input", { class: "note-in", id: "noteIn", type: "text", value: S.markDraft, placeholder: REC.on ? "Type your own note. It is pinned to this moment in the recording." : "Type your own note for this lecture", "aria-label": "Your own note", oninput: e => (S.markDraft = e.target.value), onkeydown: e => { if (e.key === "Enter") addMark(); } });
-  const addMark = async () => {
-    const text = S.markDraft.trim(); if (!text) return;
-    try { await api("POST", "/api/lectures/" + lec.id + "/marks", { t: pinT(), text }); S.markDraft = ""; noteIn.value = ""; if (S.tab === "transcript") softRefresh(); else { S.tab = "transcript"; render(); } $("noteIn") && $("noteIn").focus(); } catch (e){ fail(e); }
-  };
-  main.append(h("div", { class: "note-row" }, noteIn, h("button", { class: "btn", onclick: addMark }, "Add note")));
+    // a quick note pinned to the current moment
+    const pinT = () => (REC.on ? nowAbs() : P.lecId === lec.id && P.n != null ? playAbs() : null);
+    const noteIn = h("input", { class: "note-in", id: "noteIn", type: "text", value: S.markDraft, placeholder: REC.on ? "Quick note, pinned to this moment in the recording" : "Quick note for this lecture", "aria-label": "Quick note", oninput: e => (S.markDraft = e.target.value), onkeydown: e => { if (e.key === "Enter") addMark(); } });
+    const addMark = async () => {
+      const text = S.markDraft.trim(); if (!text) return;
+      try { await api("POST", "/api/lectures/" + lec.id + "/marks", { t: pinT(), text }); S.markDraft = ""; noteIn.value = ""; if (S.tab === "transcript") softRefresh(); else { S.tab = "transcript"; render(); } $("noteIn") && $("noteIn").focus(); } catch (e){ fail(e); }
+    };
+    main.append(h("div", { class: "note-row" }, noteIn, h("button", { class: "btn", onclick: addMark }, "Add note")));
+  }
 
-  const tabs = [["transcript", "Transcript"], ["notes", "Notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
-  main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
+  const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", "AI notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
+  if (isNote && S.tab !== "mynotes") S.tab = "mynotes";
+  if (!isNote) main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
     h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.editNotes = false; render(); } }, t))));
-  const panel = h("div", { class: "panel", role: "tabpanel" });
+  const panel = h("div", { class: "panel" + (isNote ? " solo" : ""), role: "tabpanel" });
   if (S.err) panel.append(h("p", { class: "notice err", role: "alert", style: "margin:0 0 14px" }, S.err));
-  panel.append(S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : transcriptPanel(lec));
+  panel.append(S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : S.tab === "mynotes" ? myNotesPanel(lec) : transcriptPanel(lec));
   main.append(panel);
-  liveLine();
+  if (!isNote) liveLine();
 }
 function render(){ renderList(); renderKeys(); renderMain(); renderPam(); }
 
@@ -1654,8 +1999,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.1.1", RELEASED = "19 September 2026";
+const VERSION = "2.2.0", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.0", "20 Sep 2026", ["My notes: write your own notes with bold, italics, headings and lists, then let the AI polish, structure or shorten them", "Stand-alone notes that are not tied to a recording", "Folders, drag to move, an archive, and a recycle bin that keeps deleted items for 30 days", "Download the audio of a lecture, or delete the audio and keep the text", "Export only the parts you want, plus flashcards as a file for Anki or Quizlet, and the quiz with an answer key"]],
   ["2.1.1", "19 Sep 2026", ["A hosted copy checks for new versions by itself"]],
   ["2.1.0", "19 Sep 2026", ["Use any OpenAI-compatible AI service, or change the model, in Settings", "Version number, this list, and an optional check for newer versions"]],
   ["2.0.0", "19 Sep 2026", ["Three-panel layout with the Pambizo AI workspace", "Notes tab with structured, editable notes", "AI features run on a Groq key; Claude optional", "Drop & Go uploads with a progress bar", "Export to PDF, Word, TXT, Markdown, SRT and VTT", "Search with highlighting and a course filter", "Course vocabulary, your own timestamped notes, playback speed, text size"]],
@@ -1690,7 +2036,8 @@ $("restoreIn").addEventListener("change", async ev => {
     if (!j || j.app !== "margin-ai-notes" || !Array.isArray(j.lectures)) throw new Error("x");
     let added = 0;
     for (const l of j.lectures){ if (!l || !l.id || DB.lectures.has(l.id) || !Array.isArray(l.segments)) continue; l.audio = []; DB.lectures.set(l.id, l); await DB.save(l); added++; }
-    S.list = await api("GET", "/api/lectures"); $("settings").close(); S.err = ""; render();
+    S.list = await api("GET", "/api/lectures");
+    for (const l of S.list.filter(x => x.deletedAt && Date.now() - x.deletedAt > 30 * 864e5)){ await api("DELETE", "/api/lectures/" + l.id + "?forever=1").catch(() => {}); S.list = S.list.filter(x => x.id !== l.id); } $("settings").close(); S.err = ""; render();
     alert(added + (added === 1 ? " lecture was" : " lectures were") + " added from the backup.");
   } catch (e){ $("setErr").hidden = false; $("setErr").textContent = "That file is not a Bizofy backup."; }
 });
@@ -1702,10 +2049,12 @@ function runSearch(){
   clearTimeout(searchTimer);
   const q = $("search").value.trim(); S.q = q;
   if (q.length < 2){ S.search = null; if (S.hl){ S.hl = ""; return render(); } return renderList(); }
-  searchTimer = setTimeout(async () => { try { S.search = await api("GET", "/api/search?q=" + encodeURIComponent(q) + "&course=" + encodeURIComponent(S.course || "")); renderList(); } catch (x){} }, 220);
+  searchTimer = setTimeout(async () => { try { S.search = await api("GET", "/api/search?q=" + encodeURIComponent(q) + "&view=" + S.view); renderList(); } catch (x){} }, 220);
 }
 $("search").addEventListener("input", runSearch);
-$("courseFilter").addEventListener("change", e => { S.course = e.target.value; if (S.q && S.q.length > 1) runSearch(); else renderList(); });
+$("newNoteBtn").addEventListener("click", () => { closeDrawers(); newLecture({ kind: "note", title: "Untitled note" }).catch(fail); });
+$("newFolderBtn").addEventListener("click", () => newFolder());
+$("exportDlg").addEventListener("click", e => { const k = e.target && e.target.getAttribute && e.target.getAttribute("data-exp"); if (k) exportAs(k); });
 $("openSide").addEventListener("click", () => { document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); });
 $("openPam").addEventListener("click", () => { document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); });
 $("scrim").addEventListener("click", closeDrawers);
