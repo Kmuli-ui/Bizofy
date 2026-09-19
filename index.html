@@ -1,0 +1,1746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bizofy — Ai Notes</title>
+<meta name="theme-color" content="#14233B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Bizofy">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9Ijk2IiBmaWxsPSIjMTQyMzNCIi8+PHJlY3QgeD0iOTYiIHk9IjI3MCIgd2lkdGg9IjMyMCIgaGVpZ2h0PSI5MiIgcng9IjEwIiBmaWxsPSIjRkZEODRBIi8+PHRleHQgeD0iMjU2IiB5PSIzNjYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCxIZWx2ZXRpY2Esc2Fucy1zZXJpZiIgZm9udC13ZWlnaHQ9IjgwMCIgZm9udC1zaXplPSIzMDAiIGZpbGw9IiNGMkY1RjgiPkI8L3RleHQ+PC9zdmc+">
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2F5F8; --sheet:#FFFFFF; --ink:#14233B; --slate:#56657A; --rule:#D5DDE6;
+  --hi:#FFD84A; --hi-soft:#FFF1B0; --rec:#C8372D; --ok:#1F7A5A; --focus:#2F6FE4; --margin:#E3A19B;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
+  --read:"Newsreader",Georgia,"Times New Roman",serif;
+  /* type scale, ratio 1.2 */
+  --t-2:.75rem; --t-1:.875rem; --t0:1rem; --t1:1.2rem; --t2:1.44rem; --t3:1.728rem; --t4:2.074rem; --t5:2.986rem;
+  --read-size:17px;
+}
+@media (prefers-color-scheme: dark){
+  :root{--paper:#0F1826; --sheet:#172235; --ink:#E8EEF6; --slate:#9AA9BC; --rule:#2A3950;
+    --hi:#F2C42E; --hi-soft:#5A4A12; --rec:#F0645A; --ok:#5CC9A2; --focus:#7FA8FF; --margin:#7A4642;}
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--display);font-size:var(--t0);line-height:1.5;font-optical-sizing:auto;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+[hidden]{display:none!important}
+h1,h2,h3{text-wrap:balance}
+mark{background:var(--hi);color:#14233B;border-radius:2px;padding:0 1px}
+
+/* layout: library | lecture || margin */
+.app{display:grid;grid-template-columns:272px minmax(0,1fr) 384px;min-height:100%}
+.side{border-right:1px solid var(--rule);padding:22px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;overflow:auto}
+.pam{border-left:4px double var(--margin);padding:22px 20px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;min-width:0;background:var(--paper)}
+main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:100%;margin:0 auto}
+.topbar,.scrim{display:none}
+
+.brand{font-weight:800;font-size:var(--t3);letter-spacing:-.035em;line-height:1}
+.brand span{background:linear-gradient(transparent 56%,var(--hi) 56%);padding:0 .14em}
+.brand em{font-style:normal;font-weight:400;color:var(--slate);font-size:var(--t0);letter-spacing:0}
+.brand.small{font-size:var(--t1)}
+.brand-sub{color:var(--slate);font-size:var(--t-1);margin-top:7px}
+.btn{border:1.5px solid var(--ink);background:transparent;border-radius:8px;padding:9px 15px;font-weight:600;font-size:var(--t-1);letter-spacing:.005em;text-decoration:none;color:inherit;display:inline-block;line-height:1.3}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.solid{background:var(--ink);color:var(--paper)}
+.btn.solid:hover{opacity:.88}
+.btn.quiet{border-color:var(--rule);font-weight:500;padding:6px 11px}
+.btn.quiet:hover{background:var(--rule);color:var(--ink)}
+.btn:disabled,.chip:disabled{opacity:.45;cursor:not-allowed}
+.search{width:100%;border:1.5px solid var(--rule);border-radius:8px;background:var(--sheet);padding:8px 10px;font-size:var(--t-1)}
+.course{font-size:var(--t-2);color:var(--slate);margin:16px 0 4px;font-weight:600;letter-spacing:.01em}
+.lec,.hit{display:block;width:100%;text-align:left;background:none;border:0;border-left:3px solid transparent;padding:7px 10px;border-radius:0 6px 6px 0;font-size:var(--t-1);line-height:1.35}
+.lec{font-weight:500}
+.lec:hover,.hit:hover{background:var(--sheet)}
+.lec[aria-current="true"]{border-left-color:var(--hi);background:var(--sheet);font-weight:700}
+.lec small{display:block;color:var(--slate);font-weight:400;font-size:var(--t-2);margin-top:1px}
+.hit{font-family:var(--read);font-size:var(--t-1);color:var(--slate);padding:4px 10px 4px 22px}
+.hit-t{font-family:var(--display);font-size:var(--t-2);font-variant-numeric:tabular-nums;margin-right:6px;color:var(--ink)}
+.store{margin-top:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.keynote{font-size:var(--t-2);background:var(--hi-soft);border-radius:8px;padding:8px 10px;line-height:1.4}
+
+.empty{max-width:36rem;margin-top:6vh}
+.empty h1{font-size:clamp(var(--t4),5vw,var(--t5));font-weight:800;letter-spacing:-.04em;line-height:1;margin:0 0 18px}
+.empty p{font-family:var(--read);font-size:var(--t1);line-height:1.6;color:var(--slate);margin:0 0 24px}
+.empty .drop{margin-top:28px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.end{justify-content:flex-end;margin-top:18px}
+.row.between{justify-content:space-between}
+.hint{color:var(--slate);font-size:var(--t-1);line-height:1.45}
+
+.head input{border:0;background:transparent;width:100%;padding:2px 0}
+.course-row{flex-wrap:nowrap}
+.course-row .btn{white-space:nowrap;flex:none}
+.head .course-in{color:var(--slate);font-size:var(--t0);font-weight:500}
+.head .title-in{font-size:clamp(var(--t3),3.6vw,var(--t4));font-weight:800;letter-spacing:-.035em;line-height:1.08;margin-top:2px}
+.head input:hover,.head input:focus{box-shadow:0 1.5px 0 var(--rule)}
+.meta{color:var(--slate);font-size:var(--t-1);margin:8px 0 20px;justify-content:space-between}
+.meta-bits{display:flex;gap:18px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary::after{content:"";display:inline-block;margin-left:7px;border:4px solid transparent;border-top-color:currentColor;transform:translateY(2px)}
+.menu-list{position:absolute;right:0;top:calc(100% + 6px);z-index:6;background:var(--sheet);border:1.5px solid var(--ink);border-radius:10px;padding:6px;min-width:190px;display:flex;flex-direction:column}
+.menu-list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:var(--t-1)}
+.menu-list button:hover{background:var(--hi-soft)}
+
+.deck{background:#14233B;color:#F2F5F8;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;position:sticky;top:10px;z-index:3}
+.recbtn{width:64px;height:64px;border-radius:50%;border:2px solid #F2F5F8;background:transparent;display:grid;place-items:center}
+.recbtn i{display:block;width:26px;height:26px;border-radius:50%;background:#E0483D;transition:border-radius .15s,transform .15s}
+.recbtn[aria-pressed="true"] i{border-radius:5px;transform:scale(.8)}
+.recbtn:focus-visible{outline-color:var(--hi)}
+.clock{font-size:var(--t3);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.015em;line-height:1.1}
+.clock small{font-size:var(--t-1);font-weight:400;opacity:.65}
+.live{opacity:.82;font-size:var(--t-1);min-height:1.4em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meter{height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin-top:8px;overflow:hidden;max-width:320px}
+.meter b{display:block;height:100%;width:0;background:#FFD84A;border-radius:2px;transition:width .08s linear}
+.side-ctl{display:flex;flex-direction:column;gap:8px;align-items:stretch}
+.flag{background:#FFD84A;color:#14233B;border:0;border-radius:8px;padding:9px 12px;font-weight:600;font-size:var(--t-1)}
+.flag:disabled{opacity:.4;cursor:not-allowed}
+.flag.hit{box-shadow:0 0 0 3px rgba(255,216,74,.45)}
+.deck select{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 6px;font-size:var(--t-2)}
+.deck select option{color:#14233B}
+.player{grid-column:1/-1;display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.15);padding-top:12px}
+.player button{background:transparent;border:1px solid rgba(255,255,255,.4);color:inherit;border-radius:6px;padding:4px 12px;min-width:60px;font-size:var(--t-1);font-variant-numeric:tabular-nums}
+.player input[type=range]{width:100%;accent-color:#FFD84A}
+@media (prefers-reduced-motion:no-preference){
+  .recbtn[aria-pressed="true"]{animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(224,72,61,.3)}}
+}
+.notice{font-size:var(--t-1);color:var(--slate);margin:10px 0 0}
+.notice.err{color:var(--rec)}
+.note-row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px}
+.note-in{border:1.5px solid var(--rule);border-left:4px solid var(--hi);border-radius:8px;background:var(--sheet);padding:9px 12px;font-family:var(--read);font-size:1.0625rem}
+
+.tabs{display:flex;gap:4px;margin:24px 0 0;border-bottom:1.5px solid var(--ink);overflow-x:auto}
+.tab{border:0;background:none;padding:9px 15px;font-weight:600;font-size:var(--t-1);color:var(--slate);border-radius:8px 8px 0 0;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-top:0;border-radius:0 0 14px 14px;padding:clamp(16px,2.6vw,34px)}
+.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px;font-size:var(--t-1)}
+.sizer{display:flex;gap:4px;flex:none}
+.sizer .btn{padding:4px 9px}
+
+/* transcript: timestamps sit in the page's own margin */
+.seg,.mark-row{display:grid;grid-template-columns:58px minmax(0,1fr) 24px;gap:12px;padding:4px 0;align-items:baseline}
+.ts{border:0;background:none;text-align:right;color:var(--slate);font-size:var(--t-2);font-variant-numeric:tabular-nums;padding:2px 4px;border-radius:4px}
+.ts:not(:disabled):hover{background:var(--rule);color:var(--ink)}
+.ts:disabled{cursor:default}
+.tx{font-family:var(--read);font-size:var(--read-size);line-height:1.68;max-width:66ch;outline:none;border-radius:2px;hanging-punctuation:first}
+.mk{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--rule);background:transparent;padding:0;align-self:start;margin-top:.45em}
+.mk:hover{border-color:var(--hi);background:var(--hi-soft)}
+.seg.on .mk{background:var(--hi);border-color:var(--hi)}
+.seg.on .tx{background:var(--hi-soft);box-shadow:-4px 0 0 var(--hi-soft),4px 0 0 var(--hi-soft)}
+.seg.on .ts{color:var(--ink);font-weight:600}
+.seg.now .ts{color:var(--rec);font-weight:600}
+.jump .tx{outline:2px solid var(--focus);outline-offset:3px}
+.mark-body{border-left:3px solid var(--hi);padding-left:12px}
+.mark-who{display:block;font-size:var(--t-2);font-weight:600;color:var(--slate)}
+.mark-row .tx{font-style:italic}
+.del{border:0;background:none;color:var(--slate);font-size:var(--t1);line-height:1;padding:0;align-self:start}
+.del:hover{color:var(--rec)}
+.failed{border:1.5px solid var(--rec);border-radius:8px;padding:10px 12px;margin:10px 0;font-size:var(--t-1);justify-content:space-between}
+
+.drop{border:2px dashed var(--rule);border-radius:14px;padding:30px 24px;text-align:center;margin-top:26px;display:flex;flex-direction:column;gap:10px;align-items:center}
+.drop.slim{flex-direction:row;justify-content:space-between;text-align:left;padding:12px 16px;border-width:1.5px}
+.drop.busy{border-style:solid;border-color:var(--ink)}
+.drop-title{font-weight:700;font-size:var(--t1);margin:0;letter-spacing:-.01em}
+.drop.slim .drop-title{font-size:var(--t-1);font-weight:500;color:var(--slate)}
+.drop .hint{margin:0;max-width:52ch}
+progress{width:min(420px,100%);height:8px;accent-color:var(--ink);border-radius:4px}
+.dropveil{display:none;position:fixed;inset:0;z-index:20;background:rgba(20,35,59,.82);color:#F2F5F8;place-items:center;pointer-events:none}
+.dropveil p{font-size:var(--t4);font-weight:800;letter-spacing:-.03em;border:3px dashed #FFD84A;border-radius:20px;padding:40px 56px;margin:0}
+body.dragging .dropveil{display:grid}
+.add{margin-top:16px}
+.add summary,dialog summary{cursor:pointer;font-weight:600;font-size:var(--t-1)}
+textarea{width:100%;border:1.5px solid var(--rule);border-radius:8px;background:var(--paper);padding:10px 12px;resize:vertical}
+.add textarea{min-height:130px;font-family:var(--read);font-size:1rem;margin:12px 0}
+.notes-edit{min-height:52vh;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:var(--t-1);line-height:1.6;margin:10px 0}
+
+.gate{margin-bottom:8px}
+.read h2{font-size:var(--t1);font-weight:800;margin:30px 0 8px;letter-spacing:-.015em;line-height:1.2}
+.read h3{font-size:var(--t0);font-weight:700;margin:20px 0 6px;line-height:1.3}
+.read p,.read li,.read dd{font-family:var(--read);font-size:var(--read-size);line-height:1.66;max-width:66ch}
+.read p{margin:0 0 10px}
+.read ul{padding-left:1.25em;margin:0 0 6px}
+.read ul ul{margin-top:2px}
+.read li{margin:4px 0}
+.read li::marker{color:var(--slate)}
+.read dt{font-weight:700;margin-top:12px}
+.read dd{margin:0}
+.read li.todo{list-style:"☐  "}
+.read li.todo.done{list-style:"☑  ";color:var(--slate)}
+.read strong{font-weight:600;background:linear-gradient(transparent 62%,var(--hi-soft) 62%)}
+.tsl{border:0;background:var(--hi-soft);color:var(--ink);border-radius:4px;padding:0 5px;font-family:var(--display);font-size:var(--t-2);font-variant-numeric:tabular-nums;vertical-align:.08em}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:14px}
+.card{min-height:150px;border:1.5px solid var(--ink);border-radius:10px;background:var(--sheet);padding:16px;text-align:left;display:flex;flex-direction:column;gap:8px}
+.card b{font-size:var(--t-2);color:var(--slate);font-weight:600}
+.card span{font-family:var(--read);font-size:1.0625rem;line-height:1.45}
+.card.back{background:var(--hi-soft)}
+.quiz{margin-top:30px}
+.q{border-top:1px solid var(--rule);padding:16px 0}
+.q p{font-weight:600;margin:0 0 10px;max-width:66ch;font-family:var(--display);font-size:var(--t0)}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--rule);background:transparent;border-radius:8px;padding:8px 12px;margin:6px 0;font-family:var(--read);font-size:1rem}
+.opt.right{border-color:var(--ok);box-shadow:inset 4px 0 0 var(--ok)}
+.opt.wrong{border-color:var(--rec);box-shadow:inset 4px 0 0 var(--rec)}
+.why{font-family:var(--read);color:var(--slate);margin:8px 0 0;max-width:66ch}
+.score{font-weight:700;margin-top:12px}
+
+/* Pambizo */
+.pam-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.pam-head h2{margin:0;font-size:var(--t2);font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.pam-head .hint{margin:4px 0 0}
+.pam-close{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid var(--rule);background:var(--sheet);border-radius:999px;padding:5px 12px;font-size:var(--t-2);font-weight:500}
+.chip:not(:disabled):hover{border-color:var(--ink)}
+.chat{display:flex;flex-direction:column;gap:12px;flex:1;min-height:0;overflow:auto;padding:4px 2px 4px 0}
+.msg{font-family:var(--read);font-size:1.0625rem;line-height:1.58;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;max-width:88%;background:var(--ink);color:var(--paper);border-radius:12px 12px 2px 12px;padding:7px 13px;font-family:var(--display);font-size:var(--t-1);line-height:1.4}
+.copy{align-self:flex-start;border:0;background:none;color:var(--slate);font-size:var(--t-2);padding:0;margin-top:-8px;text-decoration:underline;text-underline-offset:2px}
+.composer{display:flex;flex-direction:column;gap:8px}
+.composer textarea{background:var(--sheet);font-size:var(--t-1);min-height:58px;max-height:30vh}
+.composer select{border:1.5px solid var(--rule);border-radius:8px;background:var(--sheet);padding:6px 8px;font-size:var(--t-2)}
+.pam .notice{margin:0}
+
+dialog{border:0;border-radius:14px;padding:26px;background:var(--sheet);color:var(--ink);width:min(480px,92vw);box-shadow:0 24px 60px rgba(10,20,40,.35)}
+dialog::backdrop{background:rgba(10,20,40,.55)}
+dialog h2{margin:0 0 6px;font-weight:800;letter-spacing:-.025em;font-size:var(--t2)}
+dialog label{display:block;font-size:var(--t-1);font-weight:600;margin-top:14px}
+dialog input,dialog select{display:block;width:100%;margin-top:5px;border:1.5px solid var(--rule);border-radius:8px;background:var(--paper);padding:9px 10px;font-weight:400}
+dialog details{margin-top:16px}
+dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
+.ver{font-size:var(--t-2);color:var(--slate);font-variant-numeric:tabular-nums}
+.keynote a{color:inherit;font-weight:600}
+.changes ul{margin:2px 0 10px;padding-left:1.2em;font-size:var(--t-1);color:var(--slate)}
+.ver-head{font-weight:700;margin:12px 0 0;font-size:var(--t-1)}
+.ver-head span{font-weight:400;color:var(--slate);margin-left:8px}
+.backup{border-top:1px solid var(--rule);margin-top:18px;padding-top:14px}
+
+/* narrower screens: the margin and the library slide in */
+@media (max-width:1180px){
+  .app{grid-template-columns:272px minmax(0,1fr)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:8;background:var(--paper)}
+  #openSide{visibility:hidden}
+  .side,.deck{top:57px}
+  .side{height:calc(100vh - 57px)}
+  .pam{position:fixed;top:0;right:0;bottom:0;width:min(420px,94vw);height:auto;z-index:12;transform:translateX(104%);transition:transform .2s ease;box-shadow:-18px 0 50px rgba(10,20,40,.25)}
+  body.show-pam .pam{transform:none}
+  .pam-close{display:inline-block}
+  body.show-pam .scrim,body.show-side .scrim{display:block;position:fixed;inset:0;z-index:11;background:rgba(10,20,40,.45)}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  #openSide{visibility:visible}
+  .side{position:fixed;top:0;left:0;bottom:0;height:auto;width:min(320px,88vw);z-index:12;background:var(--paper);transform:translateX(-104%);transition:transform .2s ease}
+  body.show-side .side{transform:none}
+  main{padding:18px 14px 64px}
+  .deck{grid-template-columns:auto 1fr;top:57px;border-radius:12px}
+  .side-ctl{grid-column:1/-1;flex-direction:row}
+  .side-ctl>*{flex:1}
+  .seg,.mark-row{grid-template-columns:44px minmax(0,1fr) 22px;gap:8px}
+  .course-row{flex-wrap:wrap}
+  .drop.slim{flex-direction:column;text-align:center}
+  .dropveil p{font-size:var(--t2);padding:24px}
+}
+@media (prefers-reduced-motion:reduce){.pam,.side{transition:none}}
+@media print{
+  .side,.pam,.deck,.tabs,.add,.drop,.note-row,.toolbar,.topbar,.meta .row,.mk,.del,.gate,.dropveil{display:none!important}
+  .app{display:block}.panel{border:0;padding:0}main{max-width:none;padding:0}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <button class="btn quiet" id="openSide">Lectures</button>
+  <div class="brand small"><span>Bizofy</span></div>
+  <button class="btn quiet" id="openPam">Pambizo</button>
+</header>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="brand-block">
+      <div class="brand"><span>Bizofy</span> <em>Ai Notes</em></div>
+      <div class="brand-sub">Record a class. Get the notes.</div>
+    </div>
+    <button class="btn solid" id="newBtn">New lecture</button>
+    <input class="search" id="search" type="search" placeholder="Search every transcript" aria-label="Search every transcript">
+    <select class="search" id="courseFilter" aria-label="Show one course" hidden></select>
+    <nav id="list" aria-label="Lectures"></nav>
+    <div class="store">
+      <div id="update" class="keynote" hidden></div>
+      <div id="keyNote" class="keynote" hidden></div>
+      <button class="btn quiet" id="settingsBtn">Settings and backup</button>
+      <div class="ver" id="ver"></div>
+    </div>
+  </aside>
+  <main id="main"></main>
+  <aside class="pam" id="pam" aria-label="Pambizo, the AI workspace"></aside>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="dropveil" aria-hidden="true"><p>Drop to add to Bizofy</p></div>
+
+<dialog id="settings" aria-labelledby="setTitle">
+  <form method="dialog" id="setForm">
+    <h2 id="setTitle">Settings</h2>
+    <p class="hint">Your keys and lectures stay in this browser on this device. Keys are only sent to the service they belong to.</p>
+    <label>Speech-to-text service
+      <select name="provider">
+        <option value="groq">Groq (whisper-large-v3), cheaper and faster</option>
+        <option value="openai">OpenAI (whisper-1)</option>
+        <option value="custom">Other Whisper-compatible service</option>
+      </select>
+    </label>
+    <label>Speech-to-text API key <input name="transcribeKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
+    <label>AI for notes, summaries and Pambizo
+      <select name="aiProvider">
+        <option value="auto">Automatic: Claude if it has a key, otherwise Groq</option>
+        <option value="claude">Claude (best quality, needs an Anthropic key)</option>
+        <option value="groq">Groq (works with your Groq key)</option>
+        <option value="custom">Another service (set it up under Advanced)</option>
+      </select>
+    </label>
+    <p class="hint" id="aiNow" style="margin:6px 0 0"></p>
+    <label>Anthropic API key, for Claude (optional) <input name="anthropicKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
+    <details>
+      <summary>Advanced</summary>
+      <label>Separate Groq key for the AI <input name="groqAiKey" type="password" autocomplete="off"></label>
+      <label>Groq AI model, leave blank to pick automatically <input name="groqModel" type="text" autocomplete="off"></label>
+      <label>Claude model <input name="claudeModel" type="text" autocomplete="off"></label>
+      <p class="hint" style="margin:16px 0 0">Another AI service. Any service that speaks the OpenAI chat format works, for example OpenAI (https://api.openai.com/v1) or OpenRouter (https://openrouter.ai/api/v1). Choose "Another service" above to use it.</p>
+      <label>AI service address <input name="aiBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
+      <label>AI service key <input name="aiKey" type="password" autocomplete="off"></label>
+      <label>AI service model <input name="aiModel" type="text" autocomplete="off" placeholder="The model's exact name"></label>
+      <label>Speech-to-text model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
+      <label>Speech-to-text base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
+      <label>Address to check for new versions (optional) <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
+    </details>
+    <details>
+      <summary>What is new in this version</summary>
+      <div id="changes" class="changes"></div>
+    </details>
+    <div class="backup">
+      <p class="hint" id="usage">Lectures are stored on this device only.</p>
+      <div class="row">
+        <button type="button" class="btn quiet" id="backupBtn">Download a backup</button>
+        <button type="button" class="btn quiet" id="restoreBtn">Restore a backup</button>
+        <input type="file" id="restoreIn" accept=".json,application/json" hidden>
+      </div>
+      <p class="hint">Backups hold transcripts, highlights and notes, not audio. Use one to move lectures to another device.</p>
+    </div>
+    <p class="notice err" id="setErr" hidden></p>
+    <div class="row end">
+      <button class="btn quiet" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn solid" id="setSave" value="save">Save settings</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="vocab" aria-labelledby="vocabTitle">
+  <form method="dialog" id="vocabForm">
+    <h2 id="vocabTitle">Course vocabulary</h2>
+    <p class="hint">Names and terms the transcriber should know for <strong id="vocabCourse"></strong>, separated by commas. For example: ICER, QALY, Drummond, Infoway. It applies to recordings made from now on.</p>
+    <textarea id="vocabText" rows="5" aria-label="Course vocabulary"></textarea>
+    <div class="row end">
+      <button class="btn quiet" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn solid" value="save">Save vocabulary</button>
+    </div>
+  </form>
+</dialog>
+<script>
+(() => {
+"use strict";
+
+/* ---------- helpers ---------- */
+function h(tag, attrs, ...kids){
+  const el = document.createElement(tag);
+  for (const k in (attrs || {})){
+    const v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2), v);
+    else if (k === "value") el.value = v;
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const kid of kids.flat(Infinity)){
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const $ = id => document.getElementById(id);
+const fmt = s => {
+  s = Math.max(0, Math.floor(s || 0));
+  const hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
+  return (hh ? hh + ":" + String(mm).padStart(2, "0") : mm) + ":" + String(ss).padStart(2, "0");
+};
+const parseTs = str => str.split(":").map(Number).reduce((a, n) => a * 60 + n, 0);
+
+/* ---------- on-device backend ---------- */
+class AppError extends Error { constructor(message, data){ super(message); this.data = data || {}; } }
+const PRESETS = {
+  openai: { base: "https://api.openai.com/v1", model: "whisper-1" },
+  groq: { base: "https://api.groq.com/openai/v1", model: "whisper-large-v3" }
+};
+const MAX_DIRECT = 24 * 1024 * 1024, SPLIT_SEC = 600;
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+const DB = {
+  db: null, lectures: new Map(), settings: {},
+  open(){
+    return new Promise((resolve, reject) => {
+      const rq = indexedDB.open("margin-ai-notes", 1);
+      rq.onupgradeneeded = () => { const d = rq.result; d.createObjectStore("lectures", { keyPath: "id" }); d.createObjectStore("audio"); d.createObjectStore("kv"); };
+      rq.onsuccess = () => resolve(rq.result);
+      rq.onerror = () => reject(new AppError("This browser is blocking storage for this page. Leave private browsing, or open the file in Chrome."));
+    });
+  },
+  tx(store, mode, fn){
+    return new Promise((resolve, reject) => {
+      const t = this.db.transaction(store, mode), out = fn(t.objectStore(store));
+      t.oncomplete = () => resolve(out && "result" in out ? out.result : undefined);
+      t.onerror = t.onabort = () => reject(new AppError(t.error && t.error.name === "QuotaExceededError" ? "This device is out of storage space for Bizofy. Delete old lectures or free up space." : "Saving on this device failed."));
+    });
+  },
+  async init(){
+    this.db = await this.open();
+    const all = await this.tx("lectures", "readonly", s => s.getAll());
+    all.forEach(l => this.lectures.set(l.id, l));
+    this.settings = (await this.tx("kv", "readonly", s => s.get("settings"))) || {};
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  },
+  save(lec){ lec.updatedAt = Date.now(); return this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); },
+  async remove(lec){
+    await this.tx("lectures", "readwrite", s => s.delete(lec.id));
+    await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); });
+    this.lectures.delete(lec.id);
+  },
+  async putAudio(id, n, blob){ const buf = await blob.arrayBuffer(); return this.tx("audio", "readwrite", s => s.put({ buf, type: blob.type }, id + ":" + n)); },
+  async getAudio(id, n){ const r = await this.tx("audio", "readonly", s => s.get(id + ":" + n)); return r ? new Blob([r.buf], { type: r.type }) : null; },
+  saveSettings(){ return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
+};
+function cfg(){
+  const s = DB.settings, provider = s.provider || "groq", p = PRESETS[provider] || PRESETS.openai;
+  const gKey = s.groqAiKey || (provider === "groq" ? s.transcribeKey : "") || "";
+  let ai = s.aiProvider || "auto";
+  if (ai === "auto") ai = s.anthropicKey ? "claude" : "groq";
+  return { provider, tKey: s.transcribeKey || "", tBase: (s.transcribeBaseUrl || p.base).replace(/\/+$/, ""), tModel: s.transcribeModel || p.model,
+    aKey: s.anthropicKey || "", aModel: s.claudeModel || "claude-sonnet-5", ai, gKey, gModel: s.groqModel || "",
+    xBase: (s.aiBaseUrl || "").replace(/\/+$/, ""), xKey: s.aiKey || "", xModel: s.aiModel || "" };
+}
+const mask = k => (k ? "••••" + k.slice(-4) : "");
+function getLec(id){ const l = DB.lectures.get(id); if (!l) throw new AppError("That lecture no longer exists."); return l; }
+
+/* transcription */
+async function whisper(blob, filename, opts){
+  const c = cfg();
+  if (!c.tKey) throw new AppError("Add a speech-to-text key in Settings. The audio is saved, so you can transcribe it afterwards.");
+  const verbose = !/^gpt-4o/.test(c.tModel), fd = new FormData();
+  fd.append("file", blob, filename);
+  fd.append("model", c.tModel);
+  fd.append("response_format", verbose ? "verbose_json" : "json");
+  fd.append("temperature", "0");
+  if (opts.language && opts.language !== "auto") fd.append("language", opts.language);
+  if (opts.prompt) fd.append("prompt", opts.prompt.slice(0, 600));
+  let r;
+  try { r = await fetch(c.tBase + "/audio/transcriptions", { method: "POST", headers: { Authorization: "Bearer " + c.tKey }, body: fd }); }
+  catch (e){ const err = new AppError("No connection to the transcription service. The audio is saved; it will be transcribed when you are back online."); err.offline = true; throw err; }
+  const raw = await r.text(); let j = null; try { j = JSON.parse(raw); } catch (e){}
+  if (!r.ok){
+    const why = (j && j.error && (j.error.message || j.error)) || raw.slice(0, 200) || r.statusText;
+    throw new AppError(r.status === 401 ? "The speech-to-text key was rejected. Check it in Settings." : r.status === 429 ? "The transcription service is rate limiting this key. Wait a minute, then try again." : "Transcription failed: " + why);
+  }
+  if (!j) return { segments: [], duration: 0 };
+  let segs = Array.isArray(j.segments) ? j.segments.filter(s => !(s.no_speech_prob > 0.6 && s.avg_logprob < -1)).map(s => ({ start: +s.start || 0, end: +s.end || 0, text: String(s.text || "").trim() })) : [];
+  if (!segs.length && j.text && String(j.text).trim()) segs = [{ start: 0, end: +j.duration || 0, text: String(j.text).trim() }];
+  return { segments: segs.filter(s => s.text), duration: +j.duration || (segs.length ? segs[segs.length - 1].end : 0) };
+}
+function paragraphs(segs){
+  const out = []; let cur = null;
+  for (const s of segs){
+    if (!cur){ cur = { ...s }; continue; }
+    const long = cur.text.length > 260 && /[.!?…]["')\]]?$/.test(cur.text);
+    if (long || cur.text.length > 480 || s.start - cur.end > 4){ out.push(cur); cur = { ...s }; }
+    else { cur.text += " " + s.text; cur.end = s.end; }
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+const extFor = (mime, name) => {
+  const e = ((name || "").split(".").pop() || "").toLowerCase();
+  if (/^(mp3|m4a|mp4|wav|webm|ogg|oga|flac|mpeg|mpga|aac)$/.test(e)) return e;
+  return /mp4|m4a|aac/.test(mime) ? "m4a" : /ogg/.test(mime) ? "ogg" : /wav/.test(mime) ? "wav" : /mpeg|mp3/.test(mime) ? "mp3" : "webm";
+};
+function addPart(lec, mime, offset, dur, flags, name){
+  lec.audio = lec.audio || [];
+  const n = lec.audio.reduce((m, a) => Math.max(m, a.n), 0) + 1;
+  lec.audio.push({ n, file: "part" + n + "." + extFor(mime, name), mime, offset, dur, flags: flags || [], done: false });
+  lec.duration = Math.max(lec.duration || 0, offset + dur);
+  return n;
+}
+async function transcribePart(id, n){
+  const lec = getLec(id), part = (lec.audio || []).find(a => a.n === n);
+  if (!part) throw new AppError("That recording part no longer exists.");
+  const blob = await DB.getAudio(id, n);
+  if (!blob) throw new AppError("The audio for that part is missing on this device.");
+  const vocab = getVocab(lec.course).slice(0, 340);
+  const prompt = (vocab ? "Terms: " + vocab + ". " : "") + lec.segments.filter(s => s.t != null && s.t < part.offset).slice(-3).map(s => s.text).join(" ").slice(-240);
+  let result;
+  try { result = await whisper(blob, part.file, { language: lec.language, prompt }); }
+  catch (e){ part.done = false; part.error = e.message; part.offline = !!e.offline; await DB.save(lec); e.data = { lecture: lec }; throw e; }
+  part.done = true; delete part.error; delete part.offline;
+  if (!part.dur) part.dur = result.duration;
+  lec.duration = Math.max(lec.duration || 0, part.offset + (part.dur || 0));
+  lec.segments = lec.segments.filter(s => s.part !== n);
+  for (const s of paragraphs(result.segments)) lec.segments.push({ id: newId("s"), t: Math.round(part.offset + s.start), end: Math.round(part.offset + s.end), text: s.text, flag: false, part: n });
+  lec.segments.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t));
+  // "Mark as important" presses highlight what was being said just before the press.
+  for (const f of part.flags || []) for (const s of lec.segments) if (s.part === n || s.part === n - 1) if (s.t != null && s.t <= f + 1 && (s.end == null ? s.t + 20 : s.end) >= f - 5) s.flag = true;
+  await DB.save(lec);
+  return lec;
+}
+
+/* splitting long uploads in the browser: decode, mix to mono 16 kHz, cut into 10-minute WAV files */
+function wavBlob(samples, rate){
+  const buf = new ArrayBuffer(44 + samples.length * 2), v = new DataView(buf);
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + samples.length * 2, true); str(8, "WAVEfmt "); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); str(36, "data"); v.setUint32(40, samples.length * 2, true);
+  for (let i = 0; i < samples.length; i++){ const x = Math.max(-1, Math.min(1, samples[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
+  return new Blob([buf], { type: "audio/wav" });
+}
+async function splitAudio(file){
+  const RATE = 16000, Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  let decoded;
+  try { decoded = await new Ctx(1, RATE, RATE).decodeAudioData(await file.arrayBuffer()); }
+  catch (e){ throw new AppError("This browser could not open that file to split it. Try an MP3 or M4A file, or a shorter recording."); }
+  const len = decoded.length, mono = new Float32Array(len), ch = decoded.numberOfChannels;
+  for (let c = 0; c < ch; c++){ const d = decoded.getChannelData(c); for (let i = 0; i < len; i++) mono[i] += d[i] / ch; }
+  const rate = decoded.sampleRate, per = SPLIT_SEC * rate, parts = [];
+  for (let at = 0; at < len; at += per) parts.push({ blob: wavBlob(mono.subarray(at, Math.min(len, at + per)), rate), dur: (Math.min(len, at + per) - at) / rate });
+  return parts;
+}
+
+/* Claude */
+/* AI: runs on Claude or on Groq, whichever key is available */
+const GROQ_BASE = "https://api.groq.com/openai/v1";
+const sleep = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); if (signal) signal.addEventListener("abort", () => { clearTimeout(t); rej(Object.assign(new Error("aborted"), { name: "AbortError" })); }, { once: true }); });
+let groqPicked = null;
+async function groqModel(c){
+  if (c.gModel) return c.gModel;
+  if (groqPicked) return groqPicked;
+  try {
+    const r = await fetch(GROQ_BASE + "/models", { headers: { Authorization: "Bearer " + c.gKey } });
+    const ids = (((await r.json()).data) || []).map(m => m.id).filter(id => !/whisper|guard|tts|playai|embed|compound|vision|scout|maverick-vision/i.test(id));
+    for (const re of [/llama-3\.3-70b/i, /gpt-oss-120b/i, /llama.*70b/i, /qwen.*32b/i, /kimi/i, /gpt-oss-20b/i, /llama/i]){ const hit = ids.find(id => re.test(id)); if (hit) return (groqPicked = hit); }
+    if (ids[0]) return (groqPicked = ids[0]);
+  } catch (e){}
+  return (groqPicked = "llama-3.3-70b-versatile");
+}
+async function readSSE(r, pick, onText){
+  const reader = r.body.getReader(), dec = new TextDecoder(); let buf = "", out = "";
+  for (;;){
+    const { value, done } = await reader.read(); if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split("\n"); buf = lines.pop();
+    for (const line of lines){
+      if (!line.startsWith("data:")) continue;
+      let ev; try { ev = JSON.parse(line.slice(5)); } catch (e){ continue; }
+      const t = pick(ev); if (t){ out += t; onText(out); }
+    }
+  }
+  return out;
+}
+async function llmClaude(c, o){
+  if (!c.aKey) throw new AppError("Add an AI key in Settings: a Groq key or an Anthropic key.");
+  const system = [{ type: "text", text: o.system }];
+  if (o.context) system.push({ type: "text", text: o.context, cache_control: { type: "ephemeral" } });
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", signal: o.signal,
+      headers: { "content-type": "application/json", "x-api-key": c.aKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+      body: JSON.stringify({ model: c.aModel, max_tokens: o.max || 4096, system, messages: o.messages, stream: !!o.onText }) });
+  } catch (e){ if (e.name === "AbortError") throw e; throw new AppError("Could not reach Claude. Check the internet connection."); }
+  if (!r.ok){
+    let why = r.statusText; try { const j = await r.json(); why = (j.error && j.error.message) || why; } catch (e){}
+    throw new AppError(r.status === 401 ? "The Anthropic API key was rejected. Check it in Settings."
+      : r.status === 404 ? 'Claude does not know the model "' + c.aModel + '". Change it in Settings, under Advanced.'
+      : r.status === 429 ? "Claude is rate limiting this key. Wait a minute, then try again." : "Claude returned an error: " + why);
+  }
+  if (o.onText) return readSSE(r, ev => (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta" ? ev.delta.text : ""), o.onText);
+  const j = await r.json();
+  return (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+}
+async function llmOpenAI(c, o){
+  const custom = c.ai === "custom", name = custom ? "the AI service" : "Groq";
+  const base = custom ? c.xBase : GROQ_BASE, key = custom ? c.xKey : c.gKey;
+  if (custom ? !(c.xBase && c.xModel) : !key) throw new AppError(custom ? "Fill in the AI service address and model in Settings, under Advanced." : "Add an AI key in Settings: a Groq key or an Anthropic key.");
+  const model = custom ? c.xModel : await groqModel(c);
+  const body = { model, max_tokens: o.max || 2000, temperature: 0.3, stream: !!o.onText,
+    messages: [{ role: "system", content: o.system + (o.context ? "\n\n" + o.context : "") }, ...o.messages] };
+  if (o.json) body.response_format = { type: "json_object" };
+  let waits = 0, fixes = 0;
+  for (;;){
+    let r;
+    try { r = await fetch(base + "/chat/completions", { method: "POST", signal: o.signal, headers: Object.assign({ "content-type": "application/json" }, key ? { Authorization: "Bearer " + key } : {}), body: JSON.stringify(body) }); }
+    catch (e){ if (e.name === "AbortError") throw e; throw new AppError(custom ? "Could not reach the AI service. Check the address in Settings and the internet connection. Some services do not accept requests from a web page." : "Could not reach the AI service. Check the internet connection."); }
+    if (r.ok){
+      if (o.onText) return readSSE(r, ev => (ev.choices && ev.choices[0] && ev.choices[0].delta && ev.choices[0].delta.content) || "", o.onText);
+      const j = await r.json(); return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
+    }
+    let msg = r.statusText; try { const j = await r.json(); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e){}
+    msg = String(msg);
+    if (r.status === 413 || /request too large|reduce your message size|context.length|maximum context/i.test(msg)){ const e = new AppError("This lecture is too long for the AI plan."); e.tooLarge = true; throw e; }
+    // services differ slightly in the options they accept: adapt and try again
+    if (r.status === 400 && fixes < 3){
+      if (/max_tokens/i.test(msg) && body.max_tokens){ body.max_completion_tokens = body.max_tokens; delete body.max_tokens; fixes++; continue; }
+      if (/temperature/i.test(msg) && "temperature" in body){ delete body.temperature; fixes++; continue; }
+      if (/response_format|json/i.test(msg) && body.response_format){ delete body.response_format; fixes++; continue; }
+    }
+    if (r.status === 429 && waits < 8){
+      const h = r.headers.get("retry-after"), m = /try again in (?:(\d+)m)?([\d.]+)s/i.exec(msg);
+      const secs = Math.min(90, Math.ceil(+h || (m ? (+(m[1] || 0)) * 60 + +m[2] : 20)) + 1);
+      if (o.onWait) o.onWait(secs);
+      waits++; await sleep(secs * 1000, o.signal); continue;
+    }
+    throw new AppError(r.status === 401 || r.status === 403 ? "The key for " + name + " was rejected. Check it in Settings."
+      : r.status === 404 || /model/i.test(msg) && /not (found|exist)|decommission|does not exist/i.test(msg) ? name.charAt(0).toUpperCase() + name.slice(1) + ' does not offer the model "' + model + '". Change the model in Settings, under Advanced.'
+      : r.status === 429 ? "The AI plan's rate limit is used up for now. Try again in a few minutes." : "The AI returned an error: " + msg);
+  }
+}
+const llm = o => { const c = cfg(); return c.ai === "claude" ? llmClaude(c, o) : llmOpenAI(c, o); };
+function parseJson(text){
+  const tries = [text, (text.match(/```(?:json)?\s*([\s\S]*?)```/) || [])[1], text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)];
+  for (const t of tries){ if (!t) continue; try { const v = JSON.parse(t); if (v && typeof v === "object") return v; } catch (e){} }
+  throw new AppError("The AI replied in an unexpected format. Try again.");
+}
+
+const transcriptText = lec => lec.segments.map(s => (s.flag ? "[!] " : "") + (s.t != null ? "[" + fmt(s.t) + "] " : "") + s.text).join("\n");
+const fullText = lec => transcriptText(lec) + ((lec.marks || []).length ? "\n\nThe student's own notes taken during the lecture:\n" + lec.marks.map(m => (m.t != null ? "[" + fmt(m.t) + "] " : "") + m.text).join("\n") : "");
+const headerText = lec => "Course: " + (lec.course || "not given") + "\nLecture: " + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n";
+const strs = a => (Array.isArray(a) ? a.map(String).filter(Boolean) : []);
+function chunkText(text, size){
+  const out = []; let buf = "";
+  for (const line of text.split("\n")){ if ((buf + line).length > size && buf){ out.push(buf); buf = ""; } buf += line + "\n"; }
+  if (buf.trim()) out.push(buf);
+  return out;
+}
+// Small AI plans cannot take a whole lecture at once: condense it part by part, once, and reuse the result.
+async function digest(lec, note, signal){
+  const text = fullText(lec);
+  if (text.length <= 9000) return text;
+  if (lec.digest && Math.abs(lec.digest.len - text.length) < text.length * 0.03) return lec.digest.text;
+  const chunks = chunkText(text, 9000), per = Math.max(140, Math.min(500, Math.floor(2200 / chunks.length))), out = [];
+  for (let i = 0; i < chunks.length; i++){
+    note("Condensing part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
+    out.push(await llm({ signal, max: per, system: "Condense this part of a university lecture transcript into dense notes of at most " + Math.round(per * 0.7) + " words. Keep every concept, definition, example, deadline and reading. Keep [m:ss] timestamps for key moments and keep the [!] prefix on points from lines marked [!]. Plain text.",
+      messages: [{ role: "user", content: chunks[i] }], onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit. Part " + (i + 1) + " of " + chunks.length + ".") }));
+  }
+  lec.digest = { len: text.length, text: out.join("\n") }; await DB.save(lec);
+  return lec.digest.text;
+}
+function courseContext(lec){
+  const key = (lec.course || "").trim().toLowerCase();
+  const all = [...DB.lectures.values()].filter(l => l.segments.length && (l.course || "").trim().toLowerCase() === key).sort((a, b) => a.createdAt - b.createdAt);
+  let left = 480000 - fullText(lec).length;
+  return all.map(l => {
+    let body = fullText(l);
+    if (l.id !== lec.id){
+      if (body.length > left) body = l.summary ? "(Summary only) " + l.summary.overview + "\n- " + l.summary.keyPoints.join("\n- ") : body.slice(0, 3000) + "\n(…transcript shortened)";
+      left -= body.length;
+    }
+    return "=== " + (l.id === lec.id ? "THIS LECTURE: " : "Lecture: ") + l.title + " (" + new Date(l.createdAt).toDateString() + ") ===\n" + body;
+  }).join("\n\n");
+}
+async function withContext(lec, scope, run, note, signal){
+  const c = cfg(), small = c.ai !== "claude" && DB.settings.groqSmall;
+  if (!small){
+    try { return await run(scope === "course" ? courseContext(lec) : headerText(lec) + "\nTranscript:\n" + fullText(lec)); }
+    catch (e){ if (!e.tooLarge || c.ai === "claude") throw e; DB.settings.groqSmall = true; DB.saveSettings().catch(() => {}); }
+  }
+  const d = await digest(lec, note, signal);
+  try { return await run(headerText(lec) + "\nLecture content" + (d.length < fullText(lec).length ? " (condensed, because the full transcript is too long for this AI plan)" : "") + ":\n" + d); }
+  catch (e){ if (e.tooLarge) throw new AppError("This lecture is too long for your current AI plan, even condensed. Add an Anthropic key in Settings, or upgrade the Groq plan."); throw e; }
+}
+const RULES = " Lines starting with [!] were marked important by the student: give them priority. Use only what the transcript says.";
+async function makeSummary(lec, note){
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3000, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+    system: "You write a short summary of a university lecture for a student." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["6 to 12 strings"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["readings, deadlines and tasks the lecturer mentioned; empty array if none"], "examHints": ["anything signalled as likely to be examined; empty array if none"]}',
+    messages: [{ role: "user", content: "Write the JSON summary now." }] }), note));
+  lec.summary = { overview: String(r.overview || ""), keyPoints: strs(r.keyPoints),
+    definitions: (Array.isArray(r.definitions) ? r.definitions : []).filter(d => d && d.term).map(d => ({ term: String(d.term), meaning: String(d.meaning || "") })),
+    actionItems: strs(r.actionItems), examHints: strs(r.examHints), madeAt: Date.now() };
+}
+async function makeStudy(lec, note){
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+    system: "You write study material from a university lecture that tests understanding, not trivia." + RULES + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with 12 flashcards and 6 quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
+    messages: [{ role: "user", content: "Write the JSON study material now." }] }), note));
+  lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
+    quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
+    madeAt: Date.now() };
+}
+const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
+async function makeNotes(lec, note){
+  const c = cfg(), wait = s => note("Waiting " + s + " seconds for the AI plan's rate limit.");
+  const whole = () => llm({ max: c.ai === "claude" ? 8000 : 4000, onWait: wait, context: headerText(lec) + "\nTranscript:\n" + fullText(lec),
+    system: "You turn a university lecture transcript into complete, well-organised study notes." + RULES + NOTES_STYLE + " Finish with '## Action points' as '- [ ] ' items (readings, deadlines, tasks; write '- None mentioned' if there are none) and then '## Questions to review' with 3 to 6 bullets.",
+    messages: [{ role: "user", content: "Write the notes now." }] });
+  let md;
+  if (!(c.ai !== "claude" && DB.settings.groqSmall)){
+    try { md = await whole(); } catch (e){ if (!e.tooLarge || c.ai === "claude") throw e; DB.settings.groqSmall = true; DB.saveSettings().catch(() => {}); }
+  }
+  if (md == null){
+    const chunks = chunkText(fullText(lec), 9000), parts = [];
+    for (let i = 0; i < chunks.length; i++){
+      note("Writing notes for part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
+      parts.push(await llm({ max: 900, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit. Part " + (i + 1) + " of " + chunks.length + "."),
+        system: "You turn one part of a university lecture transcript into well-organised study notes." + RULES + NOTES_STYLE + " Do not add an introduction, a conclusion, or action points.",
+        messages: [{ role: "user", content: chunks[i] }] }));
+    }
+    md = parts.join("\n\n");
+    note("Collecting action points.");
+    md += "\n\n" + await llm({ max: 500, onWait: wait, system: "From these lecture notes, write '## Action points' as '- [ ] ' items (readings, deadlines, tasks; '- None mentioned' if none), then '## Questions to review' with 3 to 6 '- ' bullets. Markdown only, nothing else.", messages: [{ role: "user", content: md.slice(0, 9000) }] });
+  }
+  lec.notes = { md: md.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(), madeAt: Date.now() };
+}
+function askAI(lec, question, scope, signal, onText, note){
+  const history = (lec.chat || []).slice(-13, -1).map(m => ({ role: m.role, content: m.content }));
+  while (history.length && history[0].role !== "user") history.shift();
+  return withContext(lec, scope, ctx => llm({ max: 2000, signal, onText, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly. Be concise. Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Plain text only: no Markdown symbols; use simple dashes for lists.",
+    messages: [...history, { role: "user", content: question }] }), note, signal);
+}
+
+/* ---------- documents and exports ---------- */
+// Markdown notes -> simple blocks. k: h2 | h3 | li | todo | p ; lvl for nesting; t keeps **bold** markers.
+function mdBlocks(md){
+  const out = [];
+  for (const raw of String(md || "").replace(/\r/g, "").split("\n")){
+    if (!raw.trim()) continue;
+    let m;
+    if ((m = raw.match(/^\s*(#{1,6})\s+(.*)$/))) out.push({ k: m[1].length <= 2 ? "h2" : "h3", t: m[2].replace(/\*\*/g, "").trim() });
+    else if ((m = raw.match(/^(\s*)[-*•]\s+\[( |x|X)\]\s+(.*)$/))) out.push({ k: "todo", t: m[3], done: m[2] !== " ", lvl: Math.min(2, Math.floor(m[1].length / 2)) });
+    else if ((m = raw.match(/^(\s*)[-*•]\s+(.*)$/))) out.push({ k: "li", t: m[2], lvl: Math.min(2, Math.floor(m[1].length / 2)) });
+    else out.push({ k: "p", t: raw.trim() });
+  }
+  return out;
+}
+const runsOf = t => String(t).split(/(\*\*[^*]+\*\*)/).filter(Boolean).map(x => (/^\*\*[^*]+\*\*$/.test(x) ? { b: true, t: x.slice(2, -2) } : { t: x }));
+const plain = t => String(t).replace(/\*\*/g, "");
+function buildDoc(lec){
+  const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) }];
+  if (lec.notes && lec.notes.md.trim()) B.push({ k: "h1", t: "Notes" }, ...mdBlocks(lec.notes.md));
+  const s = lec.summary;
+  if (s){
+    B.push({ k: "h1", t: "Summary" }, { k: "p", t: s.overview }, { k: "h2", t: "Key points" }, ...s.keyPoints.map(t => ({ k: "li", t })));
+    if (s.definitions.length) B.push({ k: "h2", t: "Definitions" }, ...s.definitions.map(d => ({ k: "li", t: "**" + d.term + "**: " + d.meaning })));
+    if (s.actionItems.length) B.push({ k: "h2", t: "To do" }, ...s.actionItems.map(t => ({ k: "todo", t })));
+    if (s.examHints.length) B.push({ k: "h2", t: "Exam hints" }, ...s.examHints.map(t => ({ k: "li", t })));
+  }
+  if ((lec.marks || []).length) B.push({ k: "h1", t: "My notes" }, ...lec.marks.slice().sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t)).map(m => ({ k: "seg", ts: m.t != null ? fmt(m.t) : "", t: m.text })));
+  if (lec.study && lec.study.flashcards.length){ B.push({ k: "h1", t: "Flashcards" }); lec.study.flashcards.forEach(c => B.push({ k: "p", t: "**" + c.q.replace(/\*\*/g, "") + "**" }, { k: "p", t: c.a })); }
+  if (lec.segments.length) B.push({ k: "h1", t: "Transcript" }, ...lec.segments.map(x => ({ k: "seg", ts: x.t != null ? fmt(x.t) : "", t: x.text, b: !!x.flag })));
+  return B;
+}
+const indent = b => "  ".repeat(b.lvl || 0);
+function toTxt(lec){
+  return buildDoc(lec).map(b => b.k === "title" ? b.t + "\n" + "=".repeat(Math.min(70, b.t.length)) : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n\n" + b.t + "\n" + "-".repeat(b.t.length) : b.k === "h2" ? "\n" + b.t : b.k === "h3" ? "\n  " + b.t
+    : b.k === "li" ? indent(b) + "  - " + plain(b.t) : b.k === "todo" ? indent(b) + "  [" + (b.done ? "x" : " ") + "] " + plain(b.t) : b.k === "seg" ? (b.ts ? "[" + b.ts + "] " : "") + b.t + "\n" : plain(b.t)).join("\n") + "\n";
+}
+function toMarkdown(lec){
+  return buildDoc(lec).map(b => b.k === "title" ? "# " + b.t + "\n" : b.k === "meta" ? b.t + "\n" : b.k === "h1" ? "\n## " + b.t + "\n" : b.k === "h2" ? "\n### " + b.t + "\n" : b.k === "h3" ? "\n#### " + b.t + "\n"
+    : b.k === "li" ? indent(b) + "- " + b.t : b.k === "todo" ? indent(b) + "- [" + (b.done ? "x" : " ") + "] " + b.t : b.k === "seg" ? (b.ts ? "`" + b.ts + "` " : "") + (b.b ? "**" + b.t + "**" : b.t) + "\n" : b.t + "\n").join("\n") + "\n";
+}
+function cues(lec){
+  const segs = lec.segments.filter(s => s.t != null), out = [];
+  segs.forEach((s, i) => {
+    const next = segs[i + 1] ? segs[i + 1].t : null;
+    let end = s.end != null && s.end > s.t ? s.end : next != null ? next : s.t + 6;
+    if (next != null && end > next) end = next;
+    if (end <= s.t) end = s.t + 2;
+    const lines = []; let cur = "";
+    for (const w of s.text.split(/\s+/)){ if ((cur + " " + w).trim().length > 84 && cur){ lines.push(cur); cur = w; } else cur = (cur + " " + w).trim(); }
+    if (cur) lines.push(cur);
+    const total = lines.reduce((n, l) => n + l.length, 0) || 1; let at = s.t;
+    for (const l of lines){
+      const d = (end - s.t) * l.length / total, mid = l.lastIndexOf(" ", Math.ceil(l.length / 2) + 4);
+      out.push({ a: at, b: at + d, text: l.length > 42 && mid > 10 ? l.slice(0, mid) + "\n" + l.slice(mid + 1) : l }); at += d;
+    }
+  });
+  return out;
+}
+const stamp = (x, sep) => { const ms = Math.max(0, Math.round(x * 1000)), p = (n, w) => String(n).padStart(w, "0"); return p(Math.floor(ms / 3600000), 2) + ":" + p(Math.floor(ms % 3600000 / 60000), 2) + ":" + p(Math.floor(ms % 60000 / 1000), 2) + sep + p(ms % 1000, 3); };
+const toSrt = lec => cues(lec).map((c, i) => (i + 1) + "\n" + stamp(c.a, ",") + " --> " + stamp(c.b, ",") + "\n" + c.text + "\n").join("\n");
+const toVtt = lec => "WEBVTT\n\n" + cues(lec).map(c => stamp(c.a, ".") + " --> " + stamp(c.b, ".") + "\n" + c.text + "\n").join("\n");
+
+/* Word (.docx): a small zip of XML files, written here so it works offline */
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(u8){ let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files){
+  const enc = new TextEncoder(), parts = [], central = []; let offset = 0;
+  for (const f of files){
+    const name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+    const head = new DataView(new ArrayBuffer(30));
+    head.setUint32(0, 0x04034b50, true); head.setUint16(4, 20, true); head.setUint16(6, 0x0800, true); head.setUint16(8, 0, true); head.setUint16(10, 0, true); head.setUint16(12, 0x21, true);
+    head.setUint32(14, crc, true); head.setUint32(18, data.length, true); head.setUint32(22, data.length, true); head.setUint16(26, name.length, true); head.setUint16(28, 0, true);
+    parts.push(new Uint8Array(head.buffer), name, data);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true); cen.setUint16(8, 0x0800, true); cen.setUint16(10, 0, true); cen.setUint16(12, 0, true); cen.setUint16(14, 0x21, true);
+    cen.setUint32(16, crc, true); cen.setUint32(20, data.length, true); cen.setUint32(24, data.length, true); cen.setUint16(28, name.length, true); cen.setUint32(42, offset, true);
+    central.push(new Uint8Array(cen.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cenSize = central.reduce((n, p) => n + p.length, 0), end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, files.length, true); end.setUint16(10, files.length, true); end.setUint32(12, cenSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+}
+function toDocx(lec){
+  const esc = s => String(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const run = (t, b, grey) => "<w:r><w:rPr>" + (b ? "<w:b/>" : "") + (grey ? '<w:color w:val="6B7A8C"/><w:sz w:val="18"/>' : "") + '</w:rPr><w:t xml:space="preserve">' + esc(t) + "</w:t></w:r>";
+  const para = (style, inner, left) => "<w:p><w:pPr>" + (style ? '<w:pStyle w:val="' + style + '"/>' : "") + (left ? '<w:ind w:left="' + left + '" w:hanging="300"/>' : "") + "</w:pPr>" + inner + "</w:p>";
+  const rich = (t, all) => runsOf(t).map(r => run(r.t, all || r.b)).join("");
+  const body = buildDoc(lec).map(b => b.k === "title" ? para("Title", run(b.t)) : b.k === "meta" ? para("Meta", run(b.t)) : b.k === "h1" ? para("Heading1", run(b.t)) : b.k === "h2" ? para("Heading2", run(b.t)) : b.k === "h3" ? para("Heading3", run(b.t))
+    : b.k === "li" ? para("", run("•\t") + rich(b.t), 360 + 360 * (b.lvl || 0)) : b.k === "todo" ? para("", run((b.done ? "☑" : "☐") + "\t") + rich(b.t), 360 + 360 * (b.lvl || 0))
+    : b.k === "seg" ? para("", (b.ts ? run(b.ts + "   ", false, true) : "") + run(b.t, b.b)) : para("", rich(b.t))).join("");
+  const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+  const style = (id, name, size, o) => '<w:style w:type="paragraph" w:styleId="' + id + '"><w:name w:val="' + name + '"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:pPr>' + (o.keep ? "<w:keepNext/>" : "") + '<w:spacing w:before="' + o.before + '" w:after="' + o.after + '"/></w:pPr><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial"/>' + (o.bold ? "<w:b/>" : "") + (o.color ? '<w:color w:val="' + o.color + '"/>' : "") + '<w:sz w:val="' + size + '"/></w:rPr></w:style>';
+  return zipStore([
+    { name: "[Content_Types].xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>' },
+    { name: "_rels/.rels", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>' },
+    { name: "word/_rels/document.xml.rels", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>' },
+    { name: "word/styles.xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ' + W + '><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Georgia" w:hAnsi="Georgia" w:cs="Georgia"/><w:sz w:val="22"/><w:lang w:val="en-GB"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="140" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+      + style("Title", "Title", 44, { before: 0, after: 80, bold: true }) + style("Meta", "Meta", 20, { before: 0, after: 360, color: "6B7A8C" }) + style("Heading1", "heading 1", 32, { before: 480, after: 160, bold: true, keep: true }) + style("Heading2", "heading 2", 26, { before: 320, after: 120, bold: true, keep: true }) + style("Heading3", "heading 3", 22, { before: 240, after: 100, bold: true, keep: true }) + "</w:styles>" },
+    { name: "word/document.xml", text: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ' + W + "><w:body>" + body + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>' }
+  ]);
+}
+
+/* PDF: uses the jsPDF library, fetched the first time you export */
+const JSPDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+const loadScript = url => new Promise((res, rej) => { if (window.jspdf) return res(); const s = document.createElement("script"); s.src = url; s.onload = res; s.onerror = () => { s.remove(); rej(new Error("offline")); }; document.head.append(s); });
+async function toPdf(lec){
+  const SUBS = { "\u2265": ">=", "\u2264": "<=", "\u2192": "->", "\u2190": "<-", "\u2248": "~", "\u2260": "!=", "\u2212": "-", "\u03B1": "alpha", "\u03B2": "beta", "\u03B3": "gamma", "\u03B4": "delta", "\u0394": "Delta", "\u03BB": "lambda", "\u03BC": "\u00B5", "\u03C3": "sigma", "\u03A3": "Sigma", "\u03C7": "chi", "\u03C0": "pi", "\u2080": "0", "\u2081": "1", "\u2082": "2", "\u2083": "3", "\u00A0": " ", "\u2009": " ", "\u202F": " ", "\u2011": "-", "\u2010": "-" };
+  const BAD = /[^\u0000-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D\u2022\u2026\u20AC\u2122]/g;
+  const blocks = buildDoc(lec).map(b => ({ ...b, t: String(b.t).replace(BAD, ch => (SUBS[ch] != null ? SUBS[ch] : ch)) }));
+  const all = blocks.map(b => b.t).join(""), odd = (all.match(BAD) || []).length;
+  if (odd > all.length * 0.02) throw new AppError("print");   // mostly non-Latin text: the browser's own PDF printing handles it better
+  if (odd) blocks.forEach(b => (b.t = b.t.replace(BAD, "?")));
+  try { await loadScript(JSPDF_URL); } catch (e){ throw new AppError("print"); }
+  const doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }), W = 595.28, H = 841.89, M = 64;
+  let y = M;
+  const room = need => { if (y + need > H - M){ doc.addPage(); y = M; } };
+  const put = (text, o) => {
+    doc.setFont(o.font || "times", o.style || "normal"); doc.setFontSize(o.size); doc.setTextColor(o.grey ? 105 : 20);
+    const lines = doc.splitTextToSize(text, W - 2 * M - (o.left || 0));
+    if (o.keep) room(o.size * 3.2);
+    lines.forEach((ln, i) => { room(o.size * 1.45); if (i === 0 && o.lead) o.lead(y + o.size * 0.82); doc.text(ln, M + (o.left || 0), y + o.size * 0.82); y += o.size * 1.45; });
+    y += o.gap == null ? 6 : o.gap;
+  };
+  for (const b of blocks){
+    const t = plain(b.t);
+    if (b.k === "title") put(t, { font: "helvetica", style: "bold", size: 22, gap: 4 });
+    else if (b.k === "meta") put(t, { font: "helvetica", size: 10, grey: true, gap: 18 });
+    else if (b.k === "h1"){ y += 14; put(t, { font: "helvetica", style: "bold", size: 16, gap: 8, keep: true }); }
+    else if (b.k === "h2"){ y += 8; put(t, { font: "helvetica", style: "bold", size: 13, gap: 6, keep: true }); }
+    else if (b.k === "h3"){ y += 4; put(t, { font: "helvetica", style: "bold", size: 11, gap: 4, keep: true }); }
+    else if (b.k === "li" || b.k === "todo"){ const left = 16 + 16 * (b.lvl || 0); put(t, { size: 11, left, gap: 3, lead: yy => { doc.setFont("times", "normal"); doc.text(b.k === "todo" ? (b.done ? "[x]" : "[ ]") : "\u2022", M + left - (b.k === "todo" ? 16 : 11), yy); } }); }
+    else if (b.k === "seg") put(t, { size: 11, left: 48, style: b.b ? "bold" : "normal", gap: 7, lead: yy => { if (!b.ts) return; doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(120); doc.text(b.ts, M, yy); doc.setFont("times", b.b ? "bold" : "normal"); doc.setFontSize(11); doc.setTextColor(20); } });
+    else put(t, { size: 11, style: /^\*\*.*\*\*$/.test(b.t) ? "bold" : "normal" });
+  }
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++){ doc.setPage(i); doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(130); doc.text("Bizofy", M, H - 34); doc.text("Page " + i + " of " + n, W - M, H - 34, { align: "right" }); }
+  return doc.output("blob");
+}
+
+function saveFile(name, data, type){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: type || "text/plain" })); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+const courseKey = c => (c || "").trim().toLowerCase();
+const getVocab = course => ((DB.settings.vocab || {})[courseKey(course)] || "");
+async function setVocab(course, text){ DB.settings.vocab = DB.settings.vocab || {}; DB.settings.vocab[courseKey(course)] = text.trim().slice(0, 1200); await DB.saveSettings(); }
+
+/* the calls the interface makes, answered on this device */
+async function api(method, url, body, note){
+  const u = new URL(url, "http://local"), p = u.pathname.split("/").filter(Boolean).slice(1), b = body || {};
+  if (p[0] === "status"){ const c = cfg(); return { transcribe: !!c.tKey, ai: c.ai === "claude" ? !!c.aKey : c.ai === "custom" ? !!(c.xBase && c.xModel) : !!c.gKey, aiName: c.ai === "claude" ? "Claude, " + c.aModel : c.ai === "custom" ? c.xModel : "Groq" + (c.gModel ? ", " + c.gModel : "") }; }
+  if (p[0] === "settings"){
+    const s = DB.settings;
+    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "" }; }
+    if (["openai", "groq", "custom"].includes(b.provider)) s.provider = b.provider;
+    if (["auto", "claude", "groq", "custom"].includes(b.aiProvider)) s.aiProvider = b.aiProvider;
+    for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (typeof b[k] === "string" && b[k].trim()) s[k] = b[k].trim();
+    for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "updateUrl"]) if (typeof b[k] === "string") s[k] = b[k].trim();
+    delete s.groqSmall; groqPicked = null;
+    await DB.saveSettings(); return { ok: true };
+  }
+  if (p[0] === "search"){
+    const q = (u.searchParams.get("q") || "").trim().toLowerCase(), course = u.searchParams.get("course") || "", groups = [];
+    let total = 0;
+    if (q.length < 2) return { groups, total };
+    for (const l of [...DB.lectures.values()].sort((a, b) => b.createdAt - a.createdAt)){
+      if (course && courseKey(l.course) !== courseKey(course)) continue;
+      const hits = []; let count = 0;
+      const scan = (text, sid, t, own) => {
+        const low = text.toLowerCase(); let i = low.indexOf(q), first = i;
+        while (i >= 0){ count++; i = low.indexOf(q, i + q.length); }
+        if (first >= 0 && hits.length < 3){ const from = Math.max(0, first - 40); hits.push({ sid, t, own, before: (from ? "…" : "") + text.slice(from, first), match: text.slice(first, first + q.length), after: text.slice(first + q.length, first + q.length + 60) + "…" }); }
+      };
+      l.segments.forEach(s => scan(s.text, s.id, s.t, false));
+      (l.marks || []).forEach(m => scan(m.text, m.id, m.t, true));
+      if (count){ groups.push({ id: l.id, title: l.title, course: l.course, count, hits }); total += count; }
+    }
+    return { groups, total };
+  }
+  if (p[0] !== "lectures") throw new AppError("Not found.");
+  if (!p[1]){
+    if (method === "GET") return [...DB.lectures.values()].map(metaOf).sort((a, b) => b.createdAt - a.createdAt);
+    const lec = { id: newId("l"), course: String(b.course || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), language: "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], summary: null, study: null, notes: null, chat: [] };
+    DB.lectures.set(lec.id, lec); await DB.save(lec); return lec;
+  }
+  const lec = getLec(p[1]);
+  if (!p[2]){
+    if (method === "DELETE"){ await DB.remove(lec); return { ok: true }; }
+    if (method === "PATCH"){
+      if (typeof b.course === "string") lec.course = b.course.trim().slice(0, 120);
+      if (typeof b.title === "string") lec.title = b.title.trim().slice(0, 200) || "Untitled lecture";
+      if (typeof b.language === "string") lec.language = b.language.slice(0, 8);
+      if (typeof b.notes === "string") lec.notes = b.notes.trim() ? { md: b.notes, madeAt: (lec.notes && lec.notes.madeAt) || Date.now(), edited: true } : null;
+      if (b.clearChat) lec.chat = [];
+      await DB.save(lec);
+    }
+    return lec;
+  }
+  if (p[2] === "segments"){
+    if (p[3]){
+      const i = lec.segments.findIndex(s => s.id === p[3]);
+      if (i >= 0){ if (typeof b.flag === "boolean") lec.segments[i].flag = b.flag; if (typeof b.text === "string"){ if (b.text.trim()) lec.segments[i].text = b.text.trim(); else lec.segments.splice(i, 1); } }
+    } else for (const s of (b.segments || []).slice(0, 5000)){
+      const text = String((s && s.text) || "").trim(); if (!text) continue;
+      lec.segments.push({ id: newId("s"), t: Number.isFinite(s.t) ? Math.max(0, Math.round(s.t)) : null, text, flag: !!s.flag });
+    }
+    await DB.save(lec); return lec;
+  }
+  if (p[2] === "marks"){
+    lec.marks = lec.marks || [];
+    if (p[3]){
+      const i = lec.marks.findIndex(m => m.id === p[3]);
+      if (i >= 0){ if (method === "DELETE" || (typeof b.text === "string" && !b.text.trim())) lec.marks.splice(i, 1); else if (typeof b.text === "string") lec.marks[i].text = b.text.trim(); }
+    } else if (String(b.text || "").trim()) lec.marks.push({ id: newId("m"), t: Number.isFinite(b.t) ? Math.max(0, Math.round(b.t)) : null, text: String(b.text).trim().slice(0, 2000) });
+    await DB.save(lec); return lec;
+  }
+  if (p[2] === "audio" && p[4] === "transcribe") return transcribePart(lec.id, Number(p[3]));
+  if (p[2] === "summary" || p[2] === "study" || p[2] === "notes"){
+    if (!lec.segments.length) throw new AppError("Add a transcript first.");
+    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : makeNotes)(lec, note || (() => {}));
+    await DB.save(lec); return lec;
+  }
+  throw new AppError("Not found.");
+}
+
+/* ---------- state ---------- */
+const S = { list: [], cur: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
+let askCtl = null;
+
+function metaOf(l){
+  return { id: l.id, course: l.course, title: l.title, createdAt: l.createdAt, duration: l.duration || 0,
+    words: l.segments.reduce((n, s) => n + s.text.split(/\s+/).filter(Boolean).length, 0) };
+}
+function adopt(lec, soft){
+  if (!lec || !lec.id) return;
+  const i = S.list.findIndex(x => x.id === lec.id);
+  if (i >= 0) S.list[i] = metaOf(lec); else S.list.unshift(metaOf(lec));
+  if (S.cur && S.cur.id === lec.id){ S.cur = lec; soft ? softRefresh() : render(); }
+}
+async function openLecture(id){
+  if (REC.on) stopRec();
+  stopPlayer();
+  S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
+  S.cur = await api("GET", "/api/lectures/" + id);
+  render();
+}
+async function newLecture(seed){
+  if (REC.on) stopRec();
+  stopPlayer();
+  const lec = await api("POST", "/api/lectures", seed || {});
+  S.list.unshift(metaOf(lec)); S.cur = lec; S.tab = "transcript"; S.err = ""; S.pamErr = ""; S.search = null; S.hl = ""; S.q = ""; S.editNotes = false; $("search").value = "";
+  render();
+  return lec;
+}
+function fail(e){ S.err = e.message || String(e); render(); }
+
+/* ---------- recorder ---------- */
+const PART_SEC = 45;
+const MIME = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
+const REC = { on: false, stream: null, mr: null, startMs: 0, base: 0, flags: [], rot: null, tick: null, ctx: null, raf: 0, wake: null, lecId: null, msg: "" };
+const Q = { items: [], busy: false, waiting: false };
+const nowAbs = () => REC.base + (performance.now() - REC.startMs) / 1000;
+
+async function startRec(){
+  const lec = S.cur; if (!lec) return;
+  REC.msg = "";
+  if (!navigator.mediaDevices || !window.MediaRecorder){
+    REC.msg = location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+      ? "This browser cannot record audio. Use a current version of Chrome, Edge, Firefox or Safari."
+      : "Browsers only allow recording on https addresses or on localhost. Open Bizofy at http://localhost on this computer, or put it behind https.";
+    return render();
+  }
+  stopPlayer();
+  try { REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } }); }
+  catch (e){
+    REC.msg = e.name === "NotFoundError" ? "No microphone was found. Plug one in, then press record."
+      : "Microphone access was refused. Click the icon at the left of the address bar, allow the microphone, then press record.";
+    return render();
+  }
+  REC.on = true; REC.lecId = lec.id; REC.flags = [];
+  REC.base = Math.ceil(lec.duration || 0); REC.startMs = performance.now();
+  startPart();
+  REC.tick = setInterval(liveLine, 500);
+  try {
+    REC.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const an = REC.ctx.createAnalyser(); an.fftSize = 512;
+    REC.ctx.createMediaStreamSource(REC.stream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const loop = () => {
+      an.getByteTimeDomainData(buf);
+      let sum = 0; for (const v of buf){ const x = (v - 128) / 128; sum += x * x; }
+      const bar = $("level"); if (bar) bar.style.width = Math.min(100, Math.sqrt(sum / buf.length) * 320) + "%";
+      REC.raf = requestAnimationFrame(loop);
+    };
+    loop();
+  } catch (e){}
+  if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => (REC.wake = w)).catch(() => {});
+  render();
+}
+function startPart(){
+  const startAbs = nowAbs(), lecId = REC.lecId, chunks = [];
+  const mr = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 });
+  mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+  mr.onstop = () => {
+    const endAbs = mr._endAbs || nowAbs();
+    const blob = new Blob(chunks, { type: (mr.mimeType || MIME || "audio/webm").split(";")[0] });
+    if (blob.size < 800 || endAbs - startAbs < 0.8) return;
+    Q.items.push({ lecId, blob, offset: startAbs, dur: endAbs - startAbs, flags: REC.flags.filter(f => f >= startAbs - 0.5 && f < endAbs + 0.5), lang: (S.cur && S.cur.language) || "auto" });
+    pump();
+  };
+  mr.start();
+  REC.mr = mr;
+  REC.rot = setTimeout(() => { if (!REC.on) return; const old = REC.mr; old._endAbs = nowAbs(); startPart(); old.stop(); }, PART_SEC * 1000);
+}
+function stopRec(){
+  if (!REC.on) return;
+  REC.on = false;
+  clearTimeout(REC.rot); clearInterval(REC.tick); cancelAnimationFrame(REC.raf);
+  if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr.stop(); }
+  const stream = REC.stream;
+  setTimeout(() => stream && stream.getTracks().forEach(t => t.stop()), 300);
+  if (REC.ctx){ REC.ctx.close().catch(() => {}); REC.ctx = null; }
+  if (REC.wake){ REC.wake.release().catch(() => {}); REC.wake = null; }
+  render();
+}
+function markImportant(){
+  if (!REC.on) return;
+  REC.flags.push(nowAbs());
+  const b = $("flagBtn"); if (!b) return;
+  b.classList.add("hit"); b.textContent = "Marked";
+  setTimeout(() => { const x = $("flagBtn"); if (x){ x.classList.remove("hit"); x.textContent = "Mark as important"; } }, 1300);
+}
+async function pump(){
+  if (Q.busy || !Q.items.length) return;
+  Q.busy = true; liveLine();
+  const it = Q.items.shift();
+  try {
+    const lec = getLec(it.lecId);
+    lec.language = it.lang;
+    const n = addPart(lec, it.blob.type || "audio/webm", it.offset, it.dur, it.flags);
+    await DB.putAudio(lec.id, n, it.blob);
+    await DB.save(lec);
+    try { adopt(await transcribePart(lec.id, n), true); const ae = document.activeElement; if (!REC.on && !$("seek") && !(ae && /INPUT|TEXTAREA/.test(ae.tagName)) && !(ae && ae.isContentEditable)) render(); }
+    catch (e){
+      adopt(lec, true);
+      if (!e.offline){ REC.msg = e.message; const m = $("recMsg"); if (m){ m.hidden = false; m.textContent = REC.msg; } }
+    }
+  } catch (e){ REC.msg = e.message; const m = $("recMsg"); if (m){ m.hidden = false; m.textContent = REC.msg; } }
+  Q.busy = false; liveLine(); pump();
+}
+function liveLine(){
+  const c = $("clock"), l = $("live");
+  if (REC.on && c) c.textContent = fmt(nowAbs());
+  if (!l) return;
+  const n = Q.items.length;
+  const n2 = n + (Q.busy ? 1 : 0);
+  l.textContent = !navigator.onLine && REC.on ? "Recording offline. The audio is saved on this device and is transcribed when you are back online."
+    : REC.on ? "Recording. New text appears about every " + PART_SEC + " seconds." + (n > 1 ? " " + n + " parts in line." : "")
+    : n2 ? "Transcribing the last " + (n2 === 1 ? "part" : n2 + " parts") + "…"
+    : idleLine();
+}
+const idleLine = () => (S.cur && S.cur.audio && S.cur.audio.length ? "Press record to continue this lecture, or play it back." : "Press record when class starts.");
+window.addEventListener("beforeunload", e => { if (REC.on || Q.items.length || Q.busy){ e.preventDefault(); e.returnValue = ""; } });
+
+/* ---------- player ---------- */
+const P = { a: new Audio(), n: null, lecId: null };
+P.a.preload = "auto";
+const partsOf = lec => (lec.audio || []).slice().sort((a, b) => a.offset - b.offset);
+async function playFrom(t){
+  const lec = S.cur; if (!lec || REC.on) return;
+  const parts = partsOf(lec); if (!parts.length) return;
+  let p = parts[0]; for (const x of parts) if (x.offset <= t + 0.05) p = x;
+  const rel = Math.max(0, t - p.offset);
+  if (P.n !== p.n || P.lecId !== lec.id){
+    const blob = await DB.getAudio(lec.id, p.n); if (!blob) return;
+    if (P.url) URL.revokeObjectURL(P.url);
+    P.n = p.n; P.lecId = lec.id; P.url = URL.createObjectURL(blob);
+    P.a.src = P.url;
+    P.a.addEventListener("loadedmetadata", () => { try { P.a.currentTime = rel; } catch (e){} P.a.play().catch(() => {}); }, { once: true });
+    P.a.load();
+  } else { try { P.a.currentTime = rel; } catch (e){} P.a.play().catch(() => {}); }
+}
+function stopPlayer(){ P.a.pause(); P.a.removeAttribute("src"); if (P.url){ URL.revokeObjectURL(P.url); P.url = null; } P.n = null; P.lecId = null; }
+const playAbs = () => { const lec = S.cur; const p = lec && (lec.audio || []).find(x => x.n === P.n); return p ? p.offset + P.a.currentTime : 0; };
+P.a.addEventListener("timeupdate", () => {
+  if (!S.cur || P.lecId !== S.cur.id) return;
+  const t = playAbs(), seek = $("seek"), c = $("clock");
+  if (seek && !seek._drag) seek.value = t;
+  if (c && !REC.on) c.replaceChildren(fmt(t), h("small", null, " / " + fmt(S.cur.duration)));
+  let now = null;
+  document.querySelectorAll(".seg").forEach(n => { if (n._seg.t != null && n._seg.t <= t + 0.3) now = n; n.classList.remove("now"); });
+  if (now) now.classList.add("now");
+});
+P.a.addEventListener("ended", () => {
+  const parts = partsOf(S.cur || {}), i = parts.findIndex(x => x.n === P.n);
+  if (i >= 0 && parts[i + 1]) playFrom(parts[i + 1].offset); else syncPlayBtn();
+});
+["play", "pause"].forEach(ev => P.a.addEventListener(ev, () => syncPlayBtn()));
+function syncPlayBtn(){ const b = $("playBtn"); if (b) b.textContent = P.a.paused ? "Play" : "Pause"; }
+
+/* ---------- import text / subtitles ---------- */
+function parseText(raw){
+  raw = raw.replace(/\r/g, "").trim(); if (!raw) return [];
+  const segs = [];
+  if (/\d\d:\d\d[.,]\d{3}\s*-->/.test(raw)){
+    let t = null, buf = [];
+    const flush = () => { if (buf.length){ segs.push({ t, text: buf.join(" "), flag: false }); buf = []; } };
+    raw.split("\n").forEach(line => {
+      const m = line.match(/(?:(\d+):)?(\d\d):(\d\d)[.,]\d{3}\s*-->/);
+      if (m){ flush(); t = (+(m[1] || 0)) * 3600 + (+m[2]) * 60 + (+m[3]); return; }
+      line = line.replace(/<[^>]+>/g, "").trim();
+      if (!line){ flush(); return; }
+      if (/^\d+$/.test(line) || /^WEBVTT/.test(line) || /^NOTE\b/.test(line)) return;
+      buf.push(line);
+    });
+    flush();
+    return segs;
+  }
+  raw.split(/\n/).forEach(p => {
+    p = p.trim(); if (!p) return;
+    let flag = false;
+    if (/^\[!\]\s*/.test(p)){ flag = true; p = p.replace(/^\[!\]\s*/, ""); }
+    const m = p.match(/^\[?(\d{1,2}:\d\d(?::\d\d)?)\]?\s+(.*)$/);
+    if (m) return void segs.push({ t: parseTs(m[1]), text: m[2], flag });
+    const parts = p.length > 600 ? p.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) : [p];
+    let acc = "";
+    parts.forEach(s => { if ((acc + s).length > 500 && acc){ segs.push({ t: null, text: acc.trim(), flag }); acc = ""; } acc += s; });
+    if (acc.trim()) segs.push({ t: null, text: acc.trim(), flag });
+  });
+  return segs;
+}
+async function addText(raw){
+  const segs = parseText(raw); if (!segs.length) return;
+  try { S.paste = ""; adopt(await api("POST", "/api/lectures/" + S.cur.id + "/segments", { segments: segs })); } catch (e){ fail(e); }
+}
+const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i;
+function setUp(label, value){
+  S.up = { label, value };
+  const l = $("upLabel"), bar = $("upBar");
+  if (l) l.textContent = label;
+  if (bar){ if (value == null) bar.removeAttribute("value"); else bar.value = value; }
+}
+async function uploadOne(lec, file, tag){
+  setUp(tag + "Reading " + file.name + "…", null);
+  let pieces = [{ blob: file, dur: 0, name: file.name }];
+  if (file.size > MAX_DIRECT){ setUp(tag + "Splitting " + file.name + " into 10-minute parts. This can take a few minutes…", null); pieces = await splitAudio(file); }
+  const base = Math.ceil(lec.duration || 0), ns = [];
+  for (let i = 0; i < pieces.length; i++){
+    const n = addPart(lec, pieces[i].blob.type || file.type || "audio/mpeg", base + i * SPLIT_SEC, pieces[i].dur, [], pieces[i].name || "part.wav");
+    await DB.putAudio(lec.id, n, pieces[i].blob); ns.push(n);
+  }
+  await DB.save(lec);
+  let failed = 0;
+  for (let i = 0; i < ns.length; i++){
+    setUp(tag + (ns.length > 1 ? "Transcribing part " + (i + 1) + " of " + ns.length + "…" : "Transcribing " + file.name + "…"), ns.length > 1 ? i / ns.length : null);
+    try { adopt(await transcribePart(lec.id, ns[i]), true); } catch (e){ failed++; S.err = e.message; if (!navigator.onLine) break; }
+  }
+  if (failed > 1) S.err = "Some parts could not be transcribed. They are saved; use the button in the transcript to try again.";
+}
+async function handleFiles(list){
+  const files = [...list].filter(f => AUDIO_RE.test(f.name) || TEXT_RE.test(f.name) || /^(audio|video|text)\//.test(f.type));
+  if (!files.length){ S.err = "Bizofy reads audio and video files (MP3, WAV, M4A, MP4) and transcripts (.txt, .srt, .vtt)."; return render(); }
+  if (REC.on){ S.err = "Stop the recording before you add files."; return render(); }
+  if (S.busy.upload) return;
+  const intoCurrent = !!S.cur;
+  S.busy.upload = true; S.err = ""; S.up = { label: "Starting…", value: null }; render();
+  try {
+    for (let i = 0; i < files.length; i++){
+      const f = files[i], tag = files.length > 1 ? "File " + (i + 1) + " of " + files.length + ". " : "";
+      const lec = intoCurrent ? S.cur : await newLecture({ title: f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").slice(0, 120) });
+      if (TEXT_RE.test(f.name) || /^text\//.test(f.type)){ setUp(tag + "Reading " + f.name + "…", null); await addText(await f.text()); }
+      else await uploadOne(lec, f, tag);
+    }
+  } catch (e){ S.err = e.message; }
+  S.busy.upload = false; S.up = null; render();
+}
+async function retryWaiting(){
+  const lec = S.cur; if (!lec || S.busy.retry) return;
+  S.busy.retry = true; S.err = ""; render();
+  for (const a of partsOf(lec).filter(a => !a.done)){
+    try { adopt(await transcribePart(lec.id, a.n), true); } catch (e){ S.err = e.message; if (e.offline || /key|Settings/.test(e.message)) break; }
+  }
+  S.busy.retry = false; render();
+}
+window.addEventListener("online", () => { if (S.cur && !REC.on && (S.cur.audio || []).some(a => !a.done && a.offline)) retryWaiting(); });
+
+/* ---------- AI ---------- */
+function aiNote(t){ S.note = t; const n = $("aiNote"); if (n) n.textContent = t; const p = $("pending"); if (p && !p._has) p.textContent = t; }
+async function make(kind){
+  const lec = S.cur; if (S.busy[kind]) return;
+  S.busy[kind] = true; S.err = ""; S.note = ""; render();
+  try { const out = await api("POST", "/api/lectures/" + lec.id + "/" + kind, null, aiNote); S.busy[kind] = false; adopt(out); }
+  catch (e){ S.busy[kind] = false; fail(e); }
+}
+async function ask(text, label){
+  const lec = S.cur, question = (text || S.draft).trim();
+  if (!lec || !question || S.busy.ask) return;
+  S.busy.ask = true; S.pamErr = ""; if (!text) S.draft = "";
+  lec.chat = lec.chat || []; lec.chat.push({ role: "user", content: question, label: label || null, scope: S.scope });
+  renderPam();
+  let answer = "";
+  try {
+    askCtl = new AbortController();
+    answer = await askAI(lec, question, S.scope === "course" && lec.course ? "course" : "lecture", askCtl.signal, t => { answer = t; const b = $("pending"); if (b){ b._has = true; b.textContent = t; b.scrollIntoView({ block: "end" }); } }, aiNote);
+  } catch (e){
+    if (e.name !== "AbortError" && !answer.trim()){ if (!text) S.draft = question; S.pamErr = e.message; }
+  }
+  if (answer.trim()) lec.chat.push({ role: "assistant", content: answer }); else lec.chat.pop();
+  await DB.save(lec).catch(() => {});
+  S.busy.ask = false; renderPam();
+  const inp = $("pamIn"); if (inp && window.innerWidth > 760) inp.focus();
+}
+async function exportAs(kind){
+  const lec = S.cur; if (!lec) return;
+  const name = ((lec.title || "lecture").replace(/[^\w\- ]+/g, "").trim().slice(0, 60) || "lecture");
+  S.err = "";
+  try {
+    if (kind === "txt") saveFile(name + ".txt", toTxt(lec));
+    else if (kind === "md") saveFile(name + ".md", toMarkdown(lec), "text/markdown");
+    else if (kind === "srt" || kind === "vtt"){
+      if (!lec.segments.some(s => s.t != null)) throw new AppError("Subtitle files need timestamps. This lecture's text has none.");
+      saveFile(name + "." + kind, kind === "srt" ? toSrt(lec) : toVtt(lec), kind === "vtt" ? "text/vtt" : "application/x-subrip");
+    }
+    else if (kind === "docx") saveFile(name + ".docx", toDocx(lec));
+    else if (kind === "pdf"){
+      try { saveFile(name + ".pdf", await toPdf(lec)); }
+      catch (e){ if (e.message !== "print") throw e; S.err = "The PDF maker could not load, so the print window is open instead. Choose Save as PDF there."; render(); window.print(); }
+    }
+  } catch (e){ fail(e); }
+}
+
+/* ---------- rendering ---------- */
+const courses = () => [...new Set(S.list.map(l => l.course).filter(Boolean))].sort();
+function renderList(){
+  const nav = $("list"); nav.replaceChildren();
+  const cs = courses(), filter = $("courseFilter");
+  filter.hidden = cs.length < 2;
+  if (!filter.hidden){
+    if (S.course && !cs.includes(S.course)) S.course = "";
+    filter.replaceChildren(h("option", { value: "" }, "All courses"), ...cs.map(c => { const o = h("option", { value: c }, c); if (c === S.course) o.selected = true; return o; }));
+  }
+  if (S.search){
+    const n = S.search.total;
+    nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " lecture" : " lectures") : "Nothing found for that search"));
+    S.search.groups.forEach(g => {
+      const go = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); else { S.tab = "transcript"; render(); } closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
+      nav.append(h("button", { class: "lec", onclick: () => go(g.hits[0] && g.hits[0].sid) }, g.title, h("small", null, (g.course ? g.course + ", " : "") + g.count + (g.count === 1 ? " match" : " matches"))));
+      g.hits.forEach(hit => nav.append(h("button", { class: "hit", onclick: () => go(hit.sid) }, hit.t != null ? h("span", { class: "hit-t" }, fmt(hit.t)) : null, hit.before, h("mark", null, hit.match), hit.after)));
+    });
+    return;
+  }
+  const groups = {};
+  S.list.filter(l => !S.course || l.course === S.course).sort((a, b) => b.createdAt - a.createdAt).forEach(l => (groups[l.course || "No course"] = groups[l.course || "No course"] || []).push(l));
+  Object.keys(groups).sort().forEach(c => {
+    nav.append(h("div", { class: "course" }, c));
+    groups[c].forEach(l => nav.append(h("button", { class: "lec", "aria-current": S.cur && l.id === S.cur.id ? "true" : null, onclick: () => { S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); } },
+      l.title, h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.words ? "" : ", empty")))));
+  });
+  if (!S.list.length) nav.append(h("p", { class: "hint" }, "Your lectures will be listed here by course."));
+}
+function renderKeys(){
+  const n = $("keyNote"), st = S.status;
+  const miss = [!st.transcribe && "transcription", !st.ai && "the AI tools"].filter(Boolean);
+  n.hidden = !miss.length;
+  n.textContent = miss.length ? "Add a key in Settings to switch on " + miss.join(" and ") + "." : "";
+}
+function closeDrawers(){ document.body.classList.remove("show-side", "show-pam"); }
+
+// text with search matches wrapped in <mark>
+function marked(text){
+  const q = (S.hl || "").trim(); if (q.length < 2) return [text];
+  const out = [], low = text.toLowerCase(), ql = q.toLowerCase(); let at = 0, i;
+  while ((i = low.indexOf(ql, at)) >= 0){ if (i > at) out.push(text.slice(at, i)); out.push(h("mark", null, text.slice(i, i + q.length))); at = i + q.length; }
+  out.push(text.slice(at));
+  return out;
+}
+function segNode(lec, seg){
+  const tx = h("div", { class: "tx", contenteditable: "true", spellcheck: "true", "aria-label": "Transcript text, editable" }, marked(seg.text));
+  const row = h("div", { class: "seg" + (seg.flag ? " on" : "") });
+  tx.addEventListener("blur", () => {
+    const v = tx.textContent.trim();
+    if (v !== seg.text){
+      if (!v){ lec.segments.splice(lec.segments.indexOf(seg), 1); row.remove(); } else seg.text = v;
+      api("PATCH", "/api/lectures/" + lec.id + "/segments/" + seg.id, { text: v }).catch(fail);
+    }
+    if (softPending){ softPending = false; softRefresh(); }
+  });
+  const hasAudio = seg.t != null && lec.audio && lec.audio.length;
+  row.append(
+    h("button", { class: "ts", disabled: !hasAudio, title: hasAudio ? "Play from here" : null, onclick: () => playFrom(seg.t) }, seg.t != null ? fmt(seg.t) : "¶"),
+    tx,
+    h("button", { class: "mk", "aria-pressed": seg.flag ? "true" : "false", "aria-label": "Highlight as important", title: "Highlight as important", onclick: ev => {
+      seg.flag = !seg.flag; row.classList.toggle("on", seg.flag); ev.currentTarget.setAttribute("aria-pressed", seg.flag ? "true" : "false");
+      api("PATCH", "/api/lectures/" + lec.id + "/segments/" + seg.id, { flag: seg.flag }).catch(fail);
+    } }));
+  row._seg = seg;
+  return row;
+}
+function markNode(lec, m){
+  const tx = h("div", { class: "tx", contenteditable: "true", spellcheck: "true", "aria-label": "Your note, editable" }, marked(m.text));
+  const row = h("div", { class: "mark-row" });
+  tx.addEventListener("blur", () => {
+    const v = tx.textContent.trim();
+    if (v !== m.text){ if (!v) row.remove(); else m.text = v; api("PATCH", "/api/lectures/" + lec.id + "/marks/" + m.id, { text: v }).catch(fail); }
+    if (softPending){ softPending = false; softRefresh(); }
+  });
+  const hasAudio = m.t != null && lec.audio && lec.audio.length;
+  row.append(h("button", { class: "ts", disabled: !hasAudio, title: hasAudio ? "Play from here" : null, onclick: () => playFrom(Math.max(0, m.t - 5)) }, m.t != null ? fmt(m.t) : "note"),
+    h("div", { class: "mark-body" }, h("span", { class: "mark-who" }, "My note"), tx),
+    h("button", { class: "del", "aria-label": "Delete this note", title: "Delete this note", onclick: () => { row.remove(); api("DELETE", "/api/lectures/" + lec.id + "/marks/" + m.id).catch(fail); } }, "×"));
+  row._mark = m;
+  return row;
+}
+function fillSegs(box, lec){
+  box.replaceChildren();
+  const rows = [...lec.segments.map(s => ({ t: s.t, s })), ...(lec.marks || []).map(m => ({ t: m.t, m }))];
+  rows.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t) || (a.m ? 1 : -1));
+  rows.forEach(r => box.append(r.s ? segNode(lec, r.s) : markNode(lec, r.m)));
+  const waiting = (lec.audio || []).filter(a => !a.done && a.error);
+  if (waiting.length) box.append(h("div", { class: "failed row" },
+    h("span", null, (waiting.length === 1 ? "1 part of the recording is" : waiting.length + " parts of the recording are") + " saved on this device but not transcribed yet. " + waiting[waiting.length - 1].error),
+    h("button", { class: "btn quiet", disabled: S.busy.retry, onclick: retryWaiting }, S.busy.retry ? "Transcribing…" : "Transcribe now")));
+}
+// Called when new text arrives while you may be typing: only touch the transcript and the numbers.
+let softPending = false;
+function softRefresh(){
+  const a = document.activeElement;
+  if (a && a.classList && a.classList.contains("tx")){ softPending = true; return; }
+  renderList();
+  const box = $("segs"), lec = S.cur;
+  if (box && lec){
+    const atEnd = window.innerHeight + window.scrollY > document.body.scrollHeight - 200;
+    fillSegs(box, lec);
+    const dz = $("drop"); if (dz && (lec.segments.length || (lec.marks || []).length) && !S.busy.upload) dz.classList.add("slim");
+    if (REC.on && atEnd && box.lastChild) box.lastChild.scrollIntoView({ block: "nearest" });
+  }
+  const w = $("metaLine"); if (w && lec) w.replaceChildren(...metaBits(lec).filter(Boolean));
+  if (lec && lec.segments.length && $("pam").querySelector(".pam-empty") && document.activeElement !== $("pamIn")) renderPam();
+}
+function jumpSeg(test){
+  let hit = null; document.querySelectorAll(".seg, .mark-row").forEach(n => { if (!hit && test(n)) hit = n; });
+  if (hit){ hit.classList.add("jump"); hit.scrollIntoView({ block: "center" }); setTimeout(() => hit.classList.remove("jump"), 2500); }
+}
+function jumpTo(secs){
+  S.tab = "transcript"; render(); closeDrawers();
+  let best = null; document.querySelectorAll(".seg").forEach(n => { if (n._seg.t != null && n._seg.t <= secs + 2) best = n; });
+  if (best){ jumpSeg(n => n === best); if (S.cur.audio && S.cur.audio.length) playFrom(best._seg.t); }
+}
+const metaBits = lec => [h("span", null, new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })),
+  h("span", null, metaOf(lec).words.toLocaleString() + " words"), lec.duration ? h("span", null, fmt(lec.duration) + " recorded") : null];
+
+function dropZone(lec, slim){
+  const input = h("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,video/mp4,video/webm,video/quicktime,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.mov,.flac,.txt,.md,.vtt,.srt", onchange: e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ""; } });
+  const busy = S.busy.upload;
+  return h("div", { class: "drop" + (slim && !busy ? " slim" : "") + (busy ? " busy" : ""), id: "drop" },
+    input,
+    busy ? [h("p", { class: "drop-title", id: "upLabel", role: "status" }, (S.up && S.up.label) || "Working…"), (() => { const p = h("progress", { id: "upBar", max: 1, "aria-label": "Progress" }); if (S.up && S.up.value != null) p.value = S.up.value; return p; })(),
+      h("p", { class: "hint" }, "Keep this page open until it finishes.")]
+    : [h("p", { class: "drop-title" }, slim ? "Drop another recording or transcript here" : "Drop a recording here"),
+      slim ? null : h("p", { class: "hint" }, "MP3, WAV, M4A or MP4 from Zoom or your phone, or a transcript (.txt, .srt, .vtt). Several files at once is fine. Files over 25 MB are split on this device first."),
+      h("button", { class: slim ? "btn quiet" : "btn", disabled: REC.on, onclick: () => input.click() }, "Choose files")]);
+}
+function transcriptPanel(lec){
+  const segs = h("div", { id: "segs" }); fillSegs(segs, lec);
+  const has = lec.segments.length || (lec.marks || []).length;
+  const hits = S.hl ? lec.segments.concat(lec.marks || []).reduce((n, s) => n + (s.text.toLowerCase().split(S.hl.toLowerCase()).length - 1), 0) : 0;
+  const ta = h("textarea", { placeholder: "Or paste lecture text here. Lines that start with a time like 12:30 keep their timestamp.", "aria-label": "Transcript text to add", value: S.paste, oninput: e => (S.paste = e.target.value) });
+  const size = d => { S.read = Math.max(14, Math.min(24, S.read + d)); document.documentElement.style.setProperty("--read-size", S.read + "px"); DB.settings.readSize = S.read; DB.saveSettings().catch(() => {}); };
+  return h("div", null,
+    h("div", { class: "toolbar" },
+      S.hl ? h("span", { class: "row" }, h("span", null, hits + (hits === 1 ? " match for “" : " matches for “") + S.hl + "”"), h("button", { class: "btn quiet", onclick: () => { S.hl = ""; render(); } }, "Clear highlighting"))
+        : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording below."),
+      h("span", { class: "sizer" }, h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
+    segs,
+    dropZone(lec, !!has),
+    h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta,
+      h("div", { class: "row" }, h("button", { class: "btn", onclick: () => addText(ta.value) }, "Add this text"))));
+}
+
+function aiGate(lec, kind, first, again, has){
+  const wrap = h("div", { class: "row gate" });
+  if (!lec.segments.length) return wrap.append(h("p", { class: "hint" }, "Add a transcript first. Then come back here.")), wrap;
+  if (S.busy[kind]) return wrap.append(h("p", { class: "hint", id: "aiNote", role: "status" }, S.note || "Reading the lecture. This takes up to a minute.")), wrap;
+  wrap.append(h("button", { class: has ? "btn quiet" : "btn solid", disabled: !S.status.ai, onclick: () => make(kind) }, has ? again : first));
+  if (!S.status.ai) wrap.append(h("span", { class: "hint" }, "Add an AI key in Settings first."));
+  return wrap;
+}
+// notes: Markdown in, DOM out (never innerHTML)
+function inline(text){
+  const out = [];
+  runsOf(text).forEach(r => {
+    const bits = r.t.split(/(\[\d{1,2}:\d\d(?::\d\d)?\])/).map(part => {
+      const m = part.match(/^\[(\d{1,2}:\d\d(?::\d\d)?)\]$/);
+      return m ? h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(parseTs(m[1])) }, m[1]) : part;
+    });
+    out.push(r.b ? h("strong", null, bits) : bits);
+  });
+  return out;
+}
+function notesView(md){
+  const box = h("div", { class: "notes read" }); let list = null, lvl = 0, stack = [];
+  const closeList = () => { list = null; stack = []; };
+  for (const b of mdBlocks(md)){
+    if (b.k === "li" || b.k === "todo"){
+      const L = b.lvl || 0;
+      if (!stack.length){ const ul = h("ul"); box.append(ul); stack = [ul]; }
+      while (stack.length - 1 > L) stack.pop();
+      while (stack.length - 1 < L){ const parent = stack[stack.length - 1], host = parent.lastElementChild || parent.appendChild(h("li")); const ul = h("ul"); host.append(ul); stack.push(ul); }
+      stack[stack.length - 1].append(h("li", { class: b.k === "todo" ? "todo" + (b.done ? " done" : "") : null }, inline(b.t)));
+    } else { closeList(); box.append(h(b.k === "h2" ? "h2" : b.k === "h3" ? "h3" : "p", null, inline(b.t))); }
+  }
+  return box;
+}
+function notesPanel(lec){
+  const box = h("div"), has = !!(lec.notes && lec.notes.md);
+  if (S.editNotes){
+    const ta = h("textarea", { class: "notes-edit", "aria-label": "Notes, in Markdown", value: S.notesDraft, oninput: e => (S.notesDraft = e.target.value), placeholder: "## Main topic\n- A point\n  - A detail under it\n- [ ] Something to do" });
+    box.append(h("p", { class: "hint", style: "margin-top:0" }, "Use ## for topics, ### for subtopics, - for bullets (indent two spaces to nest), - [ ] for action points and **bold** for key terms."), ta,
+      h("div", { class: "row" }, h("button", { class: "btn solid", onclick: async () => { try { S.editNotes = false; adopt(await api("PATCH", "/api/lectures/" + lec.id, { notes: S.notesDraft })); } catch (e){ fail(e); } } }, "Save notes"),
+        h("button", { class: "btn quiet", onclick: () => { S.editNotes = false; render(); } }, "Cancel")));
+    return box;
+  }
+  const gate = aiGate(lec, "notes", "Write structured notes", "Write the notes again", has);
+  if (!S.busy.notes){
+    gate.append(h("button", { class: "btn quiet", onclick: () => { S.editNotes = true; S.notesDraft = has ? lec.notes.md : ""; render(); } }, has ? "Edit" : "Write them yourself"));
+    if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"));
+  }
+  box.append(gate);
+  if (has) box.append(notesView(lec.notes.md));
+  else if (!S.busy.notes && lec.segments.length) box.append(h("p", { class: "hint" }, "Notes break the lecture into topics, subtopics, bullet points and action points. The summary stays short; this is the full version."));
+  return box;
+}
+function summaryPanel(lec){
+  const s = lec.summary, box = h("div", { class: "read" });
+  box.append(aiGate(lec, "summary", "Summarize this lecture", "Summarize again", !!s));
+  if (!s) return box;
+  const list = (title, items, cls) => (items.length ? [h("h2", null, title), h("ul", { class: cls || null }, items.map(i => h("li", { class: cls === "todo" ? "todo" : null }, i)))] : []);
+  box.append(h("h2", null, "Overview"), h("p", null, s.overview), ...list("Key points", s.keyPoints));
+  if (s.definitions.length) box.append(h("h2", null, "Definitions"), h("dl", null, s.definitions.map(d => [h("dt", null, d.term), h("dd", null, d.meaning)])));
+  box.append(...list("To do", s.actionItems, "todo"), ...list("Exam hints", s.examHints));
+  return box;
+}
+function studyPanel(lec){
+  const st = lec.study, box = h("div");
+  box.append(aiGate(lec, "study", "Make flashcards and a quiz", "Make a new set", !!st));
+  if (!st) return box;
+  box.append(h("div", { class: "cards" }, st.flashcards.map(c => {
+    let back = false;
+    const label = h("b", null, "Question"), body = h("span", null, c.q);
+    const card = h("button", { class: "card", "aria-label": "Flashcard. Press to flip.", onclick: () => {
+      back = !back; card.classList.toggle("back", back); label.textContent = back ? "Answer" : "Question"; body.textContent = back ? c.a : c.q;
+    } }, label, body);
+    return card;
+  })));
+  if (st.quiz.length){
+    let done = 0, right = 0;
+    const score = h("p", { class: "score", hidden: true, role: "status" });
+    const quiz = h("div", { class: "quiz read" }, h("h2", null, "Quiz"));
+    st.quiz.forEach((q, qi) => {
+      const why = h("p", { class: "why", hidden: true });
+      const opts = q.options.map((o, i) => h("button", { class: "opt", onclick: ev => {
+        opts.forEach((b, j) => { b.disabled = true; if (j === q.answer) b.classList.add("right"); });
+        if (i !== q.answer) ev.currentTarget.classList.add("wrong"); else right++;
+        why.hidden = false; why.textContent = (i === q.answer ? "Correct. " : "Not this one. ") + q.why;
+        if (++done === st.quiz.length){ score.hidden = false; score.textContent = "You got " + right + " of " + done + "."; }
+      } }, o));
+      quiz.append(h("div", { class: "q" }, h("p", null, (qi + 1) + ". " + q.q), opts, why));
+    });
+    quiz.append(score); box.append(quiz);
+  }
+  return box;
+}
+
+/* Pambizo: the AI workspace in the margin */
+const CHIPS = [
+  ["Action items", "List every action item, deadline and reading from this lecture, and say who should do what and by when if that was stated."],
+  ["Draft an email", "Draft a short, friendly email to my classmates that sums up this lecture and any deadlines."],
+  ["Translate to Kiswahili", "Translate the key points of this lecture into Kiswahili."],
+  ["Explain simply", "Explain the main idea of this lecture in simple terms, with one everyday example."],
+  ["Likely exam questions", "Write five likely exam questions from this lecture, each with a brief model answer."]
+];
+function richAnswer(text){
+  const out = h("div", { class: "msg" });
+  text.split(/(\[\d{1,2}:\d\d(?::\d\d)?\])/).forEach(part => {
+    const m = part.match(/^\[(\d{1,2}:\d\d(?::\d\d)?)\]$/);
+    if (m) out.append(h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(parseTs(m[1])) }, m[1])); else out.append(part);
+  });
+  return out;
+}
+function renderPam(){
+  const pam = $("pam"), lec = S.cur; pam.replaceChildren();
+  pam.append(h("div", { class: "pam-head" },
+    h("div", null, h("h2", null, "Pambizo"), h("p", { class: "hint" }, "Your margin. Ask, draft, translate; it reads the lecture with you.")),
+    h("button", { class: "btn quiet pam-close", onclick: closeDrawers }, "Close")));
+  if (!lec || !lec.segments.length){
+    pam.append(h("p", { class: "hint pam-empty" }, lec ? "Once this lecture has a transcript, ask anything about it here." : "Open or record a lecture, then ask anything about it here."));
+    return;
+  }
+  const off = S.busy.ask || !S.status.ai;
+  pam.append(h("div", { class: "chips" }, CHIPS.map(([label, prompt]) => h("button", { class: "chip", disabled: off, onclick: () => ask(prompt, label) }, label))));
+  const log = h("div", { class: "chat", id: "pamLog" });
+  if (!(lec.chat || []).length) log.append(h("p", { class: "hint" }, "Try one of the buttons above, or ask something like “What is due next week?”"));
+  (lec.chat || []).forEach(m => {
+    if (m.role === "user") return void log.append(h("div", { class: "msg me" }, m.label || m.content));
+    const node = richAnswer(m.content);
+    log.append(node, h("button", { class: "copy", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(m.content).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"));
+  });
+  if (S.busy.ask) log.append(h("div", { class: "msg", id: "pending", role: "status" }, "Thinking…"));
+  pam.append(log);
+  if (S.pamErr) pam.append(h("p", { class: "notice err", role: "alert" }, S.pamErr));
+  if (!S.status.ai) pam.append(h("p", { class: "hint" }, "Add an AI key in Settings to use Pambizo. Your Groq key works."));
+  const input = h("textarea", { id: "pamIn", rows: 2, placeholder: "Ask Pambizo", "aria-label": "Message to Pambizo", value: S.draft, disabled: off,
+    oninput: e => (S.draft = e.target.value), onkeydown: e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); ask(); } } });
+  const scope = h("select", { "aria-label": "What Pambizo reads", disabled: off || !lec.course, title: lec.course ? null : "Give this lecture a course name to ask across the course", onchange: e => (S.scope = e.target.value) },
+    [["lecture", "This lecture"], ["course", "Whole course"]].map(([v, t]) => { const o = h("option", { value: v }, t); if (v === S.scope && lec.course) o.selected = true; return o; }));
+  pam.append(h("div", { class: "composer" }, input, h("div", { class: "row between" }, scope,
+    h("span", { class: "row" },
+      (lec.chat || []).length && !S.busy.ask ? h("button", { class: "btn quiet", onclick: async () => { try { await api("PATCH", "/api/lectures/" + lec.id, { clearChat: true }); S.pamErr = ""; renderPam(); } catch (e){ S.pamErr = e.message; renderPam(); } } }, "Clear") : null,
+      S.busy.ask ? h("button", { class: "btn", onclick: () => askCtl && askCtl.abort() }, "Stop") : h("button", { class: "btn solid", disabled: off, onclick: () => ask() }, "Send")))));
+  if (log.lastChild) log.scrollTop = log.scrollHeight;
+}
+
+const LANGS = [["auto", "Detect language"], ["en", "English"], ["sw", "Kiswahili"], ["fr", "Français"], ["es", "Español"], ["ar", "العربية"], ["pt", "Português"], ["de", "Deutsch"]];
+const RATES = [1, 1.25, 1.5, 2];
+function renderMain(){
+  const main = $("main"); main.replaceChildren();
+  const lec = S.cur;
+  if (!lec){
+    main.append(h("div", { class: "empty" },
+      h("h1", null, "Listen to the lecturer. Bizofy writes it down."),
+      h("p", null, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
+      S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
+      h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture")),
+      dropZone(null, false)));
+    return;
+  }
+  const patch = (field, fallback) => async ev => {
+    const v = ev.target.value.trim() || fallback || "";
+    try { const out = await api("PATCH", "/api/lectures/" + lec.id, { [field]: v }); lec[field] = out[field]; adopt(lec, true); ev.target.value = out[field]; if (field === "course") render(); } catch (e){ fail(e); }
+  };
+  const menu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Export"),
+    h("div", { class: "menu-list" }, [["pdf", "PDF"], ["docx", "Word (.docx)"], ["txt", "Plain text (.txt)"], ["md", "Markdown (.md)"], ["srt", "Subtitles (.srt)"], ["vtt", "Subtitles (.vtt)"]].map(([k, t]) =>
+      h("button", { onclick: () => { menu.open = false; exportAs(k); } }, t))));
+  main.append(h("div", { class: "head" },
+    h("div", { class: "row course-row" },
+      h("input", { class: "course-in", value: lec.course, placeholder: "Course code or name", "aria-label": "Course", list: "courses", onchange: patch("course") }),
+      h("button", { class: "btn quiet", disabled: !lec.course, title: lec.course ? null : "Name the course first", onclick: () => openVocab(lec.course) }, "Course vocabulary")),
+    h("datalist", { id: "courses" }, courses().map(c => h("option", { value: c }))),
+    h("input", { class: "title-in", value: lec.title, "aria-label": "Lecture title", onchange: patch("title", "Untitled lecture") }),
+    h("div", { class: "row meta" },
+      h("span", { class: "meta-bits", id: "metaLine" }, metaBits(lec)),
+      h("span", { class: "row" }, menu,
+        h("button", { class: "btn quiet", onclick: async () => {
+          if (!confirm('Delete "' + lec.title + '" and its recording? This cannot be undone.')) return;
+          if (REC.on) stopRec(); stopPlayer();
+          try { await api("DELETE", "/api/lectures/" + lec.id); S.list = S.list.filter(l => l.id !== lec.id); S.cur = null; render(); } catch (e){ fail(e); }
+        } }, "Delete lecture")))));
+
+  const hasAudio = lec.audio && lec.audio.length > 0;
+  const seek = h("input", { type: "range", id: "seek", min: 0, max: Math.max(1, Math.floor(lec.duration || 0)), step: 1, value: P.lecId === lec.id ? playAbs() : 0, "aria-label": "Position in the recording",
+    oninput: e => { e.target._drag = true; }, onchange: e => { e.target._drag = false; playFrom(+e.target.value); } });
+  main.append(h("div", { class: "deck" },
+    h("button", { class: "recbtn", id: "recBtn", "aria-pressed": REC.on ? "true" : "false", "aria-label": REC.on ? "Stop recording" : "Start recording", onclick: () => (REC.on ? stopRec() : startRec()) }, h("i")),
+    h("div", { style: "min-width:0" },
+      h("div", { class: "clock", id: "clock" }, fmt(REC.on ? nowAbs() : lec.duration)),
+      h("div", { class: "live", id: "live", role: "status" }),
+      REC.on ? h("div", { class: "meter", "aria-hidden": "true" }, h("b", { id: "level" })) : null),
+    h("div", { class: "side-ctl" },
+      h("button", { class: "flag", id: "flagBtn", disabled: !REC.on, onclick: markImportant }, "Mark as important"),
+      h("select", { "aria-label": "Spoken language", disabled: REC.on, onchange: async e => { lec.language = e.target.value; api("PATCH", "/api/lectures/" + lec.id, { language: lec.language }).catch(fail); } },
+        LANGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (lec.language || "auto")) o.selected = true; return o; }))),
+    hasAudio && !REC.on ? h("div", { class: "player" },
+      h("button", { id: "playBtn", onclick: () => (P.a.paused ? (P.lecId === lec.id && P.a.src ? P.a.play() : playFrom(+seek.value || 0)) : P.a.pause()) }, P.a.paused ? "Play" : "Pause"),
+      h("button", { "aria-label": "Back 10 seconds", title: "Back 10 seconds", onclick: () => playFrom(Math.max(0, (P.lecId === lec.id ? playAbs() : +seek.value || 0) - 10)) }, "−10s"),
+      seek,
+      h("select", { "aria-label": "Playback speed", onchange: e => { S.rate = +e.target.value; P.a.playbackRate = S.rate; P.a.defaultPlaybackRate = S.rate; } }, RATES.map(r => { const o = h("option", { value: r }, r + "×"); if (r === S.rate) o.selected = true; return o; }))) : null));
+  main.append(h("p", { class: "notice err", id: "recMsg", role: "alert", hidden: !REC.msg }, REC.msg));
+  if (REC.on) main.append(h("p", { class: "notice" }, "Check that your lecturer allows recording. Keep this page open and the screen on while it records." + (S.status.transcribe ? "" : " No speech-to-text key is set, so the audio is saved now and you can transcribe it afterwards.")));
+
+  // your own note, pinned to the current moment
+  const pinT = () => (REC.on ? nowAbs() : P.lecId === lec.id && P.n != null ? playAbs() : null);
+  const noteIn = h("input", { class: "note-in", id: "noteIn", type: "text", value: S.markDraft, placeholder: REC.on ? "Type your own note. It is pinned to this moment in the recording." : "Type your own note for this lecture", "aria-label": "Your own note", oninput: e => (S.markDraft = e.target.value), onkeydown: e => { if (e.key === "Enter") addMark(); } });
+  const addMark = async () => {
+    const text = S.markDraft.trim(); if (!text) return;
+    try { await api("POST", "/api/lectures/" + lec.id + "/marks", { t: pinT(), text }); S.markDraft = ""; noteIn.value = ""; if (S.tab === "transcript") softRefresh(); else { S.tab = "transcript"; render(); } $("noteIn") && $("noteIn").focus(); } catch (e){ fail(e); }
+  };
+  main.append(h("div", { class: "note-row" }, noteIn, h("button", { class: "btn", onclick: addMark }, "Add note")));
+
+  const tabs = [["transcript", "Transcript"], ["notes", "Notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
+  main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
+    h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.editNotes = false; render(); } }, t))));
+  const panel = h("div", { class: "panel", role: "tabpanel" });
+  if (S.err) panel.append(h("p", { class: "notice err", role: "alert", style: "margin:0 0 14px" }, S.err));
+  panel.append(S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : transcriptPanel(lec));
+  main.append(panel);
+  liveLine();
+}
+function render(){ renderList(); renderKeys(); renderMain(); renderPam(); }
+
+async function openVocab(course){
+  $("vocabCourse").textContent = course; $("vocabText").value = getVocab(course); $("vocab")._course = course; $("vocab").showModal();
+}
+$("vocabForm").addEventListener("submit", async ev => {
+  if (ev.submitter && ev.submitter.value === "cancel") return;
+  ev.preventDefault();
+  try { await setVocab($("vocab")._course, $("vocabText").value); $("vocab").close(); } catch (e){ fail(e); }
+});
+
+
+/* ---------- settings + login ---------- */
+async function openSettings(){
+  const f = $("setForm").elements; $("setErr").hidden = true;
+  try {
+    const s = await api("GET", "/api/settings");
+    f.provider.value = s.provider; f.aiProvider.value = s.aiProvider; f.claudeModel.value = s.claudeModel; f.groqModel.value = s.groqModel;
+    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.updateUrl.value = s.updateUrl;
+    for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : k === "groqAiKey" ? "Only if speech-to-text is not on Groq" : "Paste the key"; }
+    $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet.";
+  } catch (e){}
+  closeDrawers(); $("settings").showModal();
+}
+$("setForm").addEventListener("submit", async ev => {
+  if (ev.submitter && ev.submitter.value === "cancel") return;
+  ev.preventDefault();
+  const f = ev.target.elements;
+  try {
+    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, updateUrl: f.updateUrl.value, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
+    S.status = await api("GET", "/api/status");
+    $("settings").close(); render(); checkUpdate();
+  } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; }
+});
+
+/* ---------- version ---------- */
+const VERSION = "2.1.1", RELEASED = "19 September 2026";
+const CHANGES = [
+  ["2.1.1", "19 Sep 2026", ["A hosted copy checks for new versions by itself"]],
+  ["2.1.0", "19 Sep 2026", ["Use any OpenAI-compatible AI service, or change the model, in Settings", "Version number, this list, and an optional check for newer versions"]],
+  ["2.0.0", "19 Sep 2026", ["Three-panel layout with the Pambizo AI workspace", "Notes tab with structured, editable notes", "AI features run on a Groq key; Claude optional", "Drop & Go uploads with a progress bar", "Export to PDF, Word, TXT, Markdown, SRT and VTT", "Search with highlighting and a course filter", "Course vocabulary, your own timestamped notes, playback speed, text size"]],
+  ["1.1.0", "18 Sep 2026", ["Renamed from Margin Ai Notes to Bizofy"]],
+  ["1.0.0", "18 Sep 2026", ["First single-file version: record, transcribe, summary, flashcards, quiz, ask your notes"]]
+];
+const newer = (a, b) => { const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
+function renderVersion(){
+  $("ver").textContent = "Bizofy " + VERSION;
+  $("changes").replaceChildren(h("p", { class: "hint" }, "You have version " + VERSION + ", released " + RELEASED + "."), ...CHANGES.flatMap(([v, d, items]) => [h("p", { class: "ver-head" }, v, h("span", null, d)), h("ul", null, items.map(i => h("li", null, i)))]));
+}
+// Optional: a small JSON file you host, like {"version":"2.2.0","url":"https://…/bizofy.html","notes":"What changed"}
+async function checkUpdate(){
+  const box = $("update"); box.hidden = true;
+  // a hosted copy checks the version.json beside it; a local copy uses the address from Settings
+  const url = (DB.settings.updateUrl || "").trim() || (location.protocol === "https:" ? new URL("version.json", location.href).href : "");
+  if (!/^https:\/\//.test(url)) return;
+  try {
+    const j = await (await fetch(url, { cache: "no-store" })).json();
+    if (!j || !j.version || !newer(j.version, VERSION)) return;
+    box.replaceChildren("Version " + j.version + " is available. ", j.notes ? String(j.notes).slice(0, 140) + " " : "", (() => { let link = ""; try { link = new URL(j.url || "./", url).href; } catch (e){} return /^https:\/\//.test(link) ? h("a", { href: link, target: "_blank", rel: "noopener" }, location.href.split("#")[0] === link ? "Reload to get it" : "Get it") : null; })());
+    box.hidden = false;
+  } catch (e){}
+}
+$("backupBtn").addEventListener("click", () => {
+  saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [] })) }), "application/json");
+});
+$("restoreIn").addEventListener("change", async ev => {
+  const f = ev.target.files[0]; if (!f) return; ev.target.value = "";
+  try {
+    const j = JSON.parse(await f.text());
+    if (!j || j.app !== "margin-ai-notes" || !Array.isArray(j.lectures)) throw new Error("x");
+    let added = 0;
+    for (const l of j.lectures){ if (!l || !l.id || DB.lectures.has(l.id) || !Array.isArray(l.segments)) continue; l.audio = []; DB.lectures.set(l.id, l); await DB.save(l); added++; }
+    S.list = await api("GET", "/api/lectures"); $("settings").close(); S.err = ""; render();
+    alert(added + (added === 1 ? " lecture was" : " lectures were") + " added from the backup.");
+  } catch (e){ $("setErr").hidden = false; $("setErr").textContent = "That file is not a Bizofy backup."; }
+});
+$("restoreBtn").addEventListener("click", () => $("restoreIn").click());
+
+/* ---------- start ---------- */
+let searchTimer = null;
+function runSearch(){
+  clearTimeout(searchTimer);
+  const q = $("search").value.trim(); S.q = q;
+  if (q.length < 2){ S.search = null; if (S.hl){ S.hl = ""; return render(); } return renderList(); }
+  searchTimer = setTimeout(async () => { try { S.search = await api("GET", "/api/search?q=" + encodeURIComponent(q) + "&course=" + encodeURIComponent(S.course || "")); renderList(); } catch (x){} }, 220);
+}
+$("search").addEventListener("input", runSearch);
+$("courseFilter").addEventListener("change", e => { S.course = e.target.value; if (S.q && S.q.length > 1) runSearch(); else renderList(); });
+$("openSide").addEventListener("click", () => { document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); });
+$("openPam").addEventListener("click", () => { document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); });
+$("scrim").addEventListener("click", closeDrawers);
+document.addEventListener("click", e => { document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawers(); });
+
+// Drop & Go: files dropped anywhere on the page
+let dragDepth = 0;
+const hasFiles = e => e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files");
+window.addEventListener("dragenter", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; document.body.classList.add("dragging"); });
+window.addEventListener("dragover", e => { if (hasFiles(e)) e.preventDefault(); });
+window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; if (--dragDepth <= 0){ dragDepth = 0; document.body.classList.remove("dragging"); } });
+window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+P.a.addEventListener("play", () => { P.a.playbackRate = S.rate; });
+
+$("newBtn").addEventListener("click", () => { closeDrawers(); newLecture().catch(fail); });
+$("settingsBtn").addEventListener("click", openSettings);
+document.addEventListener("visibilitychange", () => { if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => (REC.wake = w)).catch(() => {}); });
+
+async function init(){
+  try {
+    S.status = await api("GET", "/api/status");
+    S.list = await api("GET", "/api/lectures");
+    render();
+    if (!S.status.transcribe && !S.status.ai && !S.list.length) openSettings();
+  } catch (e){ fail(e); }
+}
+(async () => {
+  try { await DB.init(); } catch (e){ S.err = e.message; return render(); }
+  if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(x => { const n = $("usage"); if (n && x.usage != null) n.textContent = "Bizofy is using " + (x.usage / 1048576).toFixed(0) + " MB on this device."; }).catch(() => {});
+  S.read = DB.settings.readSize || 17; document.documentElement.style.setProperty("--read-size", S.read + "px");
+  renderVersion(); checkUpdate();
+  init();
+})();
+})();
+</script>
+</body>
+</html>
