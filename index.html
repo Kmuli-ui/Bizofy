@@ -111,6 +111,9 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .menu-list{position:absolute;right:0;top:calc(100% + 6px);z-index:6;background:var(--sheet);border:1.5px solid var(--ink);border-radius:10px;padding:6px;min-width:190px;display:flex;flex-direction:column}
 .menu-list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px;font-size:var(--t-1)}
 .menu-list button:hover{background:var(--hi-soft)}
+.menu-list.wide{min-width:300px;max-width:340px}
+.menu-note{margin:4px 10px 8px;font-size:var(--t-2);color:var(--slate);line-height:1.45}
+.notice.info{background:var(--hi-soft);color:var(--ink);border-radius:8px;padding:9px 12px}
 
 .deck{background:#14233B;color:#F2F5F8;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .deck.is-live{position:sticky;top:10px;z-index:3}
@@ -1080,15 +1083,17 @@ async function audioFiles(lec, note){
 
 /* MP3: plays on every phone and computer. Converted on this device, part by part, so long lectures stay light on memory. */
 const LAME_URL = "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js";
+// what audio this device actually holds for a lecture, and how much of the transcript it covers
+function audioInfo(lec){
+  const parts = lec.audio || [], secs = parts.reduce((n, p) => n + (p.dur || 0), 0);
+  const textEnd = lec.segments.reduce((m, s) => Math.max(m, s.end != null ? s.end : s.t || 0), 0);
+  return { parts: parts.length, sessions: (lec.sessions || []).length, secs, textEnd, short: textEnd > 120 && secs < textEnd * 0.6 };
+}
 async function toMp3(lec, note){
   try { await loadScript(LAME_URL, () => !!window.lamejs); } catch (e){ throw new AppError("The MP3 converter could not load. Check the internet connection, or download the original recording instead."); }
   const RATE = 24000, enc = new window.lamejs.Mp3Encoder(1, RATE, 48), out = [], Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-  const parts = (lec.audio || []).slice().sort((a, b) => a.offset - b.offset);
-  let done = 0;
-  for (let i = 0; i < parts.length; i++){
-    note("Converting to MP3, " + Math.round(i / parts.length * 100) + "% done…");
-    const blob = await DB.getAudio(lec.id, parts[i].n); if (!blob) continue;
-    let d; try { d = await new Ctx(1, RATE, RATE).decodeAudioData(await blob.arrayBuffer()); } catch (e){ continue; }
+  let done = 0, failed = 0, samples = 0;
+  const feed = async d => {
     const n = d.length, ch = d.numberOfChannels, mono = d.getChannelData(0), other = ch > 1 ? d.getChannelData(1) : null, BLOCK = 1152 * 40;
     for (let at = 0; at < n; at += BLOCK){
       const end = Math.min(n, at + BLOCK), pcm = new Int16Array(end - at);
@@ -1096,12 +1101,79 @@ async function toMp3(lec, note){
       const buf = enc.encodeBuffer(pcm); if (buf.length) out.push(new Uint8Array(buf));
       if ((at / BLOCK) % 8 === 7) await sleep(0);
     }
-    done++;
+    samples += n; done++;
+  };
+  const decode = async blob => new Ctx(1, RATE, RATE).decodeAudioData(await blob.arrayBuffer());
+  const parts = (lec.audio || []).slice().sort((a, b) => a.offset - b.offset);
+  for (let i = 0; i < parts.length; i++){
+    note("Converting to MP3, " + Math.round(i / parts.length * 100) + "% done…");
+    const blob = await DB.getAudio(lec.id, parts[i].n);
+    if (!blob){ failed++; continue; }
+    try { await feed(await decode(blob)); } catch (e){ failed++; }
+  }
+  // if the short parts could not be read, fall back to the continuous recordings of each session
+  if (failed && (lec.sessions || []).length && failed >= parts.length * 0.2){
+    out.length = 0; samples = 0; done = 0; const enc2 = new window.lamejs.Mp3Encoder(1, RATE, 48); let ok = 0;
+    const sess = lec.sessions.slice().sort((a, b) => a.offset - b.offset);
+    for (let i = 0; i < sess.length; i++){
+      note("Converting the full recording, session " + (i + 1) + " of " + sess.length + "…");
+      const blob = await DB.getAudio(lec.id, "s" + sess[i].n); if (!blob) continue;
+      try { const d = await decode(blob), mono = d.getChannelData(0), BLOCK = 1152 * 40;
+        for (let at = 0; at < d.length; at += BLOCK){ const end = Math.min(d.length, at + BLOCK), pcm = new Int16Array(end - at); for (let k = at; k < end; k++){ let x = mono[k]; x = x < -1 ? -1 : x > 1 ? 1 : x; pcm[k - at] = x < 0 ? x * 0x8000 : x * 0x7FFF; } const buf = enc2.encodeBuffer(pcm); if (buf.length) out.push(new Uint8Array(buf)); if ((at / BLOCK) % 8 === 7) await sleep(0); }
+        samples += d.length; ok++; } catch (e){}
+    }
+    if (ok){ const t2 = enc2.flush(); if (t2.length) out.push(new Uint8Array(t2)); return { blob: new Blob(out, { type: "audio/mpeg" }), secs: samples / RATE, failed: 0 }; }
   }
   if (!done) throw new AppError("This browser could not read the saved audio to convert it. Download the original recording instead.");
   const tail = enc.flush(); if (tail.length) out.push(new Uint8Array(tail));
-  return new Blob(out, { type: "audio/mpeg" });
+  return { blob: new Blob(out, { type: "audio/mpeg" }), secs: samples / RATE, failed };
 }
+
+/* ---------- a lecture as one file, audio included: for moving between copies of Bizofy and between devices ---------- */
+async function lectureFile(lec, note){
+  const entries = [{ name: "lecture.json", text: JSON.stringify({ app: "bizofy-lecture", version: 1, lecture: lec }) }];
+  const all = [...(lec.audio || []).map(p => [String(p.n), p]), ...(lec.sessions || []).map(p => ["s" + p.n, p])];
+  for (let i = 0; i < all.length; i++){
+    note("Packing the audio, " + Math.round(i / all.length * 100) + "%…");
+    const b = await DB.getAudio(lec.id, all[i][0]); if (b) entries.push({ name: "audio/" + all[i][0], data: new Uint8Array(await b.arrayBuffer()) });
+  }
+  entries.mime = "application/octet-stream";
+  return zipStore(entries);
+}
+function unzipStore(buf){
+  const v = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder(), out = new Map();
+  let e = buf.byteLength - 22; while (e >= 0 && v.getUint32(e, true) !== 0x06054b50) e--;
+  if (e < 0) throw new AppError("That file is not a Bizofy lecture file.");
+  const count = v.getUint16(e + 10, true); let at = v.getUint32(e + 16, true);
+  for (let i = 0; i < count; i++){
+    if (v.getUint32(at, true) !== 0x02014b50) break;
+    const method = v.getUint16(at + 10, true), size = v.getUint32(at + 24, true), nl = v.getUint16(at + 28, true), xl = v.getUint16(at + 30, true), cl = v.getUint16(at + 32, true), off = v.getUint32(at + 42, true);
+    const name = dec.decode(u8.subarray(at + 46, at + 46 + nl));
+    if (method === 0){ const lnl = v.getUint16(off + 26, true), lxl = v.getUint16(off + 28, true), start = off + 30 + lnl + lxl; out.set(name, u8.subarray(start, start + size)); }
+    at += 46 + nl + xl + cl;
+  }
+  return out;
+}
+async function importLectureFile(file, note){
+  const files = unzipStore(await file.arrayBuffer()), raw = files.get("lecture.json");
+  let j = null; try { j = JSON.parse(new TextDecoder().decode(raw)); } catch (e){}
+  const inc = j && j.app === "bizofy-lecture" && j.lecture;
+  if (!inc || !okShape(inc)) throw new AppError("That file is not a Bizofy lecture file.");
+  let lec = DB.lectures.get(inc.id), added = 0;
+  if (!lec){ lec = { ...inc, audio: [], sessions: [] }; delete lec.deletedAt; DB.lectures.set(lec.id, lec); }
+  else if (!lec.segments.length && inc.segments.length){ lec.segments = inc.segments; lec.duration = Math.max(lec.duration || 0, inc.duration || 0); }
+  lec.audio = lec.audio || []; lec.sessions = lec.sessions || [];
+  const bring = async (list, target, prefix) => { for (const p of list || []){
+    const known = target.some(x => x.n === p.n);
+    if (known && await DB.getAudio(lec.id, prefix + p.n)) continue;
+    const bytes = files.get("audio/" + prefix + p.n); if (!bytes) continue;
+    note("Unpacking the audio…"); await DB.putAudio(lec.id, prefix + p.n, new Blob([bytes], { type: p.mime || "audio/webm" })); if (!known) target.push(p); added++; } };
+  await bring(inc.audio, lec.audio, ""); await bring(inc.sessions, lec.sessions, "s");
+  lec.duration = Math.max(lec.duration || 0, inc.duration || 0);
+  await DB.save(lec);
+  return { lec, added };
+}
+const okShape = l => l && typeof l.id === "string" && /^[a-z0-9]{6,40}$/.test(l.id) && typeof l.title === "string" && Array.isArray(l.segments);
 
 function saveFile(name, data, type){
   const a = document.createElement("a");
@@ -1202,7 +1274,7 @@ async function api(method, url, body, note){
 }
 
 /* ---------- state ---------- */
-const S = { list: [], cur: null, view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
+const S = { list: [], cur: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
 let askCtl = null;
 
 const folderOf = l => (l.folder ? l.folder : l.course || "Unfiled");
@@ -1219,7 +1291,7 @@ function adopt(lec, soft){
 async function openLecture(id){
   if (REC.on) stopRec();
   stopPlayer();
-  S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
+  S.info = ""; S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
   S.cur = await api("GET", "/api/lectures/" + id);
   if (S.cur.kind === "note") S.tab = "mynotes";
   render();
@@ -1432,7 +1504,7 @@ async function addText(raw){
   const segs = parseText(raw); if (!segs.length) return;
   try { S.paste = ""; adopt(await api("POST", "/api/lectures/" + S.cur.id + "/segments", { segments: segs })); } catch (e){ fail(e); }
 }
-const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i;
+const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i, LECT_RE = /\.bizofy$/i;
 function setUp(label, value){
   S.up = { label, value };
   const l = $("upLabel"), bar = $("upBar");
@@ -1457,6 +1529,17 @@ async function uploadOne(lec, file, tag){
   if (failed > 1) S.err = "Some parts could not be transcribed. They are saved; use the button in the transcript to try again.";
 }
 async function handleFiles(list){
+  const packed = [...list].filter(f => LECT_RE.test(f.name));
+  if (packed.length){
+    if (S.busy.upload) return;
+    S.busy.upload = true; S.err = ""; S.up = { label: "Opening the lecture file…", value: null }; render();
+    let last = null, added = 0;
+    try { for (const f of packed){ const out = await importLectureFile(f, t => setUp(t, null)); last = out.lec; added += out.added; } S.list = await api("GET", "/api/lectures"); }
+    catch (e){ S.err = e.message; }
+    S.busy.upload = false; S.up = null;
+    if (last){ S.view = "main"; await openLecture(last.id).catch(() => {}); S.info = added ? "Lecture file added, with " + added + " audio " + (added === 1 ? "part." : "parts.") : "That lecture and its audio were already here."; }
+    return render();
+  }
   const files = [...list].filter(f => AUDIO_RE.test(f.name) || TEXT_RE.test(f.name) || /^(audio|video|text)\//.test(f.type));
   if (!files.length){ S.err = "Bizofy reads audio and video files (MP3, WAV, M4A, MP4) and transcripts (.txt, .srt, .vtt)."; return render(); }
   if (REC.on){ S.err = "Stop the recording before you add files."; return render(); }
@@ -1548,7 +1631,13 @@ async function downloadAudio(asMp3){
   const say = t => { S.note = t; const n = $("audioNote"); if (n) n.textContent = t; };
   S.busy.audio = true; S.err = ""; S.note = "Preparing the audio…"; render();
   try {
-    if (asMp3) saveFile(fileBase(lec) + ".mp3", await toMp3(lec, say));
+    if (asMp3 === "pack") saveFile(fileBase(lec) + ".bizofy", await lectureFile(lec, say));
+    else if (asMp3){
+      const out = await toMp3(lec, say), info = audioInfo(lec);
+      saveFile(fileBase(lec) + ".mp3", out.blob);
+      S.info = "Saved an MP3 of " + fmt(out.secs) + "." + (out.failed ? " " + out.failed + " short parts could not be read and were skipped." : "")
+        + (info.short ? " Note: this lecture's text runs to " + fmt(info.textEnd) + ", but this device only holds " + fmt(info.secs) + " of its audio." : "");
+    }
     else {
       const files = await audioFiles(lec, say);
       if (!files.length) throw new AppError("There is no audio saved for this lecture on this device.");
@@ -1721,7 +1810,7 @@ const metaBits = lec => [h("span", null, new Date(lec.createdAt).toLocaleDateStr
   h("span", null, metaOf(lec).words.toLocaleString() + " words"), lec.duration ? h("span", null, fmt(lec.duration) + " recorded") : null];
 
 function dropZone(lec, slim){
-  const input = h("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,video/mp4,video/webm,video/quicktime,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.mov,.flac,.txt,.md,.vtt,.srt", onchange: e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ""; } });
+  const input = h("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,video/mp4,video/webm,video/quicktime,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.mov,.flac,.txt,.md,.vtt,.srt,.bizofy", onchange: e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ""; } });
   const busy = S.busy.upload;
   return h("div", { class: "drop" + (slim && !busy ? " slim" : "") + (busy ? " busy" : ""), id: "drop" },
     input,
@@ -1969,12 +2058,15 @@ function renderMain(){
   const here = folderOf(lec);
   const folderSel = h("select", { class: "folder-sel", "aria-label": "Folder", onchange: e => (e.target.value === "\u0000new" ? newFolder(lec.id) : moveTo(lec.id, e.target.value)) },
     [...new Set([here, ...folders()])].map(f => { const o = h("option", { value: f }, f); if (f === here) o.selected = true; return o; }), h("option", { value: "\u0000new" }, "New folder…"));
-  const hasAudio = (lec.audio && lec.audio.length > 0) || (lec.sessions && lec.sessions.length > 0);
+  const info = audioInfo(lec), hasAudio = info.parts > 0 || (info.sessions > 0 && info.secs > 0) || (info.sessions > 0 && !lec.segments.length);
   const audioMenu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Audio"),
-    h("div", { class: "menu-list" },
-      lec.audio && lec.audio.length ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
-      h("button", { onclick: () => { audioMenu.open = false; downloadAudio(false); } }, "Download the original recording"),
-      h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text")));
+    h("div", { class: "menu-list wide" },
+      h("p", { class: "menu-note" }, hasAudio ? "On this device: " + fmt(info.secs) + " of audio." + (info.short ? " The text runs to " + fmt(info.textEnd) + ", so most of the audio is not on this device." : "")
+        : "There is no audio for this lecture on this device. Audio stays on the device that recorded it: a backup carries the text only. To bring the audio over, open Bizofy where it was recorded, choose Audio, then Save lecture with audio, and drop that file here."),
+      info.parts ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
+      hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(false); } }, "Download the original recording") : null,
+      hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio("pack"); } }, "Save lecture with audio, to move it (.bizofy)") : null,
+      hasAudio ? h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text") : null));
   main.append(h("div", { class: "head" },
     isNote ? null : h("div", { class: "row course-row" },
       h("input", { class: "course-in", value: lec.course, placeholder: "Course code or name", "aria-label": "Course", list: "courses", onchange: patch("course") }),
@@ -1986,13 +2078,14 @@ function renderMain(){
       h("span", { class: "row actions" },
         h("label", { class: "folder-pick" }, "Folder", folderSel),
         h("button", { class: "btn quiet", onclick: openExport }, "Export"),
-        hasAudio && !REC.on ? audioMenu : null,
+        !isNote && !REC.on ? audioMenu : null,
         lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { archived: !lec.archived }); adopt(out, true); if (out.archived) S.cur = null; else S.view = "main"; render(); } catch (e){ fail(e); } } }, lec.archived ? "Move out of archive" : "Archive"),
         lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => {
           if (REC.on) stopRec(); stopPlayer();
           try { await api("DELETE", "/api/lectures/" + lec.id); lec.deletedAt = Date.now(); adopt(lec, true); S.cur = null; S.err = ""; render(); } catch (e){ fail(e); }
         } }, "Delete")))));
   if (S.busy.audio) main.append(h("p", { class: "notice", id: "audioNote", role: "status" }, S.note || "Preparing the audio…"));
+  else if (S.info) main.append(h("p", { class: "notice info", role: "status" }, S.info));
 
   if (!isNote){
     const canPlay = lec.audio && lec.audio.length > 0;
@@ -2029,7 +2122,7 @@ function renderMain(){
   const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", "AI notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
   if (isNote && S.tab !== "mynotes") S.tab = "mynotes";
   if (!isNote) main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
-    h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.editNotes = false; render(); } }, t))));
+    h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.info = ""; S.editNotes = false; render(); } }, t))));
   const panel = h("div", { class: "panel" + (isNote ? " solo" : ""), role: "tabpanel" });
   if (S.err) panel.append(h("p", { class: "notice err", role: "alert", style: "margin:0 0 14px" }, S.err));
   panel.append(S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : S.tab === "mynotes" ? myNotesPanel(lec) : transcriptPanel(lec));
@@ -2072,8 +2165,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.4", RELEASED = "20 September 2026";
+const VERSION = "2.2.5", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.5", "20 Sep 2026", ["Save a lecture with its audio as one file, and drop it into Bizofy on another device or copy", "The Audio menu now shows how much audio this device holds, and says so when a lecture has none", "MP3 downloads report their length and warn when audio is missing"]],
   ["2.2.4", "20 Sep 2026", ["When the main AI is overloaded, Bizofy hands the request to a backup AI (a second model, Groq or Claude) instead of waiting"]],
   ["2.2.3", "20 Sep 2026", ["When an AI service is overloaded, Bizofy now waits and tries again by itself"]],
   ["2.2.2", "20 Sep 2026", ["Works better with Google Gemini as the AI service, and error messages from any AI service now show the real reason"]],
@@ -2104,7 +2198,7 @@ async function checkUpdate(){
   } catch (e){}
 }
 $("backupBtn").addEventListener("click", () => {
-  saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [] })) }), "application/json");
+  saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [], sessions: [] })) }), "application/json");
 });
 $("restoreIn").addEventListener("change", async ev => {
   const f = ev.target.files[0]; if (!f) return; ev.target.value = "";
@@ -2112,7 +2206,7 @@ $("restoreIn").addEventListener("change", async ev => {
     const j = JSON.parse(await f.text());
     if (!j || j.app !== "margin-ai-notes" || !Array.isArray(j.lectures)) throw new Error("x");
     let added = 0;
-    for (const l of j.lectures){ if (!l || !l.id || DB.lectures.has(l.id) || !Array.isArray(l.segments)) continue; l.audio = []; DB.lectures.set(l.id, l); await DB.save(l); added++; }
+    for (const l of j.lectures){ if (!l || !l.id || DB.lectures.has(l.id) || !Array.isArray(l.segments)) continue; l.audio = []; l.sessions = []; DB.lectures.set(l.id, l); await DB.save(l); added++; }
     S.list = await api("GET", "/api/lectures");
     for (const l of S.list.filter(x => x.deletedAt && Date.now() - x.deletedAt > 30 * 864e5)){ await api("DELETE", "/api/lectures/" + l.id + "?forever=1").catch(() => {}); S.list = S.list.filter(x => x.id !== l.id); } $("settings").close(); S.err = ""; render();
     alert(added + (added === 1 ? " lecture was" : " lectures were") + " added from the backup.");

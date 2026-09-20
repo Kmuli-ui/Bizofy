@@ -1,5 +1,5 @@
 {
-  "version": "2.2.4",
+  "version": "2.2.5",
   "url": "./",
-  "notes": "Uses a backup AI when the main one is overloaded."
+  "notes": "Move a lecture with its audio between devices; clearer audio downloads."
 }
