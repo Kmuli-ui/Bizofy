@@ -660,7 +660,7 @@ async function llmOpenAI(c, o){
   if (o.json) body.response_format = { type: "json_object" };
   // Gemini "thinks" before answering and that thinking counts against the length limit: keep it short so answers are not cut off
   if (/generativelanguage\.googleapis\.com/.test(base)){ body.reasoning_effort = "low"; body.max_tokens = Math.max(body.max_tokens, 4000) + 2000; }
-  let waits = 0, fixes = 0;
+  let waits = 0, fixes = 0, busy = 0;
   for (;;){
     let r;
     try { r = await fetch(base + "/chat/completions", { method: "POST", signal: o.signal, headers: Object.assign({ "content-type": "application/json" }, key ? { Authorization: "Bearer " + key } : {}), body: JSON.stringify(body) }); }
@@ -684,6 +684,13 @@ async function llmOpenAI(c, o){
       if (/response_format|json/i.test(msg) && body.response_format){ delete body.response_format; fixes++; continue; }
       if (/reasoning_effort/i.test(msg) && body.reasoning_effort){ delete body.reasoning_effort; fixes++; continue; }
     }
+    // the service is overloaded or briefly down: wait a little longer each time and try again
+    if ([500, 502, 503, 504, 529].includes(r.status) && busy < 4){
+      const secs = [4, 10, 20, 30][busy++];
+      if (o.onWait) o.onWait(secs, "busy");
+      await sleep(secs * 1000, o.signal); continue;
+    }
+    if ([500, 502, 503, 504, 529].includes(r.status)) throw new AppError("The AI service is overloaded right now, and four more tries did not get through. This is on the provider's side. Try again in a few minutes" + (custom ? ", or switch to a different model in Settings." : "."));
     if (r.status === 429 && waits < 8){
       const h = r.headers.get("retry-after"), m = /try again in (?:(\d+)m)?([\d.]+)s/i.exec(msg);
       const secs = Math.min(90, Math.ceil(+h || (m ? (+(m[1] || 0)) * 60 + +m[2] : 20)) + 1);
@@ -695,6 +702,7 @@ async function llmOpenAI(c, o){
       : r.status === 429 ? "The AI plan's rate limit is used up for now. Try again in a few minutes." : "The AI returned an error (code " + r.status + "): " + msg);
   }
 }
+const waitText = (s, why) => (why === "busy" ? "The AI service is busy. Trying again in " + s + " seconds." : "Waiting " + s + " seconds for the AI plan's rate limit.");
 const llm = o => { const c = cfg(); return c.ai === "claude" ? llmClaude(c, o) : llmOpenAI(c, o); };
 function parseJson(text){
   const tries = [text, (text.match(/```(?:json)?\s*([\s\S]*?)```/) || [])[1], text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)];
@@ -723,7 +731,7 @@ async function digest(lec, note, signal){
   for (let i = 0; i < chunks.length; i++){
     note("Condensing part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
     out.push(await llm({ signal, max: per, system: "Condense this part of a university lecture transcript into dense notes of at most " + Math.round(per * 0.7) + " words. Keep every concept, definition, example, deadline and reading. Keep [m:ss] timestamps for key moments and keep the [!] prefix on points from lines marked [!]. Plain text.",
-      messages: [{ role: "user", content: chunks[i] }], onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit. Part " + (i + 1) + " of " + chunks.length + ".") }));
+      messages: [{ role: "user", content: chunks[i] }], onWait: (s, why) => note(waitText(s, why) + " Part " + (i + 1) + " of " + chunks.length + ".") }));
   }
   lec.digest = { len: text.length, text: out.join("\n") }; await DB.save(lec);
   return lec.digest.text;
@@ -753,7 +761,7 @@ async function withContext(lec, scope, run, note, signal){
 }
 const RULES = " Lines starting with [!] were marked important by the student: give them priority. Use only what the transcript says.";
 async function makeSummary(lec, note){
-  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3000, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3000, context: ctx, onWait: (s, why) => note(waitText(s, why)),
     system: "You write a short summary of a university lecture for a student." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["6 to 12 strings"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["readings, deadlines and tasks the lecturer mentioned; empty array if none"], "examHints": ["anything signalled as likely to be examined; empty array if none"]}',
     messages: [{ role: "user", content: "Write the JSON summary now." }] }), note));
   lec.summary = { overview: String(r.overview || ""), keyPoints: strs(r.keyPoints),
@@ -761,7 +769,7 @@ async function makeSummary(lec, note){
     actionItems: strs(r.actionItems), examHints: strs(r.examHints), madeAt: Date.now() };
 }
 async function makeStudy(lec, note){
-  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
     system: "You write study material from a university lecture that tests understanding, not trivia." + RULES + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with 12 flashcards and 6 quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
     messages: [{ role: "user", content: "Write the JSON study material now." }] }), note));
   lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
@@ -770,7 +778,7 @@ async function makeStudy(lec, note){
 }
 const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
 async function makeNotes(lec, note){
-  const c = cfg(), wait = s => note("Waiting " + s + " seconds for the AI plan's rate limit.");
+  const c = cfg(), wait = (s, why) => note(waitText(s, why));
   const whole = () => llm({ max: c.ai === "claude" ? 8000 : 4000, onWait: wait, context: headerText(lec) + "\nTranscript:\n" + fullText(lec),
     system: "You turn a university lecture transcript into complete, well-organised study notes." + RULES + NOTES_STYLE + " Finish with '## Action points' as '- [ ] ' items (readings, deadlines, tasks; write '- None mentioned' if there are none) and then '## Questions to review' with 3 to 6 bullets.",
     messages: [{ role: "user", content: "Write the notes now." }] });
@@ -782,7 +790,7 @@ async function makeNotes(lec, note){
     const chunks = chunkText(fullText(lec), 9000), parts = [];
     for (let i = 0; i < chunks.length; i++){
       note("Writing notes for part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
-      parts.push(await llm({ max: 900, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit. Part " + (i + 1) + " of " + chunks.length + "."),
+      parts.push(await llm({ max: 900, onWait: (s, why) => note(waitText(s, why) + " Part " + (i + 1) + " of " + chunks.length + "."),
         system: "You turn one part of a university lecture transcript into well-organised study notes." + RULES + NOTES_STYLE + " Do not add an introduction, a conclusion, or action points.",
         messages: [{ role: "user", content: chunks[i] }] }));
     }
@@ -795,7 +803,7 @@ async function makeNotes(lec, note){
 function askAI(lec, question, scope, signal, onText, note){
   const history = (lec.chat || []).slice(-13, -1).map(m => ({ role: m.role, content: m.content }));
   while (history.length && history[0].role !== "user") history.shift();
-  return withContext(lec, scope, ctx => llm({ max: 2000, signal, onText, context: ctx, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."),
+  return withContext(lec, scope, ctx => llm({ max: 2000, signal, onText, context: ctx, onWait: (s, why) => note(waitText(s, why)),
     system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly. Be concise. Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Plain text only: no Markdown symbols; use simple dashes for lists.",
     messages: [...history, { role: "user", content: question }] }), note, signal);
 }
@@ -1013,7 +1021,7 @@ async function polishNotes(lec, mode, note){
   const mine = myNotesMd(lec);
   if (mine.length < 20) throw new AppError("Write a few lines first, then run the AI over them.");
   const useTranscript = mode === "enrich" && lec.segments.length;
-  const run = ctx => llm({ max: 4000, onWait: s => note("Waiting " + s + " seconds for the AI plan's rate limit."), context: ctx || undefined,
+  const run = ctx => llm({ max: 4000, onWait: (s, why) => note(waitText(s, why)), context: ctx || undefined,
     system: "You edit a student's own notes. " + POLISH[mode][1] + " Reply with the notes only, in Markdown: '## ' main topics, '### ' subtopics, '- ' bullets (two spaces to nest), **bold** key terms, *italics* sparingly. No preamble, no commentary.",
     messages: [{ role: "user", content: "My notes:\n\n" + mine.slice(0, 24000) }] });
   const md = useTranscript ? await withContext(lec, "lecture", run, note) : await run("");
@@ -2037,8 +2045,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.2", RELEASED = "20 September 2026";
+const VERSION = "2.2.3", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.3", "20 Sep 2026", ["When an AI service is overloaded, Bizofy now waits and tries again by itself"]],
   ["2.2.2", "20 Sep 2026", ["Works better with Google Gemini as the AI service, and error messages from any AI service now show the real reason"]],
   ["2.2.1", "20 Sep 2026", ["Download the audio as an MP3 file, which plays on every phone and computer"]],
   ["2.2.0", "20 Sep 2026", ["My notes: write your own notes with bold, italics, headings and lists, then let the AI polish, structure or shorten them", "Stand-alone notes that are not tied to a recording", "Folders, drag to move, an archive, and a recycle bin that keeps deleted items for 30 days", "Download the audio of a lecture, or delete the audio and keep the text", "Export only the parts you want, plus flashcards as a file for Anki or Quizlet, and the quiz with an answer key"]],

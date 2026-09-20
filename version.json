@@ -1,5 +1,5 @@
 {
-  "version": "2.2.2",
+  "version": "2.2.3",
   "url": "./",
-  "notes": "Better Gemini support and clearer AI error messages."
+  "notes": "Retries by itself when the AI service is busy."
 }
