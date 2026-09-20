@@ -1,5 +1,5 @@
 {
-  "version": "2.2.5",
+  "version": "2.3.0",
   "url": "./",
-  "notes": "Move a lecture with its audio between devices; clearer audio downloads."
+  "notes": "Google Drive storage and sync, and recovery when a phone pauses a recording."
 }

@@ -82,6 +82,12 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .folder-empty{padding:2px 10px 6px;margin:0;font-size:var(--t-2)}
 .kind{font-size:var(--t-2);font-weight:600;background:var(--hi-soft);border-radius:4px;padding:0 5px;margin-right:6px}
 .store{margin-top:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.syncbox{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;font-size:var(--t-2);color:var(--slate);line-height:1.4;width:100%}
+.syncbox .btn{width:100%;text-align:center;padding:8px 10px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--slate);flex:none}
+.sync-dot.ok{background:var(--ok)}
+.sync-err{color:var(--rec)}
+@media (prefers-reduced-motion:no-preference){.sync-dot.spin{animation:blink 1s ease-in-out infinite}@keyframes blink{50%{opacity:.25}}}
 .keynote{font-size:var(--t-2);background:var(--hi-soft);border-radius:8px;padding:8px 10px;line-height:1.4}
 
 .empty{max-width:36rem;margin-top:6vh}
@@ -325,6 +331,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
     <button class="linkish" id="newFolderBtn">New folder</button>
     <div class="views" id="views"></div>
     <div class="store">
+      <div id="syncBox" class="syncbox" hidden></div>
       <div id="update" class="keynote" hidden></div>
       <div id="keyNote" class="keynote" hidden></div>
       <button class="btn quiet" id="settingsBtn">Settings and backup</button>
@@ -372,6 +379,15 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <label>Speech-to-text model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
       <label>Speech-to-text base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
       <label>Address to check for new versions (optional) <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
+    </details>
+    <details id="driveBox">
+      <summary>Google Drive storage and sync</summary>
+      <p class="hint" id="driveState" style="margin:10px 0 0"></p>
+      <label>Google client ID <input name="googleClientId" type="text" autocomplete="off" placeholder="Ends with .apps.googleusercontent.com"></label>
+      <label class="check" style="margin-top:12px"><input type="checkbox" name="syncAudio"> Save audio to Drive too, not only text</label>
+      <label class="check" style="margin-top:8px"><input type="checkbox" name="pullAudio"> On this device, download every lecture's audio automatically</label>
+      <p class="hint" style="margin:8px 0 0">Leave the second box off on a phone. Audio is still fetched when you press play. Your API keys are never sent to Drive.</p>
+      <button type="button" class="btn quiet" id="driveOff" style="margin-top:10px" hidden>Stop syncing on this device</button>
     </details>
     <details>
       <summary>What is new in this version</summary>
@@ -489,18 +505,26 @@ const DB = {
     const all = await this.tx("lectures", "readonly", s => s.getAll());
     all.forEach(l => this.lectures.set(l.id, l));
     this.settings = (await this.tx("kv", "readonly", s => s.get("settings"))) || {};
+    this.sync = (await this.tx("kv", "readonly", s => s.get("sync"))) || {};
+    for (const k of ["files", "audio", "tomb"]) this.sync[k] = this.sync[k] || {};
+    this.akeys = new Set(await this.tx("audio", "readonly", s => s.getAllKeys()));
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   },
-  save(lec){ lec.updatedAt = Date.now(); return this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); },
+  save(lec){ lec.updatedAt = Date.now(); const p = this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); if (typeof localChange === "function") localChange(); return p; },
+  saveRaw(lec){ return this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); },   // from sync: keeps the edit time as it came
+  saveSync(){ return this.tx("kv", "readwrite", s => s.put(this.sync, "sync")); },
+  has(id, n){ return this.akeys.has(id + ":" + n); },
   async remove(lec){
     await this.tx("lectures", "readwrite", s => s.delete(lec.id));
     await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); });
+    (lec.audio || []).forEach(a => this.akeys.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => this.akeys.delete(lec.id + ":s" + a.n));
     this.lectures.delete(lec.id);
+    if (this.sync.on){ this.sync.tomb[lec.id] = Date.now(); delete this.sync.files[lec.id]; await this.saveSync(); if (typeof localChange === "function") localChange(); }
   },
-  async putAudio(id, n, blob){ const buf = await blob.arrayBuffer(); return this.tx("audio", "readwrite", s => s.put({ buf, type: blob.type }, id + ":" + n)); },
+  async putAudio(id, n, blob){ const buf = await blob.arrayBuffer(); await this.tx("audio", "readwrite", s => s.put({ buf, type: blob.type }, id + ":" + n)); this.akeys.add(id + ":" + n); },
   async getAudio(id, n){ const r = await this.tx("audio", "readonly", s => s.get(id + ":" + n)); return r ? new Blob([r.buf], { type: r.type }) : null; },
-  async dropAudio(lec){ await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); }); },
-  saveSettings(){ return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
+  async dropAudio(lec){ (lec.audio || []).forEach(a => this.akeys.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => this.akeys.delete(lec.id + ":s" + a.n)); await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); }); },
+  saveSettings(){ this.settings.metaU = Date.now(); return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
 };
 function cfg(){
   const s = DB.settings, provider = s.provider || "groq", p = PRESETS[provider] || PRESETS.openai;
@@ -564,7 +588,8 @@ function addPart(lec, mime, offset, dur, flags, name){
 async function transcribePart(id, n){
   const lec = getLec(id), part = (lec.audio || []).find(a => a.n === n);
   if (!part) throw new AppError("That recording part no longer exists.");
-  const blob = await DB.getAudio(id, n);
+  let blob = await DB.getAudio(id, n);
+  if (!blob && DB.sync.on){ try { await pullAudio(lec, n); blob = await DB.getAudio(id, n); } catch (e){} }
   if (!blob) throw new AppError("The audio for that part is missing on this device.");
   const vocab = getVocab(lec.course).slice(0, 340);
   const prompt = (vocab ? "Terms: " + vocab + ". " : "") + lec.segments.filter(s => s.t != null && s.t < part.offset).slice(-3).map(s => s.text).join(" ").slice(-240);
@@ -572,7 +597,7 @@ async function transcribePart(id, n){
   try { result = await whisper(blob, part.file, { language: lec.language, prompt }); }
   catch (e){ part.done = false; part.error = e.message; part.offline = !!e.offline; await DB.save(lec); e.data = { lecture: lec }; throw e; }
   part.done = true; delete part.error; delete part.offline;
-  if (!part.dur) part.dur = result.duration;
+  if (result.duration > 0 && (!part.dur || Math.abs(part.dur - result.duration) > 3)) part.dur = result.duration;
   lec.duration = Math.max(lec.duration || 0, part.offset + (part.dur || 0));
   lec.segments = lec.segments.filter(s => s.part !== n);
   for (const s of paragraphs(result.segments)) lec.segments.push({ id: newId("s"), t: Math.round(part.offset + s.start), end: Math.round(part.offset + s.end), text: s.text, flag: false, part: n });
@@ -1060,6 +1085,7 @@ async function polishNotes(lec, mode, note){
 
 /* ---------- audio download ---------- */
 async function audioFiles(lec, note){
+  await ensureAudio(lec, note);
   const name = ((lec.title || "lecture").replace(/[^\w\- ]+/g, "").trim().slice(0, 50) || "lecture"), files = [];
   const sessions = (lec.sessions || []).slice().sort((a, b) => a.offset - b.offset);
   const covered = p => sessions.some(s => s.offset <= p.offset + 0.5 && p.offset < s.offset + s.dur);
@@ -1085,12 +1111,15 @@ async function audioFiles(lec, note){
 const LAME_URL = "https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js";
 // what audio this device actually holds for a lecture, and how much of the transcript it covers
 function audioInfo(lec){
-  const parts = lec.audio || [], secs = parts.reduce((n, p) => n + (p.dur || 0), 0);
+  const parts = lec.audio || [], here = parts.filter(p => DB.has(lec.id, p.n)), secs = here.reduce((n, p) => n + (p.dur || 0), 0), all = parts.reduce((n, p) => n + (p.dur || 0), 0);
   const textEnd = lec.segments.reduce((m, s) => Math.max(m, s.end != null ? s.end : s.t || 0), 0);
-  return { parts: parts.length, sessions: (lec.sessions || []).length, secs, textEnd, short: textEnd > 120 && secs < textEnd * 0.6 };
+  return { parts: here.length, listed: parts.length, away: parts.length - here.length, sessions: (lec.sessions || []).filter(p => DB.has(lec.id, "s" + p.n)).length, secs, all, textEnd, short: textEnd > 120 && all < textEnd * 0.6 };
 }
+// before converting or downloading, bring over any parts that are only in Google Drive
+async function ensureAudio(lec, note){ if (DB.sync.on && (lec.audio || []).some(p => !DB.has(lec.id, p.n))) await pullAudio(lec, null, note); }
 async function toMp3(lec, note){
   try { await loadScript(LAME_URL, () => !!window.lamejs); } catch (e){ throw new AppError("The MP3 converter could not load. Check the internet connection, or download the original recording instead."); }
+  await ensureAudio(lec, note);
   const RATE = 24000, enc = new window.lamejs.Mp3Encoder(1, RATE, 48), out = [], Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   let done = 0, failed = 0, samples = 0;
   const feed = async d => {
@@ -1131,6 +1160,7 @@ async function toMp3(lec, note){
 
 /* ---------- a lecture as one file, audio included: for moving between copies of Bizofy and between devices ---------- */
 async function lectureFile(lec, note){
+  await ensureAudio(lec, note);
   const entries = [{ name: "lecture.json", text: JSON.stringify({ app: "bizofy-lecture", version: 1, lecture: lec }) }];
   const all = [...(lec.audio || []).map(p => [String(p.n), p]), ...(lec.sessions || []).map(p => ["s" + p.n, p])];
   for (let i = 0; i < all.length; i++){
@@ -1190,11 +1220,13 @@ async function api(method, url, body, note){
   if (p[0] === "status"){ const c = cfg(); return { transcribe: !!c.tKey, ai: c.ai === "claude" ? !!c.aKey : c.ai === "custom" ? !!(c.xBase && c.xModel) : !!c.gKey, aiName: c.ai === "claude" ? "Claude, " + c.aModel : c.ai === "custom" ? c.xModel : "Groq" + (c.gModel ? ", " + c.gModel : "") }; }
   if (p[0] === "settings"){
     const s = DB.settings;
-    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiBackupModel: s.aiBackupModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "" }; }
+    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiBackupModel: s.aiBackupModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "", googleClientId: s.googleClientId || "", syncAudio: s.syncAudio !== false, pullAudio: !!s.pullAudio }; }
     if (["openai", "groq", "custom"].includes(b.provider)) s.provider = b.provider;
     if (["auto", "claude", "groq", "custom"].includes(b.aiProvider)) s.aiProvider = b.aiProvider;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (typeof b[k] === "string" && b[k].trim()) s[k] = b[k].trim();
-    for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "updateUrl"]) if (typeof b[k] === "string") s[k] = b[k].trim();
+    for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "updateUrl", "googleClientId"]) if (typeof b[k] === "string") s[k] = b[k].trim();
+    if (typeof b.syncAudio === "boolean") s.syncAudio = b.syncAudio;
+    if (typeof b.pullAudio === "boolean") s.pullAudio = b.pullAudio;
     delete s.groqSmall; groqPicked = null;
     await DB.saveSettings(); return { ok: true };
   }
@@ -1273,6 +1305,194 @@ async function api(method, url, body, note){
   throw new AppError("Not found.");
 }
 
+
+/* ---------- Google Drive: storage and sync ----------
+   Everything lives in a "Bizofy" folder in the user's own Drive. Bizofy can only see files it created (scope drive.file).
+   Lectures sync both ways, newest edit wins, and a clashing local edit is kept as a copy. Audio parts upload from the
+   device that recorded them and are fetched elsewhere only when needed. API keys never leave the device. */
+const GIS_URL = "https://accounts.google.com/gsi/client", DRIVE = "https://www.googleapis.com/drive/v3/files", DRIVE_UP = "https://www.googleapis.com/upload/drive/v3/files";
+const G = { token: "", exp: 0, busy: false, again: false, state: "idle", msg: "", timer: null, amap: {} };
+const needAuth = () => { const e = new AppError("Press Sync to connect to Google Drive again."); e.auth = true; return e; };
+function setSync(state, msg){ G.state = state; G.msg = msg || ""; if (typeof renderSync === "function") renderSync(); }
+
+function gToken(interactive){
+  if (G.token && Date.now() < G.exp - 60000) return Promise.resolve(G.token);
+  if (!interactive) return Promise.reject(needAuth());
+  const id = (DB.settings.googleClientId || "").trim();
+  if (!id) return Promise.reject(new AppError("Add your Google client ID in Settings first."));
+  return new Promise(async (res, rej) => {
+    try { await loadScript(GIS_URL, () => !!(window.google && google.accounts && google.accounts.oauth2)); } catch (e){ return rej(new AppError("Could not reach Google. Check the internet connection.")); }
+    try {
+      google.accounts.oauth2.initTokenClient({ client_id: id, scope: "https://www.googleapis.com/auth/drive.file", prompt: "",
+        callback: r => { if (r && r.access_token){ G.token = r.access_token; G.exp = Date.now() + (+r.expires_in || 3600) * 1000; res(G.token); } else rej(new AppError("Google did not give access" + (r && r.error ? " (" + r.error + ")." : "."))); },
+        error_callback: e => rej(new AppError(e && e.type === "popup_failed_to_open" ? "The browser blocked Google's sign-in window. Allow pop-ups for Bizofy, then press Sync again." : e && e.type === "popup_closed" ? "Google's sign-in window was closed before it finished." : "Google sign-in did not finish."))
+      }).requestAccessToken();
+    } catch (e){ rej(new AppError("Google sign-in could not start. Check the client ID in Settings.")); }
+  });
+}
+async function gfetch(url, opt){
+  for (let attempt = 0; ; attempt++){
+    if (!(G.token && Date.now() < G.exp - 30000)) throw needAuth();
+    let r;
+    try { r = await fetch(url, { ...opt, headers: { ...(opt && opt.headers), Authorization: "Bearer " + G.token } }); }
+    catch (e){ const err = new AppError("No connection to Google Drive. Bizofy will sync when you are back online."); err.offline = true; throw err; }
+    if (r.ok || r.status === 308) return r;
+    if (r.status === 401){ G.token = ""; throw needAuth(); }
+    if ((r.status === 429 || r.status >= 500 || r.status === 403) && attempt < 4){ const t = await r.clone().text().catch(() => ""); if (r.status !== 403 || /rate|quota/i.test(t)){ await sleep(1500 * Math.pow(2, attempt)); continue; } }
+    let why = ""; try { const j = await r.json(); why = (j.error && j.error.message) || ""; } catch (e){}
+    const err = new AppError(r.status === 404 ? "not found" : /storage quota/i.test(why) ? "Your Google Drive is full." : /has not been used|is disabled/i.test(why) ? "The Google Drive API is not switched on for your Google Cloud project. Enable it in the API Library, then press Sync." : "Google Drive returned an error (code " + r.status + ")" + (why ? ": " + why : "."));
+    err.status = r.status; throw err;
+  }
+}
+async function gList(q, fields){
+  const out = []; let page = "";
+  do { const j = await (await gfetch(DRIVE + "?spaces=drive&pageSize=1000&q=" + encodeURIComponent(q) + "&fields=" + encodeURIComponent("nextPageToken," + fields) + (page ? "&pageToken=" + encodeURIComponent(page) : ""))).json(); out.push(...(j.files || [])); page = j.nextPageToken || ""; } while (page);
+  return out;
+}
+async function gFolder(){
+  if (DB.sync.folder) return DB.sync.folder;
+  const found = await gList("name = 'Bizofy' and mimeType = 'application/vnd.google-apps.folder' and trashed = false", "files(id)");
+  DB.sync.folder = found.length ? found[0].id : (await (await gfetch(DRIVE + "?fields=id", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: "Bizofy", mimeType: "application/vnd.google-apps.folder" }) })).json()).id;
+  await DB.saveSync(); return DB.sync.folder;
+}
+async function gUpload(meta, blob, fileId){
+  const body = fileId ? { name: meta.name, appProperties: meta.appProperties } : meta;
+  if (blob.size > 4 * 1024 * 1024){   // larger files go up in one resumable request
+    const start = await gfetch(DRIVE_UP + (fileId ? "/" + fileId : "") + "?uploadType=resumable&fields=id", { method: fileId ? "PATCH" : "POST", headers: { "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": blob.type || "application/octet-stream" }, body: JSON.stringify(body) });
+    const where = start.headers.get("Location"); if (!where) throw new AppError("Google Drive did not accept the upload.");
+    return (await (await gfetch(where, { method: "PUT", body: blob })).json()).id;
+  }
+  const b = "bizofy" + Math.random().toString(36).slice(2);
+  const multi = new Blob(["--" + b + "\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n" + JSON.stringify(body) + "\r\n--" + b + "\r\nContent-Type: " + (blob.type || "application/octet-stream") + "\r\n\r\n", blob, "\r\n--" + b + "--"]);
+  return (await (await gfetch(DRIVE_UP + (fileId ? "/" + fileId : "") + "?uploadType=multipart&fields=id", { method: fileId ? "PATCH" : "POST", headers: { "Content-Type": "multipart/related; boundary=" + b }, body: multi })).json()).id;
+}
+const gDownload = async id => (await gfetch(DRIVE + "/" + id + "?alt=media")).blob();
+const gDelete = id => gfetch(DRIVE + "/" + id, { method: "DELETE" }).catch(e => { if (e.status !== 404) throw e; });
+const forDrive = lec => { const o = JSON.parse(JSON.stringify(lec)); Object.keys(o).forEach(k => { if (k[0] === "_") delete o[k]; }); return o; };
+
+// which audio files of one lecture are in Drive: part number -> file id
+async function gAudioMap(lecId, fresh){
+  if (!fresh && G.amap[lecId]) return G.amap[lecId];
+  const files = await gList("'" + (await gFolder()) + "' in parents and trashed = false and appProperties has { key='lec' and value='" + lecId + "' }", "files(id,appProperties)");
+  const map = {}; files.forEach(f => { if (f.appProperties && f.appProperties.n != null) map[f.appProperties.n] = f.id; });
+  return (G.amap[lecId] = map);
+}
+// fetch audio this device does not have yet (for playing, MP3, or transcribing a waiting part)
+async function pullAudio(lec, only, note){
+  await gToken(false);
+  const map = await gAudioMap(lec.id, true), want = (lec.audio || []).filter(p => !DB.has(lec.id, p.n) && map[p.n] && (only == null || p.n === only));
+  for (let i = 0; i < want.length; i++){
+    if (note) note("Getting the audio from Google Drive, " + Math.round(i / want.length * 100) + "%…");
+    await DB.putAudio(lec.id, want[i].n, await gDownload(map[want[i].n])); DB.sync.audio[lec.id + ":" + want[i].n] = map[want[i].n];
+  }
+  if (want.length) await DB.saveSync();
+  return want.length;
+}
+
+async function syncNow(interactive){
+  if (!DB.sync.on && !interactive) return;
+  if (G.busy){ G.again = true; return; }
+  G.busy = true; G.again = false; clearTimeout(G.timer);
+  let changed = false;
+  try {
+    setSync("working", "Connecting to Google Drive…");
+    await gToken(interactive);
+    const folder = await gFolder(), inFolder = "'" + folder + "' in parents and trashed = false and ";
+    if (!DB.sync.on){ DB.sync.on = true; await DB.saveSync(); }
+
+    // 1. shared settings: folders, course vocabulary, and the list of lectures deleted for good
+    setSync("working", "Checking what changed…");
+    const metaFile = (await gList(inFolder + "appProperties has { key='kind' and value='meta' }", "files(id)"))[0];
+    let meta = { folders: [], vocab: {}, tomb: {} };
+    if (metaFile){ try { meta = { ...meta, ...JSON.parse(await (await gDownload(metaFile.id)).text()) }; } catch (e){} }
+    const before = JSON.stringify(meta), s = DB.settings;
+    meta.folders = [...new Set([...(meta.folders || []), ...(s.folders || [])])];
+    meta.vocab = (s.metaU || 0) > (meta.u || 0) ? { ...meta.vocab, ...(s.vocab || {}) } : { ...(s.vocab || {}), ...meta.vocab };
+    meta.tomb = { ...meta.tomb, ...DB.sync.tomb };
+    for (const k of Object.keys(meta.tomb)) if (Date.now() - meta.tomb[k] > 180 * 864e5) delete meta.tomb[k];
+    if (JSON.stringify(s.folders || []) !== JSON.stringify(meta.folders) || JSON.stringify(s.vocab || {}) !== JSON.stringify(meta.vocab)){ s.folders = meta.folders; s.vocab = meta.vocab; await DB.tx("kv", "readwrite", st => st.put(s, "settings")); changed = true; }
+    if (JSON.stringify(meta) !== before || !metaFile){ meta.u = Date.now(); await gUpload({ name: "bizofy-settings.json", parents: [folder], appProperties: { kind: "meta" } }, new Blob([JSON.stringify(meta)], { type: "application/json" }), metaFile && metaFile.id); }
+
+    // 2. lectures and notes, both ways
+    const remote = await gList(inFolder + "appProperties has { key='kind' and value='lecture' }", "files(id,appProperties)"), seen = new Set();
+    let down = 0, up = 0;
+    for (const f of remote){
+      const id = f.appProperties && f.appProperties.lid, ru = +(f.appProperties && f.appProperties.u) || 0; if (!id || seen.has(id)) continue; seen.add(id);
+      if (meta.tomb[id]){ await gDelete(f.id); for (const aid of Object.values(await gAudioMap(id, true))) await gDelete(aid); delete DB.sync.files[id]; continue; }
+      const local = DB.lectures.get(id), known = DB.sync.files[id];
+      if (local && REC.on && REC.lecId === id){ continue; }                       // never replace the lecture being recorded
+      if (!local || ru > (local.updatedAt || 0)){
+        let inc; try { inc = JSON.parse(await (await gDownload(f.id)).text()); } catch (e){ continue; }
+        if (!okShape(inc) || inc.id !== id) continue;
+        if (local && known && (local.updatedAt || 0) > known.u){               // edited on both devices: keep this device's version as a copy
+          const copy = { ...forDrive(local), id: newId("l"), title: local.title + " (copy from this device)", audio: [], sessions: [] };
+          DB.lectures.set(copy.id, copy); await DB.save(copy);
+        }
+        DB.lectures.set(id, inc); await DB.saveRaw(inc); DB.sync.files[id] = { fileId: f.id, u: ru }; down++; changed = true;
+      } else if ((local.updatedAt || 0) > ru){
+        setSync("working", "Saving “" + local.title + "” to Drive…");
+        await gUpload({ name: "lecture-" + id + ".json", appProperties: { kind: "lecture", lid: id, u: String(local.updatedAt) } }, new Blob([JSON.stringify(forDrive(local))], { type: "application/json" }), f.id);
+        DB.sync.files[id] = { fileId: f.id, u: local.updatedAt }; up++;
+      } else DB.sync.files[id] = { fileId: f.id, u: ru };
+    }
+    for (const local of [...DB.lectures.values()]){
+      if (seen.has(local.id)) continue;
+      if (meta.tomb[local.id]){ if (!(REC.on && REC.lecId === local.id)){ const on = DB.sync.on; DB.sync.on = false; await DB.remove(local); DB.sync.on = on; changed = true; } continue; }
+      setSync("working", "Saving “" + local.title + "” to Drive…");
+      const fid = await gUpload({ name: "lecture-" + local.id + ".json", parents: [folder], appProperties: { kind: "lecture", lid: local.id, u: String(local.updatedAt || 0) } }, new Blob([JSON.stringify(forDrive(local))], { type: "application/json" }));
+      DB.sync.files[local.id] = { fileId: fid, u: local.updatedAt || 0 }; up++;
+    }
+    DB.sync.tomb = {}; await DB.saveSync();
+
+    // 3. audio recorded or uploaded on this device goes up to Drive
+    if (DB.settings.syncAudio !== false){
+      const todo = [];
+      for (const l of DB.lectures.values()) if (!l.deletedAt) for (const p of l.audio || []) if (DB.has(l.id, p.n) && !DB.sync.audio[l.id + ":" + p.n]) todo.push([l, p]);
+      const checked = {};
+      for (let i = 0; i < todo.length; i++){
+        const [l, p] = todo[i], key = l.id + ":" + p.n;
+        if (!checked[l.id]){ checked[l.id] = await gAudioMap(l.id, true); }
+        if (checked[l.id][p.n]){ DB.sync.audio[key] = checked[l.id][p.n]; continue; }
+        setSync("working", "Saving audio to Drive, " + (i + 1) + " of " + todo.length + "…");
+        const blob = await DB.getAudio(l.id, p.n); if (!blob) continue;
+        DB.sync.audio[key] = await gUpload({ name: "audio-" + l.id + "-" + String(p.n).padStart(4, "0") + "." + extFor(p.mime, p.file), parents: [folder], appProperties: { kind: "audio", lec: l.id, n: String(p.n) } }, blob);
+        if (i % 10 === 9) await DB.saveSync();
+      }
+      await DB.saveSync();
+      if (DB.settings.pullAudio) for (const l of DB.lectures.values()) if (!l.deletedAt && !l.archived && (l.audio || []).some(p => !DB.has(l.id, p.n))) await pullAudio(l, null, t => setSync("working", t)).catch(e => { if (e.auth || e.offline) throw e; });
+    }
+    DB.sync.last = Date.now(); await DB.saveSync();
+    setSync("ok", "");
+    if (changed){ S.list = await api("GET", "/api/lectures"); if (S.cur){ const fresh = DB.lectures.get(S.cur.id); const a = document.activeElement, typing = a && (a.isContentEditable || /INPUT|TEXTAREA/.test(a.tagName)); if (!fresh) S.cur = null; else if (fresh !== S.cur && !typing) S.cur = fresh; if (!typing) render(); else renderList(); } else render(); }
+  } catch (e){
+    setSync(e.auth ? "needs" : e.offline ? "offline" : "error", e.auth ? "" : e.message);
+  }
+  G.busy = false;
+  if (G.again) localChange();
+}
+// called after every local save: sync soon, quietly, if Drive is connected and the sign-in is still fresh
+function localChange(){
+  if (!DB.sync || !DB.sync.on) return;
+  clearTimeout(G.timer);
+  G.timer = setTimeout(() => { if (G.token && Date.now() < G.exp - 60000) syncNow(false); else if (G.state !== "working") setSync("needs", ""); }, REC.on ? 60000 : 12000);
+}
+function syncWake(){ if (DB.sync && DB.sync.on && G.token && Date.now() < G.exp - 60000 && Date.now() - (DB.sync.last || 0) > 120000) syncNow(false); }
+setInterval(syncWake, 300000);
+window.addEventListener("online", () => { if (G.state === "offline") syncNow(false); });
+async function disconnectDrive(){ G.token = ""; DB.sync = { files: {}, audio: {}, tomb: {} }; await DB.saveSync(); setSync("idle", ""); }
+
+function renderSync(){
+  const box = $("syncBox"); if (!box) return;
+  const has = !!(DB.settings.googleClientId || "").trim(); box.hidden = !has; if (!has) return;
+  const last = DB.sync.last ? new Date(DB.sync.last).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+  const btn = (label, solid) => h("button", { class: solid ? "btn solid" : "linkish", onclick: () => syncNow(true) }, label);
+  box.replaceChildren(...(G.state === "working" ? [h("span", { class: "sync-dot spin" }), h("span", { role: "status" }, G.msg || "Syncing…")]
+    : G.state === "error" ? [h("span", { class: "sync-err", role: "alert" }, G.msg), btn("Try again")]
+    : G.state === "offline" ? [h("span", null, "Offline. Changes are kept here and will sync later.")]
+    : !DB.sync.on ? [btn("Connect Google Drive", true)]
+    : G.state === "ok" ? [h("span", { class: "sync-dot ok" }), h("span", null, "Synced with Drive" + (last ? " at " + last : "")), btn("Sync now")]
+    : [btn("Sync with Google Drive", true), last ? h("span", { class: "hint" }, "Last synced at " + last + ". Google asks for one tap each session.") : null]).filter(Boolean));
+}
 /* ---------- state ---------- */
 const S = { list: [], cur: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
 let askCtl = null;
@@ -1313,7 +1533,7 @@ const PART_SEC = 45;
 const MIME = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
 const REC = { on: false, stream: null, mr: null, startMs: 0, base: 0, flags: [], rot: null, tick: null, ctx: null, raf: 0, wake: null, lecId: null, msg: "" };
 const Q = { items: [], busy: false, waiting: false };
-const nowAbs = () => REC.base + (performance.now() - REC.startMs) / 1000;
+const nowAbs = () => REC.base + (Date.now() - REC.startMs) / 1000;
 
 async function startRec(){
   const lec = S.cur; if (!lec) return;
@@ -1332,10 +1552,17 @@ async function startRec(){
     return render();
   }
   REC.on = true; REC.lecId = lec.id; REC.flags = [];
-  REC.base = Math.ceil(lec.duration || 0); REC.startMs = performance.now();
+  REC.base = Math.ceil(lec.duration || 0); REC.startMs = Date.now(); REC.beat = REC.base; REC.muteAt = null;
   startPart();
+  startFull(); watchTrack();
+  REC.tick = setInterval(() => { liveLine(); checkRec(); }, 500);
+  startMeter();
+  if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {});
+  render();
+}
+function startFull(){
   try {
-    const full = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 }), bits = [], base = REC.base, lecId = lec.id;
+    const full = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 }), bits = [], base = nowAbs(), lecId = REC.lecId;
     full.ondataavailable = e => { if (e.data && e.data.size) bits.push(e.data); };
     full.onstop = async () => {
       try {
@@ -1349,8 +1576,11 @@ async function startRec(){
     };
     full.start(10000); REC.full = full;
   } catch (e){ REC.full = null; }
-  REC.tick = setInterval(liveLine, 500);
+}
+function startMeter(){
   try {
+    if (REC.ctx) REC.ctx.close().catch(() => {});
+    cancelAnimationFrame(REC.raf);
     REC.ctx = new (window.AudioContext || window.webkitAudioContext)();
     const an = REC.ctx.createAnalyser(); an.fftSize = 512;
     REC.ctx.createMediaStreamSource(REC.stream).connect(an);
@@ -1363,8 +1593,48 @@ async function startRec(){
     };
     loop();
   } catch (e){}
-  if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => (REC.wake = w)).catch(() => {});
-  render();
+}
+/* Phones pause a web page's microphone when you switch apps or lock the screen. Bizofy cannot prevent that,
+   but it notices, restarts the recording when you come back, and marks the gap in the transcript. */
+function watchTrack(){
+  const t = REC.stream && REC.stream.getAudioTracks()[0]; if (!t) return;
+  const mine = () => REC.on && REC.stream && REC.stream.getAudioTracks()[0] === t;   // ignore events from a microphone we already replaced
+  t.addEventListener("ended", () => { if (mine()) recoverRec(); });
+  t.addEventListener("mute", () => { if (mine() && REC.muteAt == null) REC.muteAt = nowAbs(); });
+  t.addEventListener("unmute", () => { if (!mine()) return; if (REC.muteAt != null && nowAbs() - REC.muteAt > 3) recoverRec(REC.muteAt); else REC.muteAt = null; });
+}
+async function recoverRec(since){
+  if (!REC.on || REC.recovering) return;
+  REC.recovering = true;
+  const at = Math.min(since != null ? since : nowAbs(), REC.muteAt != null ? REC.muteAt : Infinity, REC.beat || Infinity), lecId = REC.lecId;
+  clearTimeout(REC.rot);
+  try { if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = at; REC.mr.stop(); } } catch (e){}
+  try { if (REC.full && REC.full.state !== "inactive"){ REC.full._endAbs = at; REC.full.stop(); } } catch (e){}
+  REC.full = null; REC.muteAt = null;
+  try { REC.stream.getTracks().forEach(t => t.stop()); } catch (e){}
+  try {
+    REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } });
+    const gap = nowAbs() - at;
+    if (gap > 3) await api("POST", "/api/lectures/" + lecId + "/marks", { t: at, text: "Recording paused here for " + fmt(gap) + ", while Bizofy was in the background or the screen was locked." }).catch(() => {});
+    REC.beat = nowAbs();
+    startPart(); startFull(); watchTrack(); startMeter();
+    REC.msg = gap > 3 ? "The phone paused the recording for " + fmt(gap) + " while Bizofy was in the background. It has started again, and the gap is marked in the transcript." : "";
+    if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {});
+  } catch (e){
+    REC.msg = "The recording stopped while Bizofy was in the background, and the microphone could not be restarted. Press record to continue.";
+    REC.recovering = false; return stopRec();
+  }
+  REC.recovering = false;
+  const m = $("recMsg"); if (m){ m.hidden = !REC.msg; m.textContent = REC.msg; }
+  if (S.tab === "transcript") softRefresh();
+}
+function checkRec(){
+  if (!REC.on || REC.recovering) return;
+  const t = REC.stream && REC.stream.getAudioTracks()[0], frozenFor = nowAbs() - (REC.beat || nowAbs());
+  if (!t || t.readyState === "ended" || (REC.mr && REC.mr.state === "inactive")) return void recoverRec();
+  if (t.muted && REC.muteAt == null) REC.muteAt = REC.beat;
+  if (!t.muted && frozenFor > 6 && REC.mr && REC.mr.state === "paused") return void recoverRec(REC.beat);
+  REC.beat = nowAbs();
 }
 function startPart(){
   const startAbs = nowAbs(), lecId = REC.lecId, chunks = [];
@@ -1443,7 +1713,9 @@ async function playFrom(t){
   let p = parts[0]; for (const x of parts) if (x.offset <= t + 0.05) p = x;
   const rel = Math.max(0, t - p.offset);
   if (P.n !== p.n || P.lecId !== lec.id){
-    const blob = await DB.getAudio(lec.id, p.n); if (!blob) return;
+    let blob = await DB.getAudio(lec.id, p.n);
+    if (!blob && DB.sync.on){ const l = $("live"); if (l) l.textContent = "Getting this part of the audio from Google Drive…"; try { await pullAudio(lec, p.n); blob = await DB.getAudio(lec.id, p.n); } catch (e){ if (l) l.textContent = e.auth ? "Press Sync, then play again: the audio is in Google Drive." : e.message; } }
+    if (!blob) return;
     if (P.url) URL.revokeObjectURL(P.url);
     P.n = p.n; P.lecId = lec.id; P.url = URL.createObjectURL(blob);
     P.a.src = P.url;
@@ -2058,12 +2330,13 @@ function renderMain(){
   const here = folderOf(lec);
   const folderSel = h("select", { class: "folder-sel", "aria-label": "Folder", onchange: e => (e.target.value === "\u0000new" ? newFolder(lec.id) : moveTo(lec.id, e.target.value)) },
     [...new Set([here, ...folders()])].map(f => { const o = h("option", { value: f }, f); if (f === here) o.selected = true; return o; }), h("option", { value: "\u0000new" }, "New folder…"));
-  const info = audioInfo(lec), hasAudio = info.parts > 0 || (info.sessions > 0 && info.secs > 0) || (info.sessions > 0 && !lec.segments.length);
+  const info = audioInfo(lec), hasAudio = info.parts > 0 || info.sessions > 0 || (DB.sync.on && info.away > 0);
   const audioMenu = h("details", { class: "menu" }, h("summary", { class: "btn quiet" }, "Audio"),
     h("div", { class: "menu-list wide" },
-      h("p", { class: "menu-note" }, hasAudio ? "On this device: " + fmt(info.secs) + " of audio." + (info.short ? " The text runs to " + fmt(info.textEnd) + ", so most of the audio is not on this device." : "")
-        : "There is no audio for this lecture on this device. Audio stays on the device that recorded it: a backup carries the text only. To bring the audio over, open Bizofy where it was recorded, choose Audio, then Save lecture with audio, and drop that file here."),
-      info.parts ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
+      h("p", { class: "menu-note" }, info.listed && info.away && DB.sync.on ? "On this device: " + fmt(info.secs) + " of " + fmt(info.all) + ". The rest is in Google Drive and is fetched when you play, convert or download."
+        : hasAudio ? "On this device: " + fmt(info.secs) + " of audio." + (info.short ? " The text runs to " + fmt(info.textEnd) + ", so most of the audio is not on this device." : "")
+        : "There is no audio for this lecture on this device. Audio stays on the device that recorded it unless Google Drive sync is on: a backup carries the text only. To bring the audio over by hand, open Bizofy where it was recorded, choose Audio, then Save lecture with audio, and drop that file here."),
+      info.parts || (DB.sync.on && info.away) ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
       hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(false); } }, "Download the original recording") : null,
       hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio("pack"); } }, "Save lecture with audio, to move it (.bizofy)") : null,
       hasAudio ? h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text") : null));
@@ -2088,7 +2361,7 @@ function renderMain(){
   else if (S.info) main.append(h("p", { class: "notice info", role: "status" }, S.info));
 
   if (!isNote){
-    const canPlay = lec.audio && lec.audio.length > 0;
+    const canPlay = lec.audio && lec.audio.length > 0 && (info.parts > 0 || DB.sync.on);
     const seek = h("input", { type: "range", id: "seek", min: 0, max: Math.max(1, Math.floor(lec.duration || 0)), step: 1, value: P.lecId === lec.id ? playAbs() : 0, "aria-label": "Position in the recording",
       oninput: e => { e.target._drag = true; }, onchange: e => { e.target._drag = false; playFrom(+e.target.value); } });
     main.append(h("div", { class: "deck" + (REC.on ? " is-live" : "") },
@@ -2107,7 +2380,7 @@ function renderMain(){
         seek,
         h("select", { "aria-label": "Playback speed", onchange: e => { S.rate = +e.target.value; P.a.playbackRate = S.rate; P.a.defaultPlaybackRate = S.rate; } }, RATES.map(r => { const o = h("option", { value: r }, r + "×"); if (r === S.rate) o.selected = true; return o; }))) : null));
     main.append(h("p", { class: "notice err", id: "recMsg", role: "alert", hidden: !REC.msg }, REC.msg));
-    if (REC.on) main.append(h("p", { class: "notice" }, "Check that your lecturer allows recording. Keep this page open and the screen on while it records." + (S.status.transcribe ? "" : " No speech-to-text key is set, so the audio is saved now and you can transcribe it afterwards.")));
+    if (REC.on) main.append(h("p", { class: "notice" }, "Check that your lecturer allows recording. Keep this page open and the screen on while it records." + (/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? " On a phone, stay in Bizofy: phones pause a web page's microphone when you switch apps or lock the screen. If that happens, Bizofy restarts when you come back and marks the gap." : "") + (S.status.transcribe ? "" : " No speech-to-text key is set, so the audio is saved now and you can transcribe it afterwards.")));
 
     // a quick note pinned to the current moment
     const pinT = () => (REC.on ? nowAbs() : P.lecId === lec.id && P.n != null ? playAbs() : null);
@@ -2147,7 +2420,8 @@ async function openSettings(){
   try {
     const s = await api("GET", "/api/settings");
     f.provider.value = s.provider; f.aiProvider.value = s.aiProvider; f.claudeModel.value = s.claudeModel; f.groqModel.value = s.groqModel;
-    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl;
+    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl; f.googleClientId.value = s.googleClientId; f.syncAudio.checked = s.syncAudio; f.pullAudio.checked = s.pullAudio;
+    $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet."; $("driveOff").hidden = !DB.sync.on;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : k === "groqAiKey" ? "Only if speech-to-text is not on Groq" : "Paste the key"; }
     $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet.";
   } catch (e){}
@@ -2158,15 +2432,16 @@ $("setForm").addEventListener("submit", async ev => {
   ev.preventDefault();
   const f = ev.target.elements;
   try {
-    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
+    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, googleClientId: f.googleClientId.value, syncAudio: f.syncAudio.checked, pullAudio: f.pullAudio.checked, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
     S.status = await api("GET", "/api/status");
-    $("settings").close(); render(); checkUpdate();
+    $("settings").close(); render(); renderSync(); checkUpdate();
   } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; }
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.5", RELEASED = "20 September 2026";
+const VERSION = "2.3.0", RELEASED = "21 September 2026";
 const CHANGES = [
+  ["2.3.0", "21 Sep 2026", ["Google Drive storage and sync: lectures, notes and audio kept in your own Drive and shared between your laptop and phone", "Audio recorded elsewhere is fetched from Drive when you play, convert or download it", "On phones, Bizofy now notices when the phone pauses a recording, restarts it when you come back, and marks the gap"]],
   ["2.2.5", "20 Sep 2026", ["Save a lecture with its audio as one file, and drop it into Bizofy on another device or copy", "The Audio menu now shows how much audio this device holds, and says so when a lecture has none", "MP3 downloads report their length and warn when audio is missing"]],
   ["2.2.4", "20 Sep 2026", ["When the main AI is overloaded, Bizofy hands the request to a backup AI (a second model, Groq or Claude) instead of waiting"]],
   ["2.2.3", "20 Sep 2026", ["When an AI service is overloaded, Bizofy now waits and tries again by itself"]],
@@ -2197,6 +2472,8 @@ async function checkUpdate(){
     box.hidden = false;
   } catch (e){}
 }
+
+$("driveOff").addEventListener("click", async () => { if (!confirm("Stop syncing on this device? Nothing is deleted, here or in Google Drive.")) return; await disconnectDrive(); $("driveOff").hidden = true; $("driveState").textContent = "Not connected."; renderSync(); });
 $("backupBtn").addEventListener("click", () => {
   saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [], sessions: [] })) }), "application/json");
 });
@@ -2243,7 +2520,7 @@ P.a.addEventListener("play", () => { P.a.playbackRate = S.rate; });
 
 $("newBtn").addEventListener("click", () => { closeDrawers(); newLecture().catch(fail); });
 $("settingsBtn").addEventListener("click", openSettings);
-document.addEventListener("visibilitychange", () => { if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => (REC.wake = w)).catch(() => {}); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ checkRec(); if (typeof syncWake === "function") syncWake(); } if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {}); });
 
 async function init(){
   try {
@@ -2258,6 +2535,7 @@ async function init(){
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(x => { const n = $("usage"); if (n && x.usage != null) n.textContent = "Bizofy is using " + (x.usage / 1048576).toFixed(0) + " MB on this device."; }).catch(() => {});
   S.read = DB.settings.readSize || 17; document.documentElement.style.setProperty("--read-size", S.read + "px");
   renderVersion(); checkUpdate();
+  if (DB.sync.on) setSync("needs", ""); else renderSync();
   init();
 })();
 })();
