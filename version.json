@@ -1,5 +1,5 @@
 {
-  "version": "2.2.3",
+  "version": "2.2.4",
   "url": "./",
-  "notes": "Retries by itself when the AI service is busy."
+  "notes": "Uses a backup AI when the main one is overloaded."
 }

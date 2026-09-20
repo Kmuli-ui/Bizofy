@@ -365,6 +365,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <label>AI service address <input name="aiBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
       <label>AI service key <input name="aiKey" type="password" autocomplete="off"></label>
       <label>AI service model <input name="aiModel" type="text" autocomplete="off" placeholder="The model's exact name"></label>
+      <label>Backup model on the same service, used when the first is overloaded (optional) <input name="aiBackupModel" type="text" autocomplete="off" placeholder="For example a lighter model"></label>
       <label>Speech-to-text model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
       <label>Speech-to-text base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
       <label>Address to check for new versions (optional) <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
@@ -642,6 +643,7 @@ async function llmClaude(c, o){
   } catch (e){ if (e.name === "AbortError") throw e; throw new AppError("Could not reach Claude. Check the internet connection."); }
   if (!r.ok){
     let why = r.statusText; try { const j = await r.json(); why = (j.error && j.error.message) || why; } catch (e){}
+    if ([500, 502, 503, 529].includes(r.status)){ const e = new AppError("Claude is overloaded right now. Try again in a few minutes."); e.busy = true; throw e; }
     throw new AppError(r.status === 401 ? "The Anthropic API key was rejected. Check it in Settings."
       : r.status === 404 ? 'Claude does not know the model "' + c.aModel + '". Change it in Settings, under Advanced.'
       : r.status === 429 ? "Claude is rate limiting this key. Wait a minute, then try again." : "Claude returned an error: " + why);
@@ -685,12 +687,12 @@ async function llmOpenAI(c, o){
       if (/reasoning_effort/i.test(msg) && body.reasoning_effort){ delete body.reasoning_effort; fixes++; continue; }
     }
     // the service is overloaded or briefly down: wait a little longer each time and try again
-    if ([500, 502, 503, 504, 529].includes(r.status) && busy < 4){
-      const secs = [4, 10, 20, 30][busy++];
+    if ([500, 502, 503, 504, 529].includes(r.status) && busy < (o.quickBusy ? 1 : 4)){
+      const secs = (o.quickBusy ? [3] : [4, 10, 20, 30])[busy++];
       if (o.onWait) o.onWait(secs, "busy");
       await sleep(secs * 1000, o.signal); continue;
     }
-    if ([500, 502, 503, 504, 529].includes(r.status)) throw new AppError("The AI service is overloaded right now, and four more tries did not get through. This is on the provider's side. Try again in a few minutes" + (custom ? ", or switch to a different model in Settings." : "."));
+    if ([500, 502, 503, 504, 529].includes(r.status)){ const e = new AppError("The AI service is overloaded right now, and several more tries did not get through. This is on the provider's side. Try again in a few minutes" + (custom ? ", or switch to a different model in Settings." : ".")); e.busy = true; throw e; }
     if (r.status === 429 && waits < 8){
       const h = r.headers.get("retry-after"), m = /try again in (?:(\d+)m)?([\d.]+)s/i.exec(msg);
       const secs = Math.min(90, Math.ceil(+h || (m ? (+(m[1] || 0)) * 60 + +m[2] : 20)) + 1);
@@ -702,8 +704,33 @@ async function llmOpenAI(c, o){
       : r.status === 429 ? "The AI plan's rate limit is used up for now. Try again in a few minutes." : "The AI returned an error (code " + r.status + "): " + msg);
   }
 }
-const waitText = (s, why) => (why === "busy" ? "The AI service is busy. Trying again in " + s + " seconds." : "Waiting " + s + " seconds for the AI plan's rate limit.");
-const llm = o => { const c = cfg(); return c.ai === "claude" ? llmClaude(c, o) : llmOpenAI(c, o); };
+const waitText = (s, why) => (why === "busy" ? "The AI service is busy. Trying again in " + s + " seconds."
+  : /^switch:/.test(why || "") ? "The main AI is busy, so " + why.slice(7) + " is handling this one."
+  : why === "back" ? "The backup AI could not take this one. Waiting for the main AI…"
+  : "Waiting " + s + " seconds for the AI plan's rate limit.");
+// When the main AI is overloaded, hand the request to another AI you have set up, instead of waiting
+function backups(c){
+  const s = DB.settings, out = [];
+  if (c.ai === "custom" && (s.aiBackupModel || "").trim() && s.aiBackupModel.trim() !== c.xModel) out.push({ name: s.aiBackupModel.trim(), run: o => llmOpenAI({ ...c, xModel: s.aiBackupModel.trim() }, o) });
+  if (c.ai !== "groq" && c.gKey) out.push({ name: "Groq", run: o => llmOpenAI({ ...c, ai: "groq" }, o) });
+  if (c.ai !== "custom" && c.xBase && c.xModel) out.push({ name: c.xModel, run: o => llmOpenAI({ ...c, ai: "custom" }, o) });
+  if (c.ai !== "claude" && c.aKey) out.push({ name: "Claude", run: o => llmClaude(c, o) });
+  return out;
+}
+async function llm(o){
+  const c = cfg(), main = (cc, oo) => (cc.ai === "claude" ? llmClaude(cc, oo) : llmOpenAI(cc, oo)), alts = backups(c);
+  try { return await main(c, { ...o, quickBusy: alts.length > 0 }); }
+  catch (e){
+    if (!e.busy || !alts.length) throw e;
+    for (const alt of alts){
+      if (o.onWait) o.onWait(0, "switch:" + alt.name);
+      try { const out = await alt.run({ ...o, quickBusy: true }); S.lastAI = alt.name; return out; }
+      catch (e2){ if (e2.name === "AbortError") throw e2; }
+    }
+    if (o.onWait) o.onWait(0, "back");
+    return main(c, { ...o, quickBusy: false });
+  }
+}
 function parseJson(text){
   const tries = [text, (text.match(/```(?:json)?\s*([\s\S]*?)```/) || [])[1], text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)];
   for (const t of tries){ if (!t) continue; try { const v = JSON.parse(t); if (v && typeof v === "object") return v; } catch (e){} }
@@ -1091,11 +1118,11 @@ async function api(method, url, body, note){
   if (p[0] === "status"){ const c = cfg(); return { transcribe: !!c.tKey, ai: c.ai === "claude" ? !!c.aKey : c.ai === "custom" ? !!(c.xBase && c.xModel) : !!c.gKey, aiName: c.ai === "claude" ? "Claude, " + c.aModel : c.ai === "custom" ? c.xModel : "Groq" + (c.gModel ? ", " + c.gModel : "") }; }
   if (p[0] === "settings"){
     const s = DB.settings;
-    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "" }; }
+    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiBackupModel: s.aiBackupModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "" }; }
     if (["openai", "groq", "custom"].includes(b.provider)) s.provider = b.provider;
     if (["auto", "claude", "groq", "custom"].includes(b.aiProvider)) s.aiProvider = b.aiProvider;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (typeof b[k] === "string" && b[k].trim()) s[k] = b[k].trim();
-    for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "updateUrl"]) if (typeof b[k] === "string") s[k] = b[k].trim();
+    for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "updateUrl"]) if (typeof b[k] === "string") s[k] = b[k].trim();
     delete s.groqSmall; groqPicked = null;
     await DB.saveSettings(); return { ok: true };
   }
@@ -2027,7 +2054,7 @@ async function openSettings(){
   try {
     const s = await api("GET", "/api/settings");
     f.provider.value = s.provider; f.aiProvider.value = s.aiProvider; f.claudeModel.value = s.claudeModel; f.groqModel.value = s.groqModel;
-    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.updateUrl.value = s.updateUrl;
+    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : k === "groqAiKey" ? "Only if speech-to-text is not on Groq" : "Paste the key"; }
     $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet.";
   } catch (e){}
@@ -2038,15 +2065,16 @@ $("setForm").addEventListener("submit", async ev => {
   ev.preventDefault();
   const f = ev.target.elements;
   try {
-    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, updateUrl: f.updateUrl.value, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
+    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
     S.status = await api("GET", "/api/status");
     $("settings").close(); render(); checkUpdate();
   } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; }
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.3", RELEASED = "20 September 2026";
+const VERSION = "2.2.4", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.4", "20 Sep 2026", ["When the main AI is overloaded, Bizofy hands the request to a backup AI (a second model, Groq or Claude) instead of waiting"]],
   ["2.2.3", "20 Sep 2026", ["When an AI service is overloaded, Bizofy now waits and tries again by itself"]],
   ["2.2.2", "20 Sep 2026", ["Works better with Google Gemini as the AI service, and error messages from any AI service now show the real reason"]],
   ["2.2.1", "20 Sep 2026", ["Download the audio as an MP3 file, which plays on every phone and computer"]],
