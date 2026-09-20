@@ -658,6 +658,8 @@ async function llmOpenAI(c, o){
   const body = { model, max_tokens: o.max || 2000, temperature: 0.3, stream: !!o.onText,
     messages: [{ role: "system", content: o.system + (o.context ? "\n\n" + o.context : "") }, ...o.messages] };
   if (o.json) body.response_format = { type: "json_object" };
+  // Gemini "thinks" before answering and that thinking counts against the length limit: keep it short so answers are not cut off
+  if (/generativelanguage\.googleapis\.com/.test(base)){ body.reasoning_effort = "low"; body.max_tokens = Math.max(body.max_tokens, 4000) + 2000; }
   let waits = 0, fixes = 0;
   for (;;){
     let r;
@@ -665,16 +667,22 @@ async function llmOpenAI(c, o){
     catch (e){ if (e.name === "AbortError") throw e; throw new AppError(custom ? "Could not reach the AI service. Check the address in Settings and the internet connection. Some services do not accept requests from a web page." : "Could not reach the AI service. Check the internet connection."); }
     if (r.ok){
       if (o.onText) return readSSE(r, ev => (ev.choices && ev.choices[0] && ev.choices[0].delta && ev.choices[0].delta.content) || "", o.onText);
-      const j = await r.json(); return (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
+      const j = await r.json(), text = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
+      if (!String(text).trim()) throw new AppError("The AI sent back an empty answer. Try again; if it keeps happening, try a different model in Settings.");
+      return text;
     }
-    let msg = r.statusText; try { const j = await r.json(); msg = (j.error && (j.error.message || j.error)) || msg; } catch (e){}
-    msg = String(msg);
+    // services word their errors differently (Gemini wraps them in a list): dig out the real reason
+    let msg = "";
+    try { const raw = await r.text(); try { let j = JSON.parse(raw); if (Array.isArray(j)) j = j[0]; const e = j && j.error; msg = (e && (e.message || (typeof e === "string" ? e : ""))) || (j && (j.message || j.detail)) || ""; if (typeof msg !== "string") msg = JSON.stringify(msg); } catch (x){ msg = raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 300); } } catch (x){}
+    msg = String(msg || "").trim() || ("the service gave no reason (code " + r.status + (r.statusText ? " " + r.statusText : "") + ")");
+    if (/api key not valid|invalid api key|incorrect api key|API_KEY_INVALID/i.test(msg)) throw new AppError("The key for " + name + " was rejected. Check it in Settings: it should be pasted with no spaces before or after.");
     if (r.status === 413 || /request too large|reduce your message size|context.length|maximum context/i.test(msg)){ const e = new AppError("This lecture is too long for the AI plan."); e.tooLarge = true; throw e; }
     // services differ slightly in the options they accept: adapt and try again
     if (r.status === 400 && fixes < 3){
       if (/max_tokens/i.test(msg) && body.max_tokens){ body.max_completion_tokens = body.max_tokens; delete body.max_tokens; fixes++; continue; }
       if (/temperature/i.test(msg) && "temperature" in body){ delete body.temperature; fixes++; continue; }
       if (/response_format|json/i.test(msg) && body.response_format){ delete body.response_format; fixes++; continue; }
+      if (/reasoning_effort/i.test(msg) && body.reasoning_effort){ delete body.reasoning_effort; fixes++; continue; }
     }
     if (r.status === 429 && waits < 8){
       const h = r.headers.get("retry-after"), m = /try again in (?:(\d+)m)?([\d.]+)s/i.exec(msg);
@@ -684,7 +692,7 @@ async function llmOpenAI(c, o){
     }
     throw new AppError(r.status === 401 || r.status === 403 ? "The key for " + name + " was rejected. Check it in Settings."
       : r.status === 404 || /model/i.test(msg) && /not (found|exist)|decommission|does not exist/i.test(msg) ? name.charAt(0).toUpperCase() + name.slice(1) + ' does not offer the model "' + model + '". Change the model in Settings, under Advanced.'
-      : r.status === 429 ? "The AI plan's rate limit is used up for now. Try again in a few minutes." : "The AI returned an error: " + msg);
+      : r.status === 429 ? "The AI plan's rate limit is used up for now. Try again in a few minutes." : "The AI returned an error (code " + r.status + "): " + msg);
   }
 }
 const llm = o => { const c = cfg(); return c.ai === "claude" ? llmClaude(c, o) : llmOpenAI(c, o); };
@@ -2029,8 +2037,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.2.1", RELEASED = "20 September 2026";
+const VERSION = "2.2.2", RELEASED = "20 September 2026";
 const CHANGES = [
+  ["2.2.2", "20 Sep 2026", ["Works better with Google Gemini as the AI service, and error messages from any AI service now show the real reason"]],
   ["2.2.1", "20 Sep 2026", ["Download the audio as an MP3 file, which plays on every phone and computer"]],
   ["2.2.0", "20 Sep 2026", ["My notes: write your own notes with bold, italics, headings and lists, then let the AI polish, structure or shorten them", "Stand-alone notes that are not tied to a recording", "Folders, drag to move, an archive, and a recycle bin that keeps deleted items for 30 days", "Download the audio of a lecture, or delete the audio and keep the text", "Export only the parts you want, plus flashcards as a file for Anki or Quizlet, and the quiz with an answer key"]],
   ["2.1.1", "19 Sep 2026", ["A hosted copy checks for new versions by itself"]],
