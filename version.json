@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "url": "./",
-  "notes": "Google Drive storage and sync, and recovery when a phone pauses a recording."
+  "notes": "New design: themes, home screen, smarter library and Pambizo, lecture outlines."
 }

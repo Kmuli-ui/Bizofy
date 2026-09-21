@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{var t=JSON.parse(localStorage.getItem("bizofy.theme")||"{}"),r=document.documentElement;r.dataset.mode=t.mode==="light"||t.mode==="dark"?t.mode:(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");if(t.palette)r.dataset.palette=t.palette;if(t.density)r.dataset.density=t.density}catch(e){}</script>
 <title>Bizofy — Ai Notes</title>
 <meta name="theme-color" content="#14233B">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,18 +15,24 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper:#F2F5F8; --sheet:#FFFFFF; --ink:#14233B; --slate:#56657A; --rule:#D5DDE6;
-  --hi:#FFD84A; --hi-soft:#FFF1B0; --rec:#C8372D; --ok:#1F7A5A; --focus:#2F6FE4; --margin:#E3A19B;
+  --rec:#C8372D; --ok:#1F7A5A; --focus:#2F6FE4; --on-hi:#14233B;
   --display:"Bricolage Grotesque",ui-sans-serif,system-ui,"Segoe UI",sans-serif;
   --read:"Newsreader",Georgia,"Times New Roman",serif;
-  /* type scale, ratio 1.2 */
   --t-2:.75rem; --t-1:.875rem; --t0:1rem; --t1:1.2rem; --t2:1.44rem; --t3:1.728rem; --t4:2.074rem; --t5:2.986rem;
-  --read-size:17px;
+  --read-size:17px; --side-w:272px; --pam-w:384px;
+  color-scheme:light;
+  --paper:#F2F5F8;--sheet:#FFFFFF;--ink:#14233B;--slate:#56657A;--rule:#D5DDE6;--hi:#FFD84A;--hi-soft:#FFF1B0;--margin:#E3A19B;--deck:#14233B;--deck-ink:#F2F5F8;
 }
-@media (prefers-color-scheme: dark){
-  :root{--paper:#0F1826; --sheet:#172235; --ink:#E8EEF6; --slate:#9AA9BC; --rule:#2A3950;
-    --hi:#F2C42E; --hi-soft:#5A4A12; --rec:#F0645A; --ok:#5CC9A2; --focus:#7FA8FF; --margin:#7A4642;}
-}
+:root[data-mode="dark"]{color-scheme:dark;--rec:#F0645A;--ok:#5CC9A2;--focus:#7FA8FF;--paper:#0F1826;--sheet:#172235;--ink:#E8EEF6;--slate:#9AA9BC;--rule:#2A3950;--hi:#F2C42E;--hi-soft:#5A4A12;--margin:#7A4642;--deck:#0A1220;--deck-ink:#E8EEF6;}
+:root[data-palette="savanna"]{--paper:#F6F1E9;--sheet:#FFFDF9;--ink:#2A2019;--slate:#6E6154;--rule:#E0D6C8;--hi:#F0B03F;--hi-soft:#FBE6B8;--margin:#C98B6B;--deck:#3A2A1E;--deck-ink:#F6F1E9;}
+:root[data-palette="savanna"][data-mode="dark"]{--paper:#1B1511;--sheet:#261E18;--ink:#F1E9DE;--slate:#B3A594;--rule:#3B3027;--hi:#E0A030;--hi-soft:#5C4517;--margin:#7C523C;--deck:#120E0B;--deck-ink:#F1E9DE;}
+:root[data-palette="forest"]{--paper:#EEF4F0;--sheet:#FFFFFF;--ink:#10302A;--slate:#52695F;--rule:#D2E0D8;--hi:#BFE36A;--hi-soft:#E4F4BF;--margin:#8DB8A4;--deck:#10302A;--deck-ink:#EEF4F0;}
+:root[data-palette="forest"][data-mode="dark"]{--paper:#0C1A16;--sheet:#132621;--ink:#E3F0EA;--slate:#94B0A5;--rule:#21392F;--hi:#A9D152;--hi-soft:#3C5216;--margin:#3F6B5A;--deck:#08130F;--deck-ink:#E3F0EA;}
+:root[data-palette="slate"]{--paper:#F3F3F5;--sheet:#FFFFFF;--ink:#1D1D22;--slate:#64646F;--rule:#DCDCE2;--hi:#B9C7FF;--hi-soft:#E3E9FF;--margin:#B5B5C2;--deck:#1D1D22;--deck-ink:#F3F3F5;}
+:root[data-palette="slate"][data-mode="dark"]{--paper:#131316;--sheet:#1C1C21;--ink:#ECECF1;--slate:#A0A0AD;--rule:#2E2E36;--hi:#8FA2F0;--hi-soft:#2E3763;--margin:#4A4A58;--deck:#0B0B0E;--deck-ink:#ECECF1;}
+:root[data-palette="contrast"]{--paper:#FFFFFF;--sheet:#FFFFFF;--ink:#000000;--slate:#2B2B2B;--rule:#000000;--hi:#FFE600;--hi-soft:#FFF59A;--margin:#000000;--deck:#000000;--deck-ink:#FFFFFF;}
+:root[data-palette="contrast"][data-mode="dark"]{--paper:#000000;--sheet:#000000;--ink:#FFFFFF;--slate:#E0E0E0;--rule:#FFFFFF;--hi:#FFE600;--hi-soft:#6B6000;--margin:#FFFFFF;--deck:#1A1A1A;--deck-ink:#FFFFFF;}
+:root[data-density="compact"]{font-size:14.5px;--read-size:16px}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--paper);color:var(--ink);font-family:var(--display);font-size:var(--t0);line-height:1.5;font-optical-sizing:auto;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -34,10 +41,10 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 [hidden]{display:none!important}
 h1,h2,h3{text-wrap:balance}
-mark{background:var(--hi);color:#14233B;border-radius:2px;padding:0 1px}
+mark{background:var(--hi);color:var(--on-hi);border-radius:2px;padding:0 1px}
 
 /* layout: library | lecture || margin */
-.app{display:grid;grid-template-columns:272px minmax(0,1fr) 384px;min-height:100%}
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr) var(--pam-w);min-height:100%}
 .side{border-right:1px solid var(--rule);padding:22px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;overflow:auto}
 .pam{border-left:4px double var(--margin);padding:22px 20px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;min-width:0;background:var(--paper)}
 main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:100%;margin:0 auto}
@@ -121,9 +128,9 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .menu-note{margin:4px 10px 8px;font-size:var(--t-2);color:var(--slate);line-height:1.45}
 .notice.info{background:var(--hi-soft);color:var(--ink);border-radius:8px;padding:9px 12px}
 
-.deck{background:#14233B;color:#F2F5F8;border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+.deck{background:var(--deck);color:var(--deck-ink);border-radius:14px;padding:16px 18px;display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
 .deck.is-live{position:sticky;top:10px;z-index:3}
-.recbtn{width:64px;height:64px;border-radius:50%;border:2px solid #F2F5F8;background:transparent;display:grid;place-items:center}
+.recbtn{width:64px;height:64px;border-radius:50%;border:2px solid var(--deck-ink);background:transparent;display:grid;place-items:center}
 .recbtn i{display:block;width:26px;height:26px;border-radius:50%;background:#E0483D;transition:border-radius .15s,transform .15s}
 .recbtn[aria-pressed="true"] i{border-radius:5px;transform:scale(.8)}
 .recbtn:focus-visible{outline-color:var(--hi)}
@@ -131,16 +138,16 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .clock small{font-size:var(--t-1);font-weight:400;opacity:.65}
 .live{opacity:.82;font-size:var(--t-1);min-height:1.4em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .meter{height:4px;border-radius:2px;background:rgba(255,255,255,.15);margin-top:8px;overflow:hidden;max-width:320px}
-.meter b{display:block;height:100%;width:0;background:#FFD84A;border-radius:2px;transition:width .08s linear}
+.meter b{display:block;height:100%;width:0;background:var(--hi);border-radius:2px;transition:width .08s linear}
 .side-ctl{display:flex;flex-direction:column;gap:8px;align-items:stretch}
-.flag{background:#FFD84A;color:#14233B;border:0;border-radius:8px;padding:9px 12px;font-weight:600;font-size:var(--t-1)}
+.flag{background:var(--hi);color:var(--on-hi);border:0;border-radius:8px;padding:9px 12px;font-weight:600;font-size:var(--t-1)}
 .flag:disabled{opacity:.4;cursor:not-allowed}
 .flag.hit{box-shadow:0 0 0 3px rgba(255,216,74,.45)}
 .deck select{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:5px 6px;font-size:var(--t-2)}
-.deck select option{color:#14233B}
+.deck select option{color:#14233B;background:#fff}
 .player{grid-column:1/-1;display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:center;border-top:1px solid rgba(255,255,255,.15);padding-top:12px}
 .player button{background:transparent;border:1px solid rgba(255,255,255,.4);color:inherit;border-radius:6px;padding:4px 12px;min-width:60px;font-size:var(--t-1);font-variant-numeric:tabular-nums}
-.player input[type=range]{width:100%;accent-color:#FFD84A}
+.player input[type=range]{width:100%;accent-color:var(--hi)}
 @media (prefers-reduced-motion:no-preference){
   .recbtn[aria-pressed="true"]{animation:pulse 1.6s ease-in-out infinite}
   @keyframes pulse{50%{box-shadow:0 0 0 8px rgba(224,72,61,.3)}}
@@ -281,7 +288,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 
 /* narrower screens: the margin and the library slide in */
 @media (max-width:1180px){
-  .app{grid-template-columns:272px minmax(0,1fr)}
+  .app{grid-template-columns:var(--side-w) minmax(0,1fr)}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:8;background:var(--paper)}
   #openSide{visibility:hidden}
   .side,.deck{top:57px}
@@ -311,6 +318,120 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
   .app{display:block}.panel{border:0;padding:0}main{max-width:none;padding:0}
   body{background:#fff}
 }
+
+/* ---------- 2.4: library, panels, home, outline, Pambizo ---------- */
+.app>.side{grid-column:1}.app>main{grid-column:2}.app>.pam{grid-column:3}
+@media (max-width:760px){.app>main{grid-column:1}}
+.resizer{position:absolute;top:0;bottom:0;width:9px;cursor:col-resize;z-index:4;touch-action:none}
+.resizer.right{right:-5px}.resizer.left{left:-6px}
+.resizer:hover,body.resizing .resizer{background:linear-gradient(90deg,transparent 3px,var(--hi) 3px,var(--hi) 6px,transparent 6px)}
+body.resizing{cursor:col-resize;user-select:none}
+.brand-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+button.brand{border:0;background:none;padding:0;text-align:left;color:inherit;font-family:inherit}
+.peek{display:none;justify-content:space-between;margin:-10px 0 14px}
+.peek-side,.peek-pam{visibility:hidden}
+@media (min-width:1181px){
+  body.no-side .app{grid-template-columns:0 minmax(0,1fr) var(--pam-w)}
+  body.no-pam .app{grid-template-columns:var(--side-w) minmax(0,1fr) 0}
+  body.no-side.no-pam .app{grid-template-columns:0 minmax(0,1fr) 0}
+  body.no-side .side,body.no-pam .pam{display:none}
+  body.no-side .peek,body.no-pam .peek{display:flex}
+  body.no-side .peek-side,body.no-pam .peek-pam{visibility:visible}
+}
+@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.no-side .peek{display:flex} body.no-side .peek-side{visibility:visible} }
+.list-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.mini{border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet);padding:3px 6px;font-size:var(--t-2);max-width:100%}
+.lec-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;border-radius:0 6px 6px 0}
+.lec-row:hover{background:var(--sheet)}
+.lec{display:flex;gap:8px;align-items:flex-start}
+.lec-text{min-width:0;flex:1}
+.lec small{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.badges{display:inline-flex;gap:5px;color:var(--ink);font-size:.6875rem;opacity:.75}
+.more{border:0;background:none;color:var(--slate);padding:0 8px;font-size:var(--t1);line-height:1;border-radius:6px;opacity:0}
+.lec-row:hover .more,.more:focus-visible{opacity:1}
+.more:hover{background:var(--rule);color:var(--ink)}
+@media (hover:none){.more{opacity:1}}
+.tick{width:16px;height:16px;border:1.5px solid var(--slate);border-radius:4px;flex:none;margin-top:2px}
+.tick.on{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--sheet)}
+.bulk{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--hi-soft);border-radius:8px;padding:8px;font-size:var(--t-2);position:sticky;top:0;z-index:2}
+.bulk .btn{padding:3px 8px}
+.folder.special summary{color:var(--ink)}
+.ctx{position:fixed;z-index:40;background:var(--sheet);border:1.5px solid var(--ink);border-radius:10px;padding:6px;min-width:200px;max-width:280px;display:flex;flex-direction:column;box-shadow:0 14px 40px rgba(10,20,40,.22)}
+.ctx button{border:0;background:none;text-align:left;padding:7px 10px;border-radius:6px;font-size:var(--t-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctx button:hover,.ctx button:focus-visible{background:var(--hi-soft);outline:none}
+.ctx .danger{color:var(--rec)}
+.ctx hr{border:0;border-top:1px solid var(--rule);margin:4px 2px}
+
+.home{max-width:46rem;margin-top:3vh}
+.home h1{font-size:clamp(var(--t4),4.4vw,var(--t5));font-weight:800;letter-spacing:-.04em;line-height:1.02;margin:0 0 18px}
+.home .lede{font-family:var(--read);font-size:var(--t1);line-height:1.6;color:var(--slate);margin:0 0 24px;max-width:36rem}
+.home h2{font-size:var(--t1);font-weight:800;letter-spacing:-.015em;margin:34px 0 12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:0;margin-top:30px;border-top:1.5px solid var(--ink);border-bottom:1px solid var(--rule)}
+.stat{padding:14px 14px 14px 0}
+.stat b{display:block;font-size:var(--t3);font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:var(--t-2);color:var(--slate)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:4px;text-align:left;border:1.5px solid var(--rule);background:var(--sheet);border-radius:12px;padding:14px 16px;min-height:104px}
+.tile:hover{border-color:var(--ink)}
+.tile-folder{font-size:var(--t-2);color:var(--slate);font-weight:600}
+.tile strong{font-size:var(--t0);line-height:1.25;letter-spacing:-.01em}
+.tile small{margin-top:auto;color:var(--slate);font-size:var(--t-2);font-variant-numeric:tabular-nums}
+.home .drop{margin-top:30px}
+
+.outline{border:1.5px solid var(--rule);border-radius:12px;padding:10px 14px;margin:0 0 18px}
+.outline.none{border-style:dashed}
+.outline summary{cursor:pointer;font-weight:700;font-size:var(--t-1);display:flex;gap:8px;align-items:center}
+.outline ol{list-style:none;margin:10px 0 4px;padding:0;display:grid;gap:2px}
+.chap-link{display:grid;grid-template-columns:52px 1fr;column-gap:10px;width:100%;text-align:left;border:0;background:none;padding:5px 6px;border-radius:6px}
+.chap-link:hover{background:var(--hi-soft)}
+.chap-link .hit-t{text-align:right;margin:0;padding-top:1px}
+.chap-link strong{font-size:var(--t-1)}
+.gist{grid-column:2;font-family:var(--read);font-size:var(--t-1);color:var(--slate);line-height:1.45}
+.chap{display:grid;grid-template-columns:58px minmax(0,1fr) 24px;gap:12px;align-items:baseline;margin:22px 0 4px;border-top:1px solid var(--rule);padding-top:12px}
+.chap:first-child{margin-top:0;border-top:0;padding-top:0}
+.chap .ts{text-align:right}
+.chap h3{margin:0;font-size:var(--t0);font-weight:800;letter-spacing:-.015em}
+
+.seg2{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--rule);border-radius:8px;overflow:hidden}
+.seg2 button{border:0;background:none;padding:6px;font-size:var(--t-2);font-weight:600;color:var(--slate)}
+.seg2 button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.quick summary{cursor:pointer;font-size:var(--t-2);font-weight:600;color:var(--slate);margin-bottom:8px}
+.quick:not([open]) summary{margin-bottom:0}
+.chip.own{display:inline-flex;padding:0;overflow:hidden}
+.chip.own button{border:0;background:none;padding:5px 4px 5px 12px;font-size:inherit;font-weight:inherit}
+.chip.own .chip-x{padding:5px 9px 5px 4px;color:var(--slate)}
+.chip.add{border-style:dashed;color:var(--slate)}
+.answer{border-left:3px solid var(--rule);padding:2px 0 2px 12px}
+.answer.pinned{border-left-color:var(--hi)}
+.pam .notes h2,.pam .notes h3{font-size:var(--t0);margin:12px 0 4px}
+.pam .notes p,.pam .notes li{font-size:1rem;line-height:1.55;max-width:none}
+.pam .notes>*:first-child{margin-top:0}
+.answer-tools{display:flex;gap:12px;margin-top:6px}
+.pins .answer{margin-bottom:12px}
+.selpop{position:absolute;z-index:30;display:flex;gap:2px;background:var(--ink);border-radius:9px;padding:4px;box-shadow:0 10px 30px rgba(10,20,40,.3)}
+.selpop button{border:0;background:none;color:var(--paper);font-size:var(--t-2);font-weight:600;padding:6px 10px;border-radius:6px}
+.selpop button:hover{background:rgba(255,255,255,.16)}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-top:14px}
+.swatch{display:flex;align-items:center;gap:8px;border:1.5px solid var(--rule);background:var(--paper);border-radius:8px;padding:7px 10px;font-size:var(--t-1)}
+.swatch[aria-pressed="true"]{border-color:var(--ink);font-weight:600}
+.swatch-dot{width:20px;height:20px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.15)}
+#setupOut{margin-top:8px;font-size:var(--t-2)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:8px 16px;margin:14px 0 0;font-size:var(--t-1)}
+.keys dt{font-weight:700;font-variant-numeric:tabular-nums;border:1.5px solid var(--rule);border-radius:6px;padding:1px 8px;text-align:center;white-space:nowrap}
+.keys dd{margin:0;align-self:center}
+
+.exit-focus{display:none;position:fixed;top:12px;right:14px;z-index:30}
+body.focus .side,body.focus .pam,body.focus .deck,body.focus .note-row,body.focus .head .actions,body.focus .course-row .btn,body.focus .peek,body.focus .topbar,body.focus .drop,body.focus .add,body.focus .tabs{display:none!important}
+body.focus .app{grid-template-columns:minmax(0,1fr)!important}
+body.focus .app>main{grid-column:1}
+body.focus main{max-width:780px}
+body.focus .panel{border:0;background:transparent;padding:0;margin-top:18px}
+body.focus .exit-focus{display:block}
+@media (max-width:760px){ .home{margin-top:0} .stats{grid-template-columns:1fr 1fr} .chap{grid-template-columns:44px minmax(0,1fr) 22px;gap:8px} }
+
+dialog{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto;overscroll-behavior:contain}
+dialog .row.end{position:sticky;bottom:-26px;background:var(--sheet);padding:12px 0 26px;margin-bottom:-26px}
 </style>
 </head>
 <body>
@@ -321,14 +442,15 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 </header>
 <div class="app">
   <aside class="side" id="side">
+    <div class="resizer right" id="sideGrip" title="Drag to resize" aria-hidden="true"></div>
     <div class="brand-block">
-      <div class="brand"><span>Bizofy</span> <em>Ai Notes</em></div>
+      <div class="brand-row"><button class="brand" id="homeBtn" title="Home"><span>Bizofy</span> <em>Ai Notes</em></button><button class="btn quiet" id="hideSide" title="Hide the library">Hide</button></div>
       <div class="brand-sub">Record a class. Get the notes.</div>
     </div>
     <div class="new-row"><button class="btn solid" id="newBtn">New lecture</button><button class="btn" id="newNoteBtn">New note</button></div>
     <input class="search" id="search" type="search" placeholder="Search every transcript" aria-label="Search every transcript">
+    <div class="list-tools" id="listTools" hidden></div>
     <nav id="list" aria-label="Lectures and notes"></nav>
-    <button class="linkish" id="newFolderBtn">New folder</button>
     <div class="views" id="views"></div>
     <div class="store">
       <div id="syncBox" class="syncbox" hidden></div>
@@ -342,6 +464,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
   <aside class="pam" id="pam" aria-label="Pambizo, the AI workspace"></aside>
 </div>
 <div class="scrim" id="scrim"></div>
+<button class="btn solid exit-focus" id="exitFocus">Leave focus mode</button>
 <div class="dropveil" aria-hidden="true"><p>Drop to add to Bizofy</p></div>
 
 <dialog id="settings" aria-labelledby="setTitle">
@@ -380,6 +503,11 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <label>Speech-to-text base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
       <label>Address to check for new versions (optional) <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
     </details>
+    <details>
+      <summary>Appearance</summary>
+      <div id="appearance"></div>
+    </details>
+    <label class="check" style="margin-top:14px"><input type="checkbox" name="autoOutline"> After each lecture, give it a title and an outline automatically</label>
     <details id="driveBox">
       <summary>Google Drive storage and sync</summary>
       <p class="hint" id="driveState" style="margin:10px 0 0"></p>
@@ -387,7 +515,10 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
       <label class="check" style="margin-top:12px"><input type="checkbox" name="syncAudio"> Save audio to Drive too, not only text</label>
       <label class="check" style="margin-top:8px"><input type="checkbox" name="pullAudio"> On this device, download every lecture's audio automatically</label>
       <p class="hint" style="margin:8px 0 0">Leave the second box off on a phone. Audio is still fetched when you press play. Your API keys are never sent to Drive.</p>
-      <button type="button" class="btn quiet" id="driveOff" style="margin-top:10px" hidden>Stop syncing on this device</button>
+      <label class="check" style="margin-top:8px"><input type="checkbox" name="signinRedirect"> Sign in without a pop-up window (for phones and the home-screen icon)</label>
+      <p class="hint" style="margin:8px 0 0">This needs one extra line in Google Cloud: open your client under Clients, and under Authorized redirect URIs add this page's address exactly as it appears in the address bar.</p>
+      <div class="row" style="margin-top:10px"><button type="button" class="btn quiet" id="setupLink" hidden>Set up another device</button><button type="button" class="btn quiet" id="driveOff" hidden>Stop syncing on this device</button></div>
+      <input id="setupOut" type="text" readonly hidden aria-label="Setup link">
     </details>
     <details>
       <summary>What is new in this version</summary>
@@ -431,6 +562,17 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
     </div>
     <p class="notice err" id="expErr" hidden></p>
     <div class="row end"><button class="btn quiet" value="cancel">Close</button></div>
+  </form>
+</dialog>
+
+<dialog id="keys" aria-labelledby="keysTitle">
+  <form method="dialog">
+    <h2 id="keysTitle">Keyboard shortcuts</h2>
+    <dl class="keys">
+      <dt>/</dt><dd>Search every transcript</dd><dt>R</dt><dd>Start recording</dd><dt>M</dt><dd>Mark as important, while recording</dd><dt>N</dt><dd>Type a quick note</dd>
+      <dt>Space</dt><dd>Play or pause</dd><dt>J and L</dt><dd>Back or forward 10 seconds</dd><dt>F</dt><dd>Focus mode, Esc to leave</dd><dt>[ and ]</dt><dd>Hide or show the library and Pambizo</dd><dt>?</dt><dd>This list</dd>
+    </dl>
+    <div class="row end"><button class="btn solid" value="cancel">Close</button></div>
   </form>
 </dialog>
 
@@ -831,6 +973,16 @@ async function makeStudy(lec, note){
     quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
     madeAt: Date.now() };
 }
+async function makeOutline(lec, note){
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 1800, context: ctx, onWait: (s, why) => note(waitText(s, why)),
+    system: "You divide a university lecture into its main parts so a student can find their way around it. Use only the transcript, and only times that appear in it. Reply with only a JSON object of this shape: {\"title\": \"a specific title for this lecture, at most 9 words, no course code\", \"chapters\": [{\"t\": \"m:ss where this part starts\", \"title\": \"3 to 7 words\", \"gist\": \"one short sentence\"}]} with 4 to 12 chapters in time order, the first at the start.",
+    messages: [{ role: "user", content: "Write the JSON outline now." }] }), note));
+  const chapters = (Array.isArray(r.chapters) ? r.chapters : []).map(c => ({ t: /^\d{1,2}(:\d\d){1,2}$/.test(String(c && c.t).trim()) ? parseTs(String(c.t).trim()) : null, title: String((c && c.title) || "").trim().slice(0, 90), gist: String((c && c.gist) || "").trim().slice(0, 220) }))
+    .filter(c => c.t != null && c.title).sort((x, y) => x.t - y.t).filter((c, i, all) => !i || c.t - all[i - 1].t >= 20);
+  lec.outline = { chapters, madeAt: Date.now() };
+  const title = String(r.title || "").replace(/["“”]/g, "").trim().slice(0, 120);
+  if (title && /^untitled/i.test(lec.title)) lec.title = title;
+}
 const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
 async function makeNotes(lec, note){
   const c = cfg(), wait = (s, why) => note(waitText(s, why));
@@ -859,7 +1011,7 @@ function askAI(lec, question, scope, signal, onText, note){
   const history = (lec.chat || []).slice(-13, -1).map(m => ({ role: m.role, content: m.content }));
   while (history.length && history[0].role !== "user") history.shift();
   return withContext(lec, scope, ctx => llm({ max: 2000, signal, onText, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly. Be concise. Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Plain text only: no Markdown symbols; use simple dashes for lists.",
+    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly. Be concise. Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Format lightly in Markdown so it reads well in a narrow panel: '- ' bullets for lists, **bold** for key terms, and a short '### ' heading only when the answer has several parts. Write emails and messages as plain paragraphs.",
     messages: [...history, { role: "user", content: question }] }), note, signal);
 }
 
@@ -879,12 +1031,13 @@ function mdBlocks(md){
 }
 const runsOf = t => String(t).split(/(\*\*[^*]+\*\*|(?<![*\w])\*[^*\n]+\*(?![*\w]))/).filter(Boolean).map(x => (/^\*\*[^*]+\*\*$/.test(x) ? { b: true, t: x.slice(2, -2) } : /^\*[^*]+\*$/.test(x) ? { i: true, t: x.slice(1, -1) } : { t: x }));
 const plain = t => runsOf(t).map(r => r.t).join("");
-const SECTIONS = [["notes", "AI notes"], ["summary", "Summary"], ["mine", "My notes"], ["marks", "Timestamped notes"], ["cards", "Flashcards"], ["quiz", "Quiz"], ["transcript", "Transcript"]];
-const hasSection = (lec, k) => k === "notes" ? !!(lec.notes && lec.notes.md.trim()) : k === "summary" ? !!lec.summary : k === "mine" ? !!myNotesMd(lec) : k === "marks" ? (lec.marks || []).length > 0
+const SECTIONS = [["outline", "Outline"], ["notes", "AI notes"], ["summary", "Summary"], ["mine", "My notes"], ["marks", "Timestamped notes"], ["cards", "Flashcards"], ["quiz", "Quiz"], ["transcript", "Transcript"]];
+const hasSection = (lec, k) => k === "outline" ? !!(lec.outline && lec.outline.chapters.length) : k === "notes" ? !!(lec.notes && lec.notes.md.trim()) : k === "summary" ? !!lec.summary : k === "mine" ? !!myNotesMd(lec) : k === "marks" ? (lec.marks || []).length > 0
   : k === "cards" ? !!(lec.study && lec.study.flashcards.length) : k === "quiz" ? !!(lec.study && lec.study.quiz.length) : lec.segments.length > 0;
 function buildDoc(lec, only){
   const want = k => (!only || only.includes(k)) && hasSection(lec, k);
   const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) }];
+  if (want("outline")) B.push({ k: "h1", t: "Outline" }, ...lec.outline.chapters.map(c => ({ k: "seg", ts: fmt(c.t), t: c.title + (c.gist ? ". " + c.gist : "") })));
   if (want("mine")) B.push({ k: "h1", t: "My notes" }, ...mdBlocks(myNotesMd(lec)));
   if (want("notes")) B.push({ k: "h1", t: "AI notes" }, ...mdBlocks(lec.notes.md));
   const s = lec.summary;
@@ -1220,10 +1373,12 @@ async function api(method, url, body, note){
   if (p[0] === "status"){ const c = cfg(); return { transcribe: !!c.tKey, ai: c.ai === "claude" ? !!c.aKey : c.ai === "custom" ? !!(c.xBase && c.xModel) : !!c.gKey, aiName: c.ai === "claude" ? "Claude, " + c.aModel : c.ai === "custom" ? c.xModel : "Groq" + (c.gModel ? ", " + c.gModel : "") }; }
   if (p[0] === "settings"){
     const s = DB.settings;
-    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiBackupModel: s.aiBackupModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "", googleClientId: s.googleClientId || "", syncAudio: s.syncAudio !== false, pullAudio: !!s.pullAudio }; }
+    if (method === "GET"){ const c = cfg(); return { provider: c.provider, aiProvider: s.aiProvider || "auto", transcribeKey: mask(c.tKey), anthropicKey: mask(c.aKey), groqAiKey: mask(s.groqAiKey || ""), transcribeBaseUrl: s.transcribeBaseUrl || "", transcribeModel: s.transcribeModel || "", claudeModel: c.aModel, groqModel: s.groqModel || "", aiBaseUrl: s.aiBaseUrl || "", aiModel: s.aiModel || "", aiBackupModel: s.aiBackupModel || "", aiKey: mask(s.aiKey || ""), updateUrl: s.updateUrl || "", googleClientId: s.googleClientId || "", syncAudio: s.syncAudio !== false, pullAudio: !!s.pullAudio, signinRedirect: !!s.signinRedirect, autoOutline: s.autoOutline !== false }; }
     if (["openai", "groq", "custom"].includes(b.provider)) s.provider = b.provider;
     if (["auto", "claude", "groq", "custom"].includes(b.aiProvider)) s.aiProvider = b.aiProvider;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (typeof b[k] === "string" && b[k].trim()) s[k] = b[k].trim();
+    if (typeof b.googleClientId === "string"){ b.googleClientId = b.googleClientId.replace(/\s+/g, ""); if (b.googleClientId && !CLIENT_RE.test(b.googleClientId)) throw new AppError("That does not look like a complete Google client ID. It is one long line that ends with .apps.googleusercontent.com. Copy it again with the copy button in Google Cloud."); }
+    for (const k of ["signinRedirect", "autoOutline"]) if (typeof b[k] === "boolean") s[k] = b[k];
     for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "updateUrl", "googleClientId"]) if (typeof b[k] === "string") s[k] = b[k].trim();
     if (typeof b.syncAudio === "boolean") s.syncAudio = b.syncAudio;
     if (typeof b.pullAudio === "boolean") s.pullAudio = b.pullAudio;
@@ -1267,6 +1422,7 @@ async function api(method, url, body, note){
       if (typeof b.course === "string"){ const was = lec.course; lec.course = b.course.trim().slice(0, 120); if (lec.folder && lec.folder === was) lec.folder = ""; }
       if (typeof b.folder === "string") lec.folder = b.folder.trim().slice(0, 80);
       if (typeof b.archived === "boolean") lec.archived = b.archived;
+      if (typeof b.pinned === "boolean") lec.pinned = b.pinned;
       if (b.restore) delete lec.deletedAt;
       if (typeof b.myNotes === "string"){ const box = cleanHtml(b.myNotes); if (lec.myNotes && b.keepPrev) lec.myNotesPrev = lec.myNotes.html; lec.myNotes = box.textContent.trim() ? { html: box.innerHTML, updatedAt: Date.now() } : null; }
       if (b.dropAudio){ await DB.dropAudio(lec); lec.audio = []; lec.sessions = []; }
@@ -1297,9 +1453,9 @@ async function api(method, url, body, note){
     await DB.save(lec); return lec;
   }
   if (p[2] === "audio" && p[4] === "transcribe") return transcribePart(lec.id, Number(p[3]));
-  if (p[2] === "summary" || p[2] === "study" || p[2] === "notes"){
+  if (p[2] === "summary" || p[2] === "study" || p[2] === "notes" || p[2] === "outline"){
     if (!lec.segments.length) throw new AppError("Add a transcript first.");
-    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : makeNotes)(lec, note || (() => {}));
+    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : makeNotes)(lec, note || (() => {}));
     await DB.save(lec); return lec;
   }
   throw new AppError("Not found.");
@@ -1320,12 +1476,19 @@ function gToken(interactive){
   if (!interactive) return Promise.reject(needAuth());
   const id = (DB.settings.googleClientId || "").trim();
   if (!id) return Promise.reject(new AppError("Add your Google client ID in Settings first."));
+  if (!CLIENT_RE.test(id)) return Promise.reject(new AppError("The Google client ID in Settings looks incomplete. Copy it again from Google Cloud."));
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if (DB.settings.signinRedirect || standalone){   // go to Google's page and come back: works on phones and from a home-screen icon
+    if (REC.on) return Promise.reject(new AppError("Stop the recording before you sign in to Google."));
+    location.href = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + encodeURIComponent(id) + "&redirect_uri=" + encodeURIComponent(location.origin + location.pathname) + "&response_type=token&include_granted_scopes=true&state=bizofy-sync&scope=" + encodeURIComponent("https://www.googleapis.com/auth/drive.file");
+    return new Promise(() => {});
+  }
   return new Promise(async (res, rej) => {
     try { await loadScript(GIS_URL, () => !!(window.google && google.accounts && google.accounts.oauth2)); } catch (e){ return rej(new AppError("Could not reach Google. Check the internet connection.")); }
     try {
       google.accounts.oauth2.initTokenClient({ client_id: id, scope: "https://www.googleapis.com/auth/drive.file", prompt: "",
         callback: r => { if (r && r.access_token){ G.token = r.access_token; G.exp = Date.now() + (+r.expires_in || 3600) * 1000; res(G.token); } else rej(new AppError("Google did not give access" + (r && r.error ? " (" + r.error + ")." : "."))); },
-        error_callback: e => rej(new AppError(e && e.type === "popup_failed_to_open" ? "The browser blocked Google's sign-in window. Allow pop-ups for Bizofy, then press Sync again." : e && e.type === "popup_closed" ? "Google's sign-in window was closed before it finished." : "Google sign-in did not finish."))
+        error_callback: e => rej(new AppError(e && e.type === "popup_failed_to_open" ? "The browser blocked Google's sign-in window. Allow pop-ups for Bizofy, or turn on “Sign in without a pop-up window” in Settings, then press Sync again." : e && e.type === "popup_closed" ? "Google's sign-in window was closed before it finished." : "Google sign-in did not finish."))
       }).requestAccessToken();
     } catch (e){ rej(new AppError("Google sign-in could not start. Check the client ID in Settings.")); }
   });
@@ -1494,12 +1657,13 @@ function renderSync(){
     : [btn("Sync with Google Drive", true), last ? h("span", { class: "hint" }, "Last synced at " + last + ". Google asks for one tap each session.") : null]).filter(Boolean));
 }
 /* ---------- state ---------- */
-const S = { list: [], cur: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
+const S = { list: [], cur: null, sel: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
 let askCtl = null;
 
 const folderOf = l => (l.folder ? l.folder : l.course || "Unfiled");
 function metaOf(l){
-  return { id: l.id, course: l.course, title: l.title, createdAt: l.createdAt, duration: l.duration || 0, kind: l.kind || "lecture", folder: folderOf(l), archived: !!l.archived, deletedAt: l.deletedAt || 0,
+  return { id: l.id, course: l.course, title: l.title, createdAt: l.createdAt, duration: l.duration || 0, kind: l.kind || "lecture", folder: folderOf(l), archived: !!l.archived, deletedAt: l.deletedAt || 0, updatedAt: l.updatedAt || 0, pinned: !!l.pinned,
+    hasAudio: (l.audio || []).length > 0, hasNotes: !!((l.notes && l.notes.md) || (l.myNotes && l.myNotes.html)),
     words: l.segments.reduce((n, s) => n + s.text.split(/\s+/).filter(Boolean).length, 0) };
 }
 function adopt(lec, soft){
@@ -1514,6 +1678,7 @@ async function openLecture(id){
   S.info = ""; S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
   S.cur = await api("GET", "/api/lectures/" + id);
   if (S.cur.kind === "note") S.tab = "mynotes";
+  DB.settings.recent = [id, ...(DB.settings.recent || []).filter(x => x !== id)].slice(0, 8); DB.tx("kv", "readwrite", st => st.put(DB.settings, "settings")).catch(() => {});
   render();
 }
 async function newLecture(seed){
@@ -1688,6 +1853,7 @@ async function pump(){
     }
   } catch (e){ REC.msg = e.message; const m = $("recMsg"); if (m){ m.hidden = false; m.textContent = REC.msg; } }
   Q.busy = false; liveLine(); pump();
+  if (!Q.items.length && !REC.on) setTimeout(() => autoOutline(it.lecId), 1500);
 }
 function liveLine(){
   const c = $("clock"), l = $("live");
@@ -1827,6 +1993,7 @@ async function handleFiles(list){
     }
   } catch (e){ S.err = e.message; }
   S.busy.upload = false; S.up = null; render();
+  if (S.cur) autoOutline(S.cur.id);
 }
 async function retryWaiting(){
   const lec = S.cur; if (!lec || S.busy.retry) return;
@@ -1942,33 +2109,81 @@ async function renameFolder(old){
   DB.settings.folders = (DB.settings.folders || []).map(f => (f === old ? name : f)); await DB.saveSettings();
   S.list = await api("GET", "/api/lectures"); render();
 }
+/* ---------- the library: folders, pins, recents, sorting, selection, right-click menu ---------- */
+const SORTS = { new: ["Newest first", (a, b) => b.createdAt - a.createdAt], old: ["Oldest first", (a, b) => a.createdAt - b.createdAt], az: ["Title, A to Z", (a, b) => a.title.localeCompare(b.title)] };
+const unsynced = l => DB.sync.on && (!DB.sync.files[l.id] || DB.sync.files[l.id].u < (l.updatedAt || 0));
+let ctxMenu = null;
+function closeMenu(){ if (ctxMenu){ ctxMenu.remove(); ctxMenu = null; } }
+function openMenu(x, y, items){
+  closeMenu();
+  ctxMenu = h("div", { class: "ctx", role: "menu" }, items.filter(Boolean).map(it => (it === "-" ? h("hr") : h("button", { role: "menuitem", class: it[2] ? "danger" : null, onclick: () => { closeMenu(); it[1](); } }, it[0]))));
+  document.body.append(ctxMenu);
+  const r = ctxMenu.getBoundingClientRect();
+  ctxMenu.style.left = Math.max(8, Math.min(x, window.innerWidth - r.width - 8)) + "px"; ctxMenu.style.top = Math.max(8, Math.min(y, window.innerHeight - r.height - 8)) + "px";
+  const first = ctxMenu.querySelector("button"); if (first) first.focus();
+}
+document.addEventListener("pointerdown", e => { if (ctxMenu && !ctxMenu.contains(e.target)) closeMenu(); }, true);
+window.addEventListener("blur", closeMenu); window.addEventListener("resize", closeMenu);
+async function patchLec(id, body){ try { const out = await api("PATCH", "/api/lectures/" + id, body); adopt(out, true); if (S.cur && S.cur.id === id) render(); else renderList(); return out; } catch (e){ fail(e); } }
+async function binLec(id){ try { if (REC.on && REC.lecId === id) stopRec(); const l = getLec(id); await api("DELETE", "/api/lectures/" + id); adopt(l, true); if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } render(); } catch (e){ fail(e); } }
+function lecMenu(l, x, y){
+  if (l.deletedAt) return openMenu(x, y, [["Restore", () => patchLec(l.id, { restore: true })], ["Delete forever", async () => { if (!confirm("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + l.id + "?forever=1"); S.list = S.list.filter(x2 => x2.id !== l.id); if (S.cur && S.cur.id === l.id) S.cur = null; render(); } catch (e){ fail(e); } }, true]]);
+  const others = folders().filter(f => f !== l.folder).slice(0, 8);
+  openMenu(x, y, [
+    ["Open", () => openLecture(l.id).then(closeDrawers).catch(fail)],
+    [l.pinned ? "Unpin" : "Pin to the top", () => patchLec(l.id, { pinned: !l.pinned })],
+    ["Rename", () => { const t = (prompt("Rename", l.title) || "").trim(); if (t && t !== l.title) patchLec(l.id, { title: t }); }],
+    "-", ...others.map(f => ["Move to “" + f + "”", () => moveTo(l.id, f)]), ["Move to a new folder…", () => newFolder(l.id)], "-",
+    [l.archived ? "Move out of archive" : "Archive", () => patchLec(l.id, { archived: !l.archived })],
+    ["Delete", () => binLec(l.id), true]]);
+}
 function lecButton(l){
-  const b = h("button", { class: "lec", draggable: S.view === "main" ? "true" : null, "aria-current": S.cur && l.id === S.cur.id ? "true" : null, onclick: () => { S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); } },
-    l.kind === "note" ? h("span", { class: "kind" }, "Note") : null, l.title,
-    h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" || l.words ? "" : ", empty")));
-  b.addEventListener("dragstart", e => { e.dataTransfer.setData("text/bizofy-lecture", l.id); e.dataTransfer.effectAllowed = "move"; });
-  return b;
+  const picked = S.sel && S.sel.has(l.id);
+  const open = () => { if (S.sel){ picked ? S.sel.delete(l.id) : S.sel.add(l.id); return renderList(); } S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); };
+  const badges = [l.pinned ? ["Pinned", "●"] : null, l.hasAudio ? ["Has audio", "♪"] : null, l.hasNotes ? ["Has notes", "✎"] : null, unsynced(l) ? ["Not yet saved to Google Drive", "↑"] : null].filter(Boolean);
+  const main = h("button", { class: "lec", "aria-current": S.cur && l.id === S.cur.id ? "true" : null, "aria-pressed": S.sel ? (picked ? "true" : "false") : null, onclick: open },
+    S.sel ? h("span", { class: "tick" + (picked ? " on" : ""), "aria-hidden": "true" }) : null,
+    h("span", { class: "lec-text" }, l.kind === "note" ? h("span", { class: "kind" }, "Note") : null, l.title,
+      h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" || l.words ? "" : ", empty"),
+        badges.length ? h("span", { class: "badges" }, badges.map(([t, g]) => h("span", { title: t, "aria-label": t }, g))) : null)));
+  const row = h("div", { class: "lec-row", draggable: S.view === "main" && !S.sel ? "true" : null }, main,
+    S.sel ? null : h("button", { class: "more", "aria-label": "More actions for " + l.title, title: "More", onclick: e => { const r = e.currentTarget.getBoundingClientRect(); lecMenu(l, r.left, r.bottom + 4); } }, "⋯"));
+  row.addEventListener("contextmenu", e => { if (S.sel) return; e.preventDefault(); lecMenu(l, e.clientX, e.clientY); });
+  row.addEventListener("dragstart", e => { e.dataTransfer.setData("text/bizofy-lecture", l.id); e.dataTransfer.effectAllowed = "move"; });
+  return row;
 }
 function renderList(){
-  const nav = $("list"); nav.replaceChildren();
+  const nav = $("list"); nav.replaceChildren(); closeMenu();
   const counts = { archive: S.list.filter(l => !l.deletedAt && l.archived).length, bin: S.list.filter(l => l.deletedAt).length };
-  const go = v => () => { S.view = v; S.search = null; runSearch(); renderList(); };
+  const go = v => () => { S.view = v; S.search = null; S.sel = null; runSearch(); renderList(); };
   $("views").replaceChildren(...[
     S.view !== "main" ? h("button", { class: "linkish", onclick: go("main") }, "Back to all lectures") : null,
     S.view !== "archive" && counts.archive ? h("button", { class: "linkish", onclick: go("archive") }, "Archive (" + counts.archive + ")") : null,
     S.view !== "bin" && counts.bin ? h("button", { class: "linkish", onclick: go("bin") }, "Recycle bin (" + counts.bin + ")") : null].filter(Boolean));
-  $("newFolderBtn").hidden = S.view !== "main";
+  const sortKey = SORTS[DB.settings.sort] ? DB.settings.sort : "new";
+  $("listTools").hidden = !!S.search || S.list.length < 2;
+  $("listTools").replaceChildren(
+    h("select", { class: "mini", "aria-label": "Sort lectures", onchange: async e => { DB.settings.sort = e.target.value; await DB.saveSettings(); renderList(); } }, Object.keys(SORTS).map(k => { const o = h("option", { value: k }, SORTS[k][0]); if (k === sortKey) o.selected = true; return o; })),
+    h("button", { class: "linkish", onclick: () => { S.sel = S.sel ? null : new Set(); renderList(); } }, S.sel ? "Done" : "Select"),
+    S.view === "main" && !S.sel ? h("button", { class: "linkish", onclick: () => newFolder() }, "New folder") : null);
   if (S.search){
     const n = S.search.total;
     nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " item" : " items") : "Nothing found for that search"));
     S.search.groups.forEach(g => {
-      const go = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); if (sid === "mynotes") S.tab = "mynotes"; else if (S.cur.kind !== "note") S.tab = "transcript"; render(); closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
-      nav.append(h("button", { class: "lec", onclick: () => go(g.hits[0] && g.hits[0].sid) }, g.title, h("small", null, (g.course ? g.course + ", " : "") + g.count + (g.count === 1 ? " match" : " matches"))));
-      g.hits.forEach(hit => nav.append(h("button", { class: "hit", onclick: () => go(hit.sid) }, hit.t != null ? h("span", { class: "hit-t" }, fmt(hit.t)) : hit.sid === "mynotes" ? h("span", { class: "hit-t" }, "My notes") : null, hit.before, h("mark", null, hit.match), hit.after)));
+      const open = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); if (sid === "mynotes") S.tab = "mynotes"; else if (S.cur.kind !== "note") S.tab = "transcript"; render(); closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
+      nav.append(h("button", { class: "lec", onclick: () => open(g.hits[0] && g.hits[0].sid) }, h("span", { class: "lec-text" }, g.title, h("small", null, (g.course ? g.course + ", " : "") + g.count + (g.count === 1 ? " match" : " matches")))));
+      g.hits.forEach(hit => nav.append(h("button", { class: "hit", onclick: () => open(hit.sid) }, hit.t != null ? h("span", { class: "hit-t" }, fmt(hit.t)) : hit.sid === "mynotes" ? h("span", { class: "hit-t" }, "My notes") : null, hit.before, h("mark", null, hit.match), hit.after)));
     });
     return;
   }
-  const items = S.list.filter(inView).sort((a, b) => b.createdAt - a.createdAt);
+  const items = S.list.filter(inView).sort(SORTS[sortKey][1]);
+  if (S.sel){
+    const ids = () => [...S.sel], each = async fn => { for (const id of ids()) await fn(id); S.sel = null; S.list = await api("GET", "/api/lectures"); if (S.cur && !DB.lectures.get(S.cur.id)) S.cur = null; render(); };
+    nav.append(h("div", { class: "bulk" }, h("strong", null, S.sel.size + " selected"),
+      S.view === "main" ? h("select", { class: "mini", "aria-label": "Move the selected items", disabled: !S.sel.size, onchange: e => { const f = e.target.value; if (f) each(id => api("PATCH", "/api/lectures/" + id, { folder: f })).catch(fail); } }, h("option", { value: "" }, "Move to…"), folders().map(f => h("option", { value: f }, f))) : null,
+      S.view !== "bin" ? h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(id => api("PATCH", "/api/lectures/" + id, { archived: S.view !== "archive" })).catch(fail) }, S.view === "archive" ? "Unarchive" : "Archive") : h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(id => api("PATCH", "/api/lectures/" + id, { restore: true })).catch(fail) }, "Restore"),
+      S.view !== "bin" ? h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(async id => { if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } await api("DELETE", "/api/lectures/" + id); }).catch(fail) }, "Delete") : null));
+  }
   if (S.view !== "main"){
     nav.append(h("div", { class: "course" }, S.view === "bin" ? "Recycle bin. Items are removed for good after 30 days." : "Archive"));
     items.forEach(l => nav.append(lecButton(l)));
@@ -1976,18 +2191,23 @@ function renderList(){
     return;
   }
   const shut = new Set(DB.settings.shut || []);
-  folders().forEach(f => {
-    const mine = items.filter(l => l.folder === f);
-    const box = h("details", { class: "folder", open: !shut.has(f) },
-      h("summary", null, h("span", { class: "folder-name" }, f), h("span", { class: "folder-n" }, mine.length), f !== "Unfiled" ? h("button", { class: "linkish folder-edit", title: "Rename this folder", onclick: e => { e.preventDefault(); renameFolder(f); } }, "Rename") : null),
+  const group = (key, name, mine, opt) => {
+    const box = h("details", { class: "folder" + (opt && opt.special ? " special" : ""), open: !shut.has(key) },
+      h("summary", null, h("span", { class: "folder-name" }, name), h("span", { class: "folder-n" }, mine.length), opt && opt.rename ? h("button", { class: "linkish folder-edit", title: "Rename this folder", onclick: e => { e.preventDefault(); renameFolder(name); } }, "Rename") : null),
       mine.map(lecButton),
-      !mine.length ? h("p", { class: "hint folder-empty" }, "Empty. Drag a lecture here, or ", h("button", { class: "linkish", onclick: async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== f); await DB.saveSettings(); renderList(); } }, "remove it"), ".") : null);
-    box.addEventListener("toggle", () => { const s2 = new Set(DB.settings.shut || []); box.open ? s2.delete(f) : s2.add(f); DB.settings.shut = [...s2]; DB.saveSettings().catch(() => {}); });
-    box.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); box.classList.add("over"); } });
-    box.addEventListener("dragleave", () => box.classList.remove("over"));
-    box.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); box.classList.remove("over"); if (id){ e.preventDefault(); e.stopPropagation(); moveTo(id, f); } });
+      !mine.length && opt && opt.rename ? h("p", { class: "hint folder-empty" }, "Empty. Drag a lecture here, or ", h("button", { class: "linkish", onclick: async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== name); await DB.saveSettings(); renderList(); } }, "remove it"), ".") : null);
+    box.addEventListener("toggle", () => { const s2 = new Set(DB.settings.shut || []); box.open ? s2.delete(key) : s2.add(key); DB.settings.shut = [...s2]; DB.saveSettings().catch(() => {}); });
+    if (!opt || !opt.special){
+      box.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); box.classList.add("over"); } });
+      box.addEventListener("dragleave", () => box.classList.remove("over"));
+      box.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); box.classList.remove("over"); if (id){ e.preventDefault(); e.stopPropagation(); moveTo(id, name); } });
+    }
     nav.append(box);
-  });
+  };
+  const pinned = items.filter(l => l.pinned), recent = (DB.settings.recent || []).map(id => items.find(l => l.id === id)).filter(Boolean).slice(0, 4);
+  if (pinned.length) group("\u0001pinned", "Pinned", pinned, { special: true });
+  if (recent.length > 1 && items.length > 6 && !S.sel) group("\u0001recent", "Recent", recent, { special: true });
+  folders().forEach(f => group(f, f, items.filter(l => l.folder === f), { rename: f !== "Unfiled" }));
   if (!items.length && !folders().length) nav.append(h("p", { class: "hint" }, "Your lectures and notes will be listed here in folders."));
 }
 function renderKeys(){
@@ -2046,8 +2266,9 @@ function markNode(lec, m){
 function fillSegs(box, lec){
   box.replaceChildren();
   const rows = [...lec.segments.map(s => ({ t: s.t, s })), ...(lec.marks || []).map(m => ({ t: m.t, m }))];
-  rows.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t) || (a.m ? 1 : -1));
-  rows.forEach(r => box.append(r.s ? segNode(lec, r.s) : markNode(lec, r.m)));
+  if (lec.outline) lec.outline.chapters.forEach(c => rows.push({ t: c.t, c }));
+  rows.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t) || (a.c ? -1 : b.c ? 1 : a.m ? 1 : -1));
+  rows.forEach(r => box.append(r.c ? h("div", { class: "chap" }, h("span", { class: "ts" }, fmt(r.c.t)), h("h3", null, r.c.title)) : r.s ? segNode(lec, r.s) : markNode(lec, r.m)));
   const waiting = (lec.audio || []).filter(a => !a.done && a.error);
   if (waiting.length) box.append(h("div", { class: "failed row" },
     h("span", null, (waiting.length === 1 ? "1 part of the recording is" : waiting.length + " parts of the recording are") + " saved on this device but not transcribed yet. " + waiting[waiting.length - 1].error),
@@ -2088,7 +2309,7 @@ function dropZone(lec, slim){
     input,
     busy ? [h("p", { class: "drop-title", id: "upLabel", role: "status" }, (S.up && S.up.label) || "Working…"), (() => { const p = h("progress", { id: "upBar", max: 1, "aria-label": "Progress" }); if (S.up && S.up.value != null) p.value = S.up.value; return p; })(),
       h("p", { class: "hint" }, "Keep this page open until it finishes.")]
-    : [h("p", { class: "drop-title" }, slim ? "Drop another recording or transcript here" : "Drop a recording here"),
+    : [h("p", { class: "drop-title" }, slim ? (lec ? "Drop another recording or transcript here" : "Drop a recording or transcript here") : "Drop a recording here"),
       slim ? null : h("p", { class: "hint" }, "MP3, WAV, M4A or MP4 from Zoom or your phone, or a transcript (.txt, .srt, .vtt). Several files at once is fine. Files over 25 MB are split on this device first."),
       h("button", { class: slim ? "btn quiet" : "btn", disabled: REC.on, onclick: () => input.click() }, "Choose files")]);
 }
@@ -2102,7 +2323,8 @@ function transcriptPanel(lec){
     h("div", { class: "toolbar" },
       S.hl ? h("span", { class: "row" }, h("span", null, hits + (hits === 1 ? " match for “" : " matches for “") + S.hl + "”"), h("button", { class: "btn quiet", onclick: () => { S.hl = ""; render(); } }, "Clear highlighting"))
         : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording below."),
-      h("span", { class: "sizer" }, h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
+      h("span", { class: "sizer" }, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
+    outlineBox(lec),
     segs,
     dropZone(lec, !!has),
     h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta,
@@ -2211,46 +2433,82 @@ const CHIPS = [
   ["Explain simply", "Explain the main idea of this lecture in simple terms, with one everyday example."],
   ["Likely exam questions", "Write five likely exam questions from this lecture, each with a brief model answer."]
 ];
-function richAnswer(text){
-  const out = h("div", { class: "msg" });
-  text.split(/(\[\d{1,2}:\d\d(?::\d\d)?\])/).forEach(part => {
-    const m = part.match(/^\[(\d{1,2}:\d\d(?::\d\d)?)\]$/);
-    if (m) out.append(h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(parseTs(m[1])) }, m[1])); else out.append(part);
-  });
-  return out;
+async function addToMyNotes(md, btn){
+  const lec = S.cur; if (!lec) return;
+  try {
+    const ed = S.tab === "mynotes" ? $("editor") : null, box = ed ? cleanHtml(ed.innerHTML) : cleanHtml(lec.myNotes ? lec.myNotes.html : "");
+    box.append(...mdToNodes(md).childNodes);
+    const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: box.innerHTML });
+    if (S.tab === "mynotes") adopt(out); else adopt(out, true);
+    if (btn){ btn.textContent = "Added"; setTimeout(() => (btn.textContent = "Add to My notes"), 1600); }
+  } catch (e){ S.pamErr = e.message; renderPam(); }
+}
+function answerNode(lec, m){
+  const copy = ev => { const b = ev.currentTarget; navigator.clipboard.writeText(m.content).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); };
+  return h("div", { class: "answer" + (m.pinned ? " pinned" : "") }, notesView(m.content),
+    h("div", { class: "answer-tools" },
+      h("button", { class: "linkish", onclick: copy }, "Copy"),
+      h("button", { class: "linkish", onclick: ev => addToMyNotes(m.content, ev.currentTarget) }, "Add to My notes"),
+      h("button", { class: "linkish", "aria-pressed": m.pinned ? "true" : "false", onclick: async () => { m.pinned = !m.pinned; await DB.save(lec).catch(() => {}); renderPam(); } }, m.pinned ? "Unpin" : "Pin")));
 }
 function renderPam(){
-  const pam = $("pam"), lec = S.cur; pam.replaceChildren();
+  const pam = $("pam"), lec = S.cur; pam.replaceChildren(h("div", { class: "resizer left", id: "pamGrip", title: "Drag to resize", "aria-hidden": "true" }));
   pam.append(h("div", { class: "pam-head" },
     h("div", null, h("h2", null, "Pambizo"), h("p", { class: "hint" }, "Your margin. Ask, draft, translate; it reads the lecture with you.")),
-    h("button", { class: "btn quiet pam-close", onclick: closeDrawers }, "Close")));
+    h("button", { class: "btn quiet", onclick: () => { if (window.innerWidth <= 1180) closeDrawers(); else togglePanel("pam"); }, title: "Hide Pambizo" }, "Hide")));
   if (!lec || !hasContent(lec)){
     pam.append(h("p", { class: "hint pam-empty" }, lec ? (lec.kind === "note" ? "Once this note has some text, ask anything about it here." : "Once this lecture has a transcript, ask anything about it here.") : "Open or record a lecture, then ask anything about it here."));
-    return;
+    return void hookGrips();
   }
-  const off = S.busy.ask || !S.status.ai;
-  pam.append(h("div", { class: "chips" }, CHIPS.map(([label, prompt]) => h("button", { class: "chip", disabled: off, onclick: () => ask(prompt, label) }, label))));
+  const off = S.busy.ask || !S.status.ai, mine = DB.settings.chips || [];
+  if (lec.course) pam.append(h("div", { class: "seg2", role: "group", "aria-label": "What Pambizo reads" }, [["lecture", "This lecture"], ["course", "Whole course"]].map(([v, t]) => h("button", { "aria-pressed": S.scope === v ? "true" : "false", onclick: () => { S.scope = v; renderPam(); } }, t))));
+  pam.append(h("details", { class: "quick", open: !DB.settings.quickShut, ontoggle: e => { DB.settings.quickShut = !e.target.open; DB.saveSettings().catch(() => {}); } },
+    h("summary", null, "Quick actions"),
+    h("div", { class: "chips" },
+      CHIPS.map(([label, prompt]) => h("button", { class: "chip", disabled: off, onclick: () => ask(prompt, label) }, label)),
+      mine.map((c, i) => h("span", { class: "chip own" }, h("button", { disabled: off, onclick: () => ask(c.prompt, c.label) }, c.label), h("button", { class: "chip-x", "aria-label": "Remove the button " + c.label, onclick: async () => { DB.settings.chips = mine.filter((x, j) => j !== i); await DB.saveSettings(); renderPam(); } }, "×"))),
+      h("button", { class: "chip add", onclick: async () => { const label = (prompt("Name your button, for example: Key statistics") || "").trim().slice(0, 40); if (!label) return; const p2 = (prompt("What should Pambizo do when you press “" + label + "”?") || "").trim().slice(0, 600); if (!p2) return; DB.settings.chips = [...mine, { label, prompt: p2 }]; await DB.saveSettings(); renderPam(); } }, "+ Your own"))));
+  const pins = (lec.chat || []).filter(m => m.role === "assistant" && m.pinned);
+  if (pins.length) pam.append(h("details", { class: "quick pins" }, h("summary", null, "Pinned answers (" + pins.length + ")"), pins.map(m => answerNode(lec, m))));
   const log = h("div", { class: "chat", id: "pamLog" });
-  if (!(lec.chat || []).length) log.append(h("p", { class: "hint" }, "Try one of the buttons above, or ask something like “What is due next week?”"));
-  (lec.chat || []).forEach(m => {
-    if (m.role === "user") return void log.append(h("div", { class: "msg me" }, m.label || m.content));
-    const node = richAnswer(m.content);
-    log.append(node, h("button", { class: "copy", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(m.content).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"));
-  });
+  if (!(lec.chat || []).length) log.append(h("p", { class: "hint" }, "Try a quick action, ask something like “What is due next week?”, or select any passage in the transcript to ask about it."));
+  (lec.chat || []).forEach(m => log.append(m.role === "user" ? h("div", { class: "msg me" }, m.label || m.content) : answerNode(lec, m)));
   if (S.busy.ask) log.append(h("div", { class: "msg", id: "pending", role: "status" }, "Thinking…"));
   pam.append(log);
   if (S.pamErr) pam.append(h("p", { class: "notice err", role: "alert" }, S.pamErr));
   if (!S.status.ai) pam.append(h("p", { class: "hint" }, "Add an AI key in Settings to use Pambizo. Your Groq key works."));
   const input = h("textarea", { id: "pamIn", rows: 2, placeholder: "Ask Pambizo", "aria-label": "Message to Pambizo", value: S.draft, disabled: off,
     oninput: e => (S.draft = e.target.value), onkeydown: e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); ask(); } } });
-  const scope = h("select", { "aria-label": "What Pambizo reads", disabled: off || !lec.course, title: lec.course ? null : "Give this lecture a course name to ask across the course", onchange: e => (S.scope = e.target.value) },
-    [["lecture", "This lecture"], ["course", "Whole course"]].map(([v, t]) => { const o = h("option", { value: v }, t); if (v === S.scope && lec.course) o.selected = true; return o; }));
-  pam.append(h("div", { class: "composer" }, input, h("div", { class: "row between" }, scope,
-    h("span", { class: "row" },
-      (lec.chat || []).length && !S.busy.ask ? h("button", { class: "btn quiet", onclick: async () => { try { await api("PATCH", "/api/lectures/" + lec.id, { clearChat: true }); S.pamErr = ""; renderPam(); } catch (e){ S.pamErr = e.message; renderPam(); } } }, "Clear") : null,
-      S.busy.ask ? h("button", { class: "btn", onclick: () => askCtl && askCtl.abort() }, "Stop") : h("button", { class: "btn solid", disabled: off, onclick: () => ask() }, "Send")))));
-  if (log.lastChild) log.scrollTop = log.scrollHeight;
+  pam.append(h("div", { class: "composer" }, input, h("div", { class: "row between" },
+    (lec.chat || []).length && !S.busy.ask ? h("button", { class: "linkish", onclick: async () => { const keep = (lec.chat || []).filter(m => m.pinned); try { lec.chat = keep; await DB.save(lec); S.pamErr = ""; renderPam(); } catch (e){ S.pamErr = e.message; renderPam(); } } }, "Clear the conversation") : h("span"),
+    S.busy.ask ? h("button", { class: "btn", onclick: () => askCtl && askCtl.abort() }, "Stop") : h("button", { class: "btn solid", disabled: off, onclick: () => ask() }, "Send"))));
+  log.scrollTop = log.scrollHeight;
+  hookGrips();
 }
+
+/* select any passage, then ask about it */
+let selPop = null;
+function hideSelPop(){ if (selPop){ selPop.remove(); selPop = null; } }
+function checkSelection(){
+  const sel = window.getSelection(), text = sel && !sel.isCollapsed ? sel.toString().trim() : "";
+  const host = text && sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+  if (!text || text.length < 12 || text.length > 1500 || !host || !host.closest("#segs, .notes, .read") || host.closest("#pam, #editor") || !S.cur || !S.status.ai) return hideSelPop();
+  const r = sel.getRangeAt(0).getBoundingClientRect(); if (!r.width && !r.height) return hideSelPop();
+  hideSelPop();
+  const short = text.length > 46 ? text.slice(0, 44) + "…" : text;
+  selPop = h("div", { class: "selpop", role: "toolbar", "aria-label": "Ask Pambizo about the selected text" },
+    h("button", { onmousedown: e => e.preventDefault(), onclick: () => { hideSelPop(); sel.removeAllRanges(); openPam(); ask("About this passage from the lecture:\n“" + text + "”\n\nExplain it clearly and say why it matters.", "Explain: “" + short + "”"); } }, "Explain this"),
+    h("button", { onmousedown: e => e.preventDefault(), onclick: () => { hideSelPop(); S.draft = "About this passage: “" + text + "”\n"; openPam(); renderPam(); const i = $("pamIn"); if (i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } } }, "Ask about this"));
+  document.body.append(selPop);
+  const w = selPop.getBoundingClientRect();
+  selPop.style.left = Math.max(8, Math.min(r.left + r.width / 2 - w.width / 2, window.innerWidth - w.width - 8)) + "px";
+  selPop.style.top = (r.top > 56 ? r.top - w.height - 8 : r.bottom + 8) + window.scrollY + "px";
+}
+function openPam(){ if (window.innerWidth <= 1180) document.body.classList.add("show-pam"); else if (document.body.classList.contains("no-pam")) togglePanel("pam"); }
+document.addEventListener("mouseup", () => setTimeout(checkSelection, 10));
+document.addEventListener("touchend", () => setTimeout(checkSelection, 350));
+document.addEventListener("keyup", e => { if (e.shiftKey || e.key === "Shift") setTimeout(checkSelection, 10); });
+document.addEventListener("scroll", hideSelPop, true);
 
 /* My notes: a small rich-text editor, with the AI as an editor you can overrule */
 let notesTimer = null;
@@ -2309,15 +2567,8 @@ const RATES = [1, 1.25, 1.5, 2];
 function renderMain(){
   const main = $("main"); main.replaceChildren();
   const lec = S.cur;
-  if (!lec){
-    main.append(h("div", { class: "empty" },
-      h("h1", null, "Listen to the lecturer. Bizofy writes it down."),
-      h("p", null, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
-      S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
-      h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note")),
-      dropZone(null, false)));
-    return;
-  }
+  main.append(h("div", { class: "peek" }, h("button", { class: "btn quiet peek-side", onclick: () => togglePanel("side") }, "Show lectures"), h("button", { class: "btn quiet peek-pam", onclick: () => togglePanel("pam") }, "Show Pambizo")));
+  if (!lec){ main.append(homeView()); return; }
   const isNote = lec.kind === "note";
   const patch = (field, fallback) => async ev => {
     const v = ev.target.value.trim() || fallback || "";
@@ -2414,13 +2665,127 @@ $("vocabForm").addEventListener("submit", async ev => {
 });
 
 
+/* ---------- appearance: mode, palette, spacing, panel widths ---------- */
+const PALETTES = [["pambizo", "Pambizo", "#14233B", "#FFD84A"], ["savanna", "Savanna", "#3A2A1E", "#F0B03F"], ["forest", "Forest", "#10302A", "#BFE36A"], ["slate", "Slate", "#1D1D22", "#B9C7FF"], ["contrast", "High contrast", "#000000", "#FFE600"]];
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+function applyTheme(){
+  const t = DB.settings.theme || {}, root = document.documentElement;
+  root.dataset.mode = t.mode === "light" || t.mode === "dark" ? t.mode : darkQuery.matches ? "dark" : "light";
+  root.dataset.palette = PALETTES.some(p => p[0] === t.palette) ? t.palette : "pambizo";
+  if (t.density === "compact") root.dataset.density = "compact"; else delete root.dataset.density;
+  root.style.setProperty("--side-w", Math.max(220, Math.min(440, t.sideW || 272)) + "px");
+  root.style.setProperty("--pam-w", Math.max(300, Math.min(620, t.pamW || 384)) + "px");
+  document.body.classList.toggle("no-side", !!t.hideSide); document.body.classList.toggle("no-pam", !!t.hidePam);
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = getComputedStyle(root).getPropertyValue("--deck").trim() || "#14233B";
+  try { localStorage.setItem("bizofy.theme", JSON.stringify({ mode: t.mode || "auto", palette: root.dataset.palette, density: t.density || "" })); } catch (e){}
+}
+darkQuery.addEventListener("change", () => applyTheme());
+async function setTheme(patch){ DB.settings.theme = { ...(DB.settings.theme || {}), ...patch }; applyTheme(); await DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); }
+function togglePanel(which){ const k = which === "pam" ? "hidePam" : "hideSide"; setTheme({ [k]: !(DB.settings.theme || {})[k] }); }
+function hookGrips(){
+  [["sideGrip", "sideW", 1], ["pamGrip", "pamW", -1]].forEach(([id, key, dir]) => {
+    const g = $(id); if (!g || g._on) return; g._on = true;
+    g.addEventListener("pointerdown", e => {
+      e.preventDefault(); g.setPointerCapture(e.pointerId); document.body.classList.add("resizing");
+      const start = e.clientX, from = parseFloat(getComputedStyle(document.documentElement).getPropertyValue(key === "sideW" ? "--side-w" : "--pam-w")) || 300; let now = from;
+      const move = ev => { now = from + (ev.clientX - start) * dir; document.documentElement.style.setProperty(key === "sideW" ? "--side-w" : "--pam-w", Math.max(key === "sideW" ? 220 : 300, Math.min(key === "sideW" ? 440 : 620, now)) + "px"); };
+      const up = () => { g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); document.body.classList.remove("resizing"); setTheme({ [key]: Math.round(now) }); };
+      g.addEventListener("pointermove", move); g.addEventListener("pointerup", up);
+    });
+  });
+}
+function renderAppearance(){
+  const t = DB.settings.theme || {}, box = $("appearance"); if (!box) return;
+  const pick = (label, key, options) => h("label", null, label, h("select", { onchange: e => setTheme({ [key]: e.target.value }).then(renderAppearance) }, options.map(([v, n]) => { const o = h("option", { value: v }, n); if ((t[key] || options[0][0]) === v) o.selected = true; return o; })));
+  box.replaceChildren(
+    pick("Light or dark", "mode", [["auto", "Follow this device"], ["light", "Light"], ["dark", "Dark"]]),
+    h("div", { class: "swatches", role: "group", "aria-label": "Colours" }, PALETTES.map(([id, name, a, b2]) => h("button", { type: "button", class: "swatch", "aria-pressed": (t.palette || "pambizo") === id ? "true" : "false", onclick: () => setTheme({ palette: id }).then(renderAppearance) },
+      h("span", { class: "swatch-dot", style: "background:linear-gradient(135deg," + a + " 50%," + b2 + " 50%)" }), name))),
+    pick("Spacing", "density", [["", "Comfortable"], ["compact", "Compact"]]));
+}
+
+/* ---------- home ---------- */
+function homeView(){
+  const live = S.list.filter(l => !l.deletedAt && !l.archived), week = live.filter(l => Date.now() - l.createdAt < 7 * 864e5);
+  const last = (DB.settings.recent || []).map(id => live.find(l => l.id === id)).filter(Boolean)[0];
+  const recent = live.slice().sort((a, b) => (b.updatedAt || b.createdAt) - (a.updatedAt || a.createdAt)).slice(0, 6);
+  const hour = new Date().getHours(), hello = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const stat = (n, label) => h("div", { class: "stat" }, h("b", null, n), h("span", null, label));
+  const secs = week.reduce((n, l) => n + (l.duration || 0), 0);
+  const box = h("div", { class: "home" },
+    h("h1", null, live.length ? hello + "." : "Listen to the lecturer. Bizofy writes it down."),
+    live.length ? null : h("p", { class: "lede" }, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
+    S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
+    S.info ? h("p", { class: "notice info", role: "status" }, S.info) : null,
+    h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
+      last ? h("button", { class: "btn", onclick: () => openLecture(last.id).catch(fail) }, "Continue “" + (last.title.length > 34 ? last.title.slice(0, 32) + "…" : last.title) + "”") : null));
+  if (live.length){
+    box.append(h("div", { class: "stats" }, stat(week.filter(l => l.kind !== "note").length, week.filter(l => l.kind !== "note").length === 1 ? "lecture this week" : "lectures this week"), stat(secs >= 3600 ? (secs / 3600).toFixed(1) + " h" : Math.round(secs / 60) + " min", "recorded this week"), stat(live.filter(l => l.hasNotes).length, "with notes"), stat(live.length, "in your library")));
+    box.append(h("h2", null, "Recently worked on"), h("div", { class: "tiles" }, recent.map(l => h("button", { class: "tile", onclick: () => openLecture(l.id).catch(fail) },
+      h("span", { class: "tile-folder" }, l.folder), h("strong", null, l.title), h("small", null, new Date(l.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" ? ", note" : ""))))));
+  }
+  box.append(dropZone(null, !!live.length));
+  return box;
+}
+
+/* ---------- outline and automatic titles ---------- */
+async function autoOutline(id){
+  const lec = DB.lectures.get(id);
+  if (!lec || DB.settings.autoOutline === false || !S.status.ai || lec.outline || S.busy.outline || REC.on || lec.kind === "note" || metaOf(lec).words < 300) return;
+  S.busy.outline = true;
+  try { const out = await api("POST", "/api/lectures/" + id + "/outline", null, () => {}); adopt(out, !(S.cur && S.cur.id === id && S.tab === "transcript")); } catch (e){}
+  S.busy.outline = false;
+}
+function outlineBox(lec){
+  const o = lec.outline;
+  if (!o || !o.chapters.length){
+    if (lec.segments.length < 6) return null;
+    return h("div", { class: "outline none" }, S.busy.outline ? h("span", { class: "hint", id: "aiNote", role: "status" }, S.note || "Working out the outline…")
+      : h("button", { class: "btn quiet", disabled: !S.status.ai, onclick: async () => { S.busy.outline = true; S.err = ""; render(); try { const out = await api("POST", "/api/lectures/" + lec.id + "/outline", null, aiNote); S.busy.outline = false; adopt(out); } catch (e){ S.busy.outline = false; fail(e); } } }, "Make an outline of this lecture"));
+  }
+  return h("details", { class: "outline", open: !DB.settings.outlineShut, ontoggle: e => { DB.settings.outlineShut = !e.target.open; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); } },
+    h("summary", null, "Outline", h("span", { class: "folder-n" }, o.chapters.length + " parts")),
+    h("ol", null, o.chapters.map(c => h("li", null, h("button", { class: "chap-link", onclick: () => jumpTo(c.t) }, h("span", { class: "hit-t" }, fmt(c.t)), h("strong", null, c.title), c.gist ? h("span", { class: "gist" }, c.gist) : null)))));
+}
+
+/* ---------- keyboard ---------- */
+const typing = () => { const a = document.activeElement; return a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape"){ closeMenu(); hideSelPop(); if (document.body.classList.contains("focus")){ document.body.classList.remove("focus"); } return; }
+  if (e.metaKey || e.ctrlKey || e.altKey || typing() || document.querySelector("dialog[open]")) return;
+  const lec = S.cur, k = e.key;
+  if (k === "/"){ e.preventDefault(); if (window.innerWidth <= 760) document.body.classList.add("show-side"); $("search").focus(); }
+  else if (k === "?"){ $("keys").showModal(); }
+  else if (k === "[") togglePanel("side");
+  else if (k === "]") togglePanel("pam");
+  else if (!lec || lec.kind === "note") return;
+  else if (k === " " && !REC.on && lec.audio && lec.audio.length){ e.preventDefault(); const b = $("playBtn"); if (b) b.click(); }
+  else if ((k === "j" || k === "l") && !REC.on && P.lecId === lec.id){ playFrom(Math.max(0, playAbs() + (k === "j" ? -10 : 10))); }
+  else if (k === "r" && !REC.on){ startRec(); }
+  else if (k === "m" && REC.on){ markImportant(); }
+  else if (k === "n"){ e.preventDefault(); const i = $("noteIn"); if (i){ i.scrollIntoView({ block: "center" }); i.focus(); } }
+  else if (k === "f"){ document.body.classList.toggle("focus"); }
+});
+
+/* ---------- setting up another device, and coming back from Google's sign-in page ---------- */
+const CLIENT_RE = /^\d{6,}-[a-z0-9]{10,}\.apps\.googleusercontent\.com$/i;
+function readStartLink(){
+  const hash = new URLSearchParams(location.hash.replace(/^#/, "")), out = {};
+  if (hash.get("state") === "bizofy-sync" && (hash.get("access_token") || hash.get("error"))){
+    if (hash.get("access_token")){ G.token = hash.get("access_token"); G.exp = Date.now() + (+hash.get("expires_in") || 3600) * 1000; out.signedIn = true; }
+    else out.signError = hash.get("error") === "access_denied" ? "Google sign-in was cancelled." : "Google sign-in did not finish (" + hash.get("error") + ").";
+  } else if (hash.get("setup")) out.setup = hash.get("setup").trim();
+  if (Object.keys(out).length) history.replaceState(null, "", location.pathname + location.search);
+  return out;
+}
+
 /* ---------- settings + login ---------- */
 async function openSettings(){
   const f = $("setForm").elements; $("setErr").hidden = true;
   try {
     const s = await api("GET", "/api/settings");
     f.provider.value = s.provider; f.aiProvider.value = s.aiProvider; f.claudeModel.value = s.claudeModel; f.groqModel.value = s.groqModel;
-    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl; f.googleClientId.value = s.googleClientId; f.syncAudio.checked = s.syncAudio; f.pullAudio.checked = s.pullAudio;
+    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl; f.googleClientId.value = s.googleClientId; f.syncAudio.checked = s.syncAudio; f.pullAudio.checked = s.pullAudio; f.signinRedirect.checked = s.signinRedirect; f.autoOutline.checked = s.autoOutline; renderAppearance(); $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
     $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet."; $("driveOff").hidden = !DB.sync.on;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : k === "groqAiKey" ? "Only if speech-to-text is not on Groq" : "Paste the key"; }
     $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet.";
@@ -2432,15 +2797,16 @@ $("setForm").addEventListener("submit", async ev => {
   ev.preventDefault();
   const f = ev.target.elements;
   try {
-    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, googleClientId: f.googleClientId.value, syncAudio: f.syncAudio.checked, pullAudio: f.pullAudio.checked, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
+    await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, googleClientId: f.googleClientId.value, syncAudio: f.syncAudio.checked, pullAudio: f.pullAudio.checked, signinRedirect: f.signinRedirect.checked, autoOutline: f.autoOutline.checked, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
     S.status = await api("GET", "/api/status");
     $("settings").close(); render(); renderSync(); checkUpdate();
   } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; }
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.3.0", RELEASED = "21 September 2026";
+const VERSION = "2.4.0", RELEASED = "22 September 2026";
 const CHANGES = [
+  ["2.4.0", "22 Sep 2026", ["Themes: light, dark or automatic, five colour palettes, and compact spacing", "A home screen with your week and recent work", "The library can be resized or hidden, with pins, recents, sorting, multi-select and a right-click menu", "Pambizo: formatted answers, Add to My notes, pinned answers, your own quick actions, and Explain this on any selected passage", "Lecture outlines with clickable chapters, and automatic titles", "Keyboard shortcuts (press ?), and a focus mode for reading", "Google sign-in without a pop-up for phones, a setup link for other devices, and a check on the client ID"]],
   ["2.3.0", "21 Sep 2026", ["Google Drive storage and sync: lectures, notes and audio kept in your own Drive and shared between your laptop and phone", "Audio recorded elsewhere is fetched from Drive when you play, convert or download it", "On phones, Bizofy now notices when the phone pauses a recording, restarts it when you come back, and marks the gap"]],
   ["2.2.5", "20 Sep 2026", ["Save a lecture with its audio as one file, and drop it into Bizofy on another device or copy", "The Audio menu now shows how much audio this device holds, and says so when a lecture has none", "MP3 downloads report their length and warn when audio is missing"]],
   ["2.2.4", "20 Sep 2026", ["When the main AI is overloaded, Bizofy hands the request to a backup AI (a second model, Groq or Claude) instead of waiting"]],
@@ -2474,6 +2840,12 @@ async function checkUpdate(){
 }
 
 $("driveOff").addEventListener("click", async () => { if (!confirm("Stop syncing on this device? Nothing is deleted, here or in Google Drive.")) return; await disconnectDrive(); $("driveOff").hidden = true; $("driveState").textContent = "Not connected."; renderSync(); });
+
+$("setupLink").addEventListener("click", async () => {
+  const link = location.origin + location.pathname + "#setup=" + encodeURIComponent((DB.settings.googleClientId || "").trim()), out = $("setupOut");
+  out.hidden = false; out.value = link; out.select();
+  try { if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) await navigator.share({ title: "Bizofy setup", url: link }); else { await navigator.clipboard.writeText(link); $("setupLink").textContent = "Link copied. Open it on the other device"; } } catch (e){}
+});
 $("backupBtn").addEventListener("click", () => {
   saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [], sessions: [] })) }), "application/json");
 });
@@ -2501,7 +2873,9 @@ function runSearch(){
 }
 $("search").addEventListener("input", runSearch);
 $("newNoteBtn").addEventListener("click", () => { closeDrawers(); newLecture({ kind: "note", title: "Untitled note" }).catch(fail); });
-$("newFolderBtn").addEventListener("click", () => newFolder());
+$("homeBtn").addEventListener("click", () => { if (REC.on) return; stopPlayer(); S.cur = null; S.err = ""; closeDrawers(); render(); });
+$("hideSide").addEventListener("click", () => { if (window.innerWidth <= 760) closeDrawers(); else togglePanel("side"); });
+$("exitFocus").addEventListener("click", () => document.body.classList.remove("focus"));
 $("exportDlg").addEventListener("click", e => { const k = e.target && e.target.getAttribute && e.target.getAttribute("data-exp"); if (k) exportAs(k); });
 $("openSide").addEventListener("click", () => { document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); });
 $("openPam").addEventListener("click", () => { document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); });
@@ -2527,16 +2901,20 @@ async function init(){
     S.status = await api("GET", "/api/status");
     S.list = await api("GET", "/api/lectures");
     render();
-    if (!S.status.transcribe && !S.status.ai && !S.list.length) openSettings();
+    if (!S.status.transcribe && !S.status.ai && !S.list.length && !S.info) openSettings();
   } catch (e){ fail(e); }
 }
 (async () => {
   try { await DB.init(); } catch (e){ S.err = e.message; return render(); }
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(x => { const n = $("usage"); if (n && x.usage != null) n.textContent = "Bizofy is using " + (x.usage / 1048576).toFixed(0) + " MB on this device."; }).catch(() => {});
   S.read = DB.settings.readSize || 17; document.documentElement.style.setProperty("--read-size", S.read + "px");
-  renderVersion(); checkUpdate();
-  if (DB.sync.on) setSync("needs", ""); else renderSync();
-  init();
+  applyTheme(); hookGrips(); renderVersion(); checkUpdate();
+  const link = readStartLink();
+  if (link.setup && CLIENT_RE.test(link.setup)){ DB.settings.googleClientId = link.setup; await DB.saveSettings(); S.info = "Google Drive is set up on this device. Press Connect Google Drive in the sidebar."; }
+  if (link.signError) S.err = link.signError;
+  if (DB.sync.on && !link.signedIn) setSync("needs", ""); else renderSync();
+  await init();
+  if (link.signedIn) syncNow(true);
 })();
 })();
 </script>
