@@ -432,6 +432,45 @@ body.focus .exit-focus{display:block}
 
 dialog{max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto;overscroll-behavior:contain}
 dialog .row.end{position:sticky;bottom:-26px;background:var(--sheet);padding:12px 0 26px;margin-bottom:-26px}
+
+/* settings window */
+dialog.settings{width:min(860px,96vw);height:min(640px,calc(100dvh - 28px));padding:0;overflow:hidden}
+dialog.settings[open]{display:flex}
+dialog.settings form{display:flex;flex-direction:column;width:100%;min-height:0}
+.set-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px 12px;border-bottom:1px solid var(--rule)}
+.set-head h2{margin:0}
+.set-body{display:grid;grid-template-columns:190px minmax(0,1fr);flex:1;min-height:0}
+.set-nav{display:flex;flex-direction:column;gap:2px;padding:14px 10px;border-right:1px solid var(--rule);background:var(--paper)}
+.set-nav button{border:0;background:none;text-align:left;padding:9px 12px;border-radius:8px;font-size:var(--t-1);font-weight:600;color:var(--slate)}
+.set-nav button:hover{background:var(--sheet);color:var(--ink)}
+.set-nav button[aria-current="true"]{background:var(--ink);color:var(--paper)}
+.set-panes{overflow:auto;padding:6px 24px 24px;overscroll-behavior:contain}
+.set-sec h3{font-size:var(--t0);font-weight:800;letter-spacing:-.015em;margin:22px 0 4px}
+.set-sec h3:first-child{margin-top:14px}
+.set-sec .hint{margin:4px 0 0}
+.set-sec .hint.foot{margin-top:20px;padding-top:12px;border-top:1px dashed var(--rule)}
+.set-sec label{margin-top:12px}
+.set-sec label.check{margin-top:10px}
+.set-sec .row{margin-top:12px}
+.sub{margin-top:14px;border:1px solid var(--rule);border-radius:10px;padding:10px 14px}
+.sub summary{font-size:var(--t-1)}
+.sub[open] summary{margin-bottom:2px}
+.set-foot{display:flex;justify-content:flex-end;gap:10px;padding:12px 22px;border-top:1px solid var(--rule);background:var(--sheet)}
+dialog.settings #setErr{margin:0 22px}
+@media (max-width:640px){
+  dialog.settings{width:100vw;height:100dvh;max-height:none;border-radius:0}
+  .set-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
+  .set-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule);padding:8px 10px}
+  .set-nav button{white-space:nowrap;padding:7px 11px}
+  .set-panes{padding:0 16px 20px}
+}
+
+.rec-now{display:inline-flex;align-items:center;gap:8px}
+.rec-now i{width:12px;height:12px;border-radius:50%;background:#E0483D;display:inline-block}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:35;display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--paper);border-radius:10px;padding:10px 12px 10px 16px;font-size:var(--t-1);box-shadow:0 12px 36px rgba(10,20,40,.3);max-width:min(560px,92vw)}
+.toast .linkish{color:var(--hi);font-size:var(--t-1);font-weight:700}
+.toast-x{border:0;background:none;color:inherit;opacity:.7;font-size:var(--t1);line-height:1;padding:0 2px}
+@media (max-width:760px){.toast{bottom:14px}}
 </style>
 </head>
 <body>
@@ -456,7 +495,7 @@ dialog .row.end{position:sticky;bottom:-26px;background:var(--sheet);padding:12p
       <div id="syncBox" class="syncbox" hidden></div>
       <div id="update" class="keynote" hidden></div>
       <div id="keyNote" class="keynote" hidden></div>
-      <button class="btn quiet" id="settingsBtn">Settings and backup</button>
+      <button class="btn quiet" id="settingsBtn">Settings</button>
       <div class="ver" id="ver"></div>
     </div>
   </aside>
@@ -467,74 +506,119 @@ dialog .row.end{position:sticky;bottom:-26px;background:var(--sheet);padding:12p
 <button class="btn solid exit-focus" id="exitFocus">Leave focus mode</button>
 <div class="dropveil" aria-hidden="true"><p>Drop to add to Bizofy</p></div>
 
-<dialog id="settings" aria-labelledby="setTitle">
+<dialog id="settings" aria-labelledby="setTitle" class="settings">
   <form method="dialog" id="setForm">
-    <h2 id="setTitle">Settings</h2>
-    <p class="hint">Your keys and lectures stay in this browser on this device. Keys are only sent to the service they belong to.</p>
-    <label>Speech-to-text service
-      <select name="provider">
-        <option value="groq">Groq (whisper-large-v3), cheaper and faster</option>
-        <option value="openai">OpenAI (whisper-1)</option>
-        <option value="custom">Other Whisper-compatible service</option>
-      </select>
-    </label>
-    <label>Speech-to-text API key <input name="transcribeKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
-    <label>AI for notes, summaries and Pambizo
-      <select name="aiProvider">
-        <option value="auto">Automatic: Claude if it has a key, otherwise Groq</option>
-        <option value="claude">Claude (best quality, needs an Anthropic key)</option>
-        <option value="groq">Groq (works with your Groq key)</option>
-        <option value="custom">Another service (set it up under Advanced)</option>
-      </select>
-    </label>
-    <p class="hint" id="aiNow" style="margin:6px 0 0"></p>
-    <label>Anthropic API key, for Claude (optional) <input name="anthropicKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
-    <details>
-      <summary>Advanced</summary>
-      <label>Separate Groq key for the AI <input name="groqAiKey" type="password" autocomplete="off"></label>
-      <label>Groq AI model, leave blank to pick automatically <input name="groqModel" type="text" autocomplete="off"></label>
-      <label>Claude model <input name="claudeModel" type="text" autocomplete="off"></label>
-      <p class="hint" style="margin:16px 0 0">Another AI service. Any service that speaks the OpenAI chat format works, for example OpenAI (https://api.openai.com/v1) or OpenRouter (https://openrouter.ai/api/v1). Choose "Another service" above to use it.</p>
-      <label>AI service address <input name="aiBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
-      <label>AI service key <input name="aiKey" type="password" autocomplete="off"></label>
-      <label>AI service model <input name="aiModel" type="text" autocomplete="off" placeholder="The model's exact name"></label>
-      <label>Backup model on the same service, used when the first is overloaded (optional) <input name="aiBackupModel" type="text" autocomplete="off" placeholder="For example a lighter model"></label>
-      <label>Speech-to-text model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
-      <label>Speech-to-text base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
-      <label>Address to check for new versions (optional) <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
-    </details>
-    <details>
-      <summary>Appearance</summary>
-      <div id="appearance"></div>
-    </details>
-    <label class="check" style="margin-top:14px"><input type="checkbox" name="autoOutline"> After each lecture, give it a title and an outline automatically</label>
-    <details id="driveBox">
-      <summary>Google Drive storage and sync</summary>
-      <p class="hint" id="driveState" style="margin:10px 0 0"></p>
-      <label>Google client ID <input name="googleClientId" type="text" autocomplete="off" placeholder="Ends with .apps.googleusercontent.com"></label>
-      <label class="check" style="margin-top:12px"><input type="checkbox" name="syncAudio"> Save audio to Drive too, not only text</label>
-      <label class="check" style="margin-top:8px"><input type="checkbox" name="pullAudio"> On this device, download every lecture's audio automatically</label>
-      <p class="hint" style="margin:8px 0 0">Leave the second box off on a phone. Audio is still fetched when you press play. Your API keys are never sent to Drive.</p>
-      <label class="check" style="margin-top:8px"><input type="checkbox" name="signinRedirect"> Sign in without a pop-up window (for phones and the home-screen icon)</label>
-      <p class="hint" style="margin:8px 0 0">This needs one extra line in Google Cloud: open your client under Clients, and under Authorized redirect URIs add this page's address exactly as it appears in the address bar.</p>
-      <div class="row" style="margin-top:10px"><button type="button" class="btn quiet" id="setupLink" hidden>Set up another device</button><button type="button" class="btn quiet" id="driveOff" hidden>Stop syncing on this device</button></div>
-      <input id="setupOut" type="text" readonly hidden aria-label="Setup link">
-    </details>
-    <details>
-      <summary>What is new in this version</summary>
-      <div id="changes" class="changes"></div>
-    </details>
-    <div class="backup">
-      <p class="hint" id="usage">Lectures are stored on this device only.</p>
-      <div class="row">
-        <button type="button" class="btn quiet" id="backupBtn">Download a backup</button>
-        <button type="button" class="btn quiet" id="restoreBtn">Restore a backup</button>
-        <input type="file" id="restoreIn" accept=".json,application/json" hidden>
+    <div class="set-head">
+      <h2 id="setTitle">Settings</h2>
+      <button type="button" class="btn quiet" id="setClose" aria-label="Close settings">Close</button>
+    </div>
+    <div class="set-body">
+      <nav class="set-nav" aria-label="Settings sections">
+        <button type="button" data-sec="ai" aria-current="true">AI and keys</button>
+        <button type="button" data-sec="record">Recording</button>
+        <button type="button" data-sec="look">Appearance</button>
+        <button type="button" data-sec="drive">Google Drive</button>
+        <button type="button" data-sec="data">Storage and backup</button>
+        <button type="button" data-sec="about">About</button>
+      </nav>
+      <div class="set-panes">
+
+        <section class="set-sec" data-sec="ai">
+          <h3>Which AI writes your notes</h3>
+          <p class="hint" id="aiNow"></p>
+          <label>AI for notes, summaries and Pambizo
+            <select name="aiProvider">
+              <option value="auto">Automatic: Claude if it has a key, otherwise Groq</option>
+              <option value="claude">Claude (best quality, paid per use)</option>
+              <option value="groq">Groq (free, works with the speech-to-text key)</option>
+              <option value="custom">Another service, set up below</option>
+            </select>
+          </label>
+          <label>Anthropic API key, for Claude <input name="anthropicKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
+          <label>Claude model <input name="claudeModel" type="text" autocomplete="off"></label>
+          <details class="sub">
+            <summary>Groq for the AI</summary>
+            <label>Separate Groq key for the AI, if speech-to-text is not on Groq <input name="groqAiKey" type="password" autocomplete="off"></label>
+            <label>Groq AI model, leave blank to pick automatically <input name="groqModel" type="text" autocomplete="off"></label>
+          </details>
+          <details class="sub">
+            <summary>Another AI service (Gemini, OpenAI, OpenRouter…)</summary>
+            <p class="hint">Any service that speaks the OpenAI chat format. Gemini: https://generativelanguage.googleapis.com/v1beta/openai. OpenAI: https://api.openai.com/v1. OpenRouter: https://openrouter.ai/api/v1.</p>
+            <label>Service address <input name="aiBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
+            <label>Service key <input name="aiKey" type="password" autocomplete="off"></label>
+            <label>Model <input name="aiModel" type="text" autocomplete="off" placeholder="The model's exact name"></label>
+            <label>Backup model on the same service, used when the first is overloaded <input name="aiBackupModel" type="text" autocomplete="off" placeholder="For example a lighter model"></label>
+          </details>
+          <p class="hint foot">Keys stay in this browser on this device and are only sent to the service they belong to. They are never saved to Google Drive.</p>
+        </section>
+
+        <section class="set-sec" data-sec="record" hidden>
+          <h3>Speech-to-text</h3>
+          <label>Service
+            <select name="provider">
+              <option value="groq">Groq (whisper-large-v3), free and fast</option>
+              <option value="openai">OpenAI (whisper-1)</option>
+              <option value="custom">Other Whisper-compatible service</option>
+            </select>
+          </label>
+          <label>Speech-to-text API key <input name="transcribeKey" type="password" autocomplete="off" placeholder="Paste the key"></label>
+          <details class="sub">
+            <summary>Advanced</summary>
+            <label>Model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
+            <label>Base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
+          </details>
+          <h3>After each lecture</h3>
+          <label class="check"><input type="checkbox" name="autoOutline"> Give it a title and an outline automatically (uses a little AI)</label>
+          <p class="hint foot">Course vocabulary, the terms the transcriber should know, is set per course from the lecture page.</p>
+        </section>
+
+        <section class="set-sec" data-sec="look" hidden>
+          <h3>Appearance</h3>
+          <div id="appearance"></div>
+          <h3>Panels</h3>
+          <p class="hint">Drag the edge of the library or of Pambizo to resize it. Press [ or ] to hide or show them, F for focus mode, and ? for all shortcuts.</p>
+          <div class="row"><button type="button" class="btn quiet" id="resetPanels">Reset panel sizes</button><button type="button" class="btn quiet" id="showKeys">Keyboard shortcuts</button></div>
+        </section>
+
+        <section class="set-sec" data-sec="drive" hidden>
+          <h3>Google Drive storage and sync</h3>
+          <p class="hint" id="driveState"></p>
+          <label>Google client ID <input name="googleClientId" type="text" autocomplete="off" placeholder="Ends with .apps.googleusercontent.com"></label>
+          <div class="row"><button type="button" class="btn quiet" id="setupLink" hidden>Set up another device</button><button type="button" class="btn quiet" id="driveOff" hidden>Stop syncing on this device</button></div>
+          <input id="setupOut" type="text" readonly hidden aria-label="Setup link">
+          <h3>What syncs</h3>
+          <label class="check"><input type="checkbox" name="syncAudio"> Save audio to Drive too, not only text</label>
+          <label class="check"><input type="checkbox" name="pullAudio"> On this device, download every lecture's audio automatically</label>
+          <p class="hint">Leave the second box off on a phone. Audio is still fetched when you press play.</p>
+          <h3>Signing in</h3>
+          <label class="check"><input type="checkbox" name="signinRedirect"> Sign in without a pop-up window (for phones and the home-screen icon)</label>
+          <p class="hint">This needs one extra line in Google Cloud: open your client under Clients, and under Authorized redirect URIs add this page's address exactly as it appears in the address bar.</p>
+        </section>
+
+        <section class="set-sec" data-sec="data" hidden>
+          <h3>On this device</h3>
+          <p class="hint" id="usage">Lectures are stored on this device only.</p>
+          <div id="storage"></div>
+          <h3>Backup</h3>
+          <div class="row">
+            <button type="button" class="btn quiet" id="backupBtn">Download a backup</button>
+            <button type="button" class="btn quiet" id="restoreBtn">Restore a backup</button>
+            <input type="file" id="restoreIn" accept=".json,application/json" hidden>
+          </div>
+          <p class="hint">Backups hold transcripts, highlights and notes, not audio. To move one lecture with its audio, use Audio, then Save lecture with audio, on the lecture page.</p>
+        </section>
+
+        <section class="set-sec" data-sec="about" hidden>
+          <h3 id="aboutVer"></h3>
+          <p class="hint">Bizofy, from pambizo, the Swahili word for the margin of a page.</p>
+          <label>Address to check for new versions, leave blank when Bizofy is hosted <input name="updateUrl" type="url" autocomplete="off" placeholder="https://…/version.json"></label>
+          <h3>What is new</h3>
+          <div id="changes" class="changes"></div>
+        </section>
       </div>
-      <p class="hint">Backups hold transcripts, highlights and notes, not audio. Use one to move lectures to another device.</p>
     </div>
     <p class="notice err" id="setErr" hidden></p>
-    <div class="row end">
+    <div class="set-foot">
       <button class="btn quiet" value="cancel" formnovalidate>Cancel</button>
       <button class="btn solid" id="setSave" value="save">Save settings</button>
     </div>
@@ -562,6 +646,23 @@ dialog .row.end{position:sticky;bottom:-26px;background:var(--sheet);padding:12p
     </div>
     <p class="notice err" id="expErr" hidden></p>
     <div class="row end"><button class="btn quiet" value="cancel">Close</button></div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<dialog id="fr" aria-labelledby="frTitle">
+  <form method="dialog" id="frForm">
+    <h2 id="frTitle">Find and replace</h2>
+    <p class="hint">Changes every match in this lecture's transcript and quick notes. Capitalisation is matched as you type it in the second box.</p>
+    <label>Find <input id="frFind" type="text" autocomplete="off"></label>
+    <p class="hint" id="frCount" role="status"></p>
+    <label>Replace with <input id="frWith" type="text" autocomplete="off"></label>
+    <label class="check"><input type="checkbox" id="frVocab"> Also add the correct term to this course's vocabulary, so the transcriber learns it</label>
+    <div class="row end">
+      <button class="btn quiet" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn solid" value="go">Replace all</button>
+    </div>
   </form>
 </dialog>
 
@@ -2125,7 +2226,7 @@ function openMenu(x, y, items){
 document.addEventListener("pointerdown", e => { if (ctxMenu && !ctxMenu.contains(e.target)) closeMenu(); }, true);
 window.addEventListener("blur", closeMenu); window.addEventListener("resize", closeMenu);
 async function patchLec(id, body){ try { const out = await api("PATCH", "/api/lectures/" + id, body); adopt(out, true); if (S.cur && S.cur.id === id) render(); else renderList(); return out; } catch (e){ fail(e); } }
-async function binLec(id){ try { if (REC.on && REC.lecId === id) stopRec(); const l = getLec(id); await api("DELETE", "/api/lectures/" + id); adopt(l, true); if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } render(); } catch (e){ fail(e); } }
+async function binLec(id){ try { if (REC.on && REC.lecId === id) stopRec(); const l = getLec(id); await api("DELETE", "/api/lectures/" + id); adopt(l, true); if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } render(); toast("“" + l.title + "” moved to the recycle bin.", async () => { await api("PATCH", "/api/lectures/" + id, { restore: true }); S.list = await api("GET", "/api/lectures"); render(); }); } catch (e){ fail(e); } }
 function lecMenu(l, x, y){
   if (l.deletedAt) return openMenu(x, y, [["Restore", () => patchLec(l.id, { restore: true })], ["Delete forever", async () => { if (!confirm("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + l.id + "?forever=1"); S.list = S.list.filter(x2 => x2.id !== l.id); if (S.cur && S.cur.id === l.id) S.cur = null; render(); } catch (e){ fail(e); } }, true]]);
   const others = folders().filter(f => f !== l.folder).slice(0, 8);
@@ -2323,7 +2424,7 @@ function transcriptPanel(lec){
     h("div", { class: "toolbar" },
       S.hl ? h("span", { class: "row" }, h("span", null, hits + (hits === 1 ? " match for “" : " matches for “") + S.hl + "”"), h("button", { class: "btn quiet", onclick: () => { S.hl = ""; render(); } }, "Clear highlighting"))
         : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording below."),
-      h("span", { class: "sizer" }, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
+      h("span", { class: "sizer" }, has ? h("button", { class: "btn quiet", title: "Fix a word the transcriber keeps getting wrong, everywhere in this lecture", onclick: openReplace }, "Replace") : null, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
     outlineBox(lec),
     segs,
     dropZone(lec, !!has),
@@ -2603,10 +2704,10 @@ function renderMain(){
         h("label", { class: "folder-pick" }, "Folder", folderSel),
         h("button", { class: "btn quiet", onclick: openExport }, "Export"),
         !isNote && !REC.on ? audioMenu : null,
-        lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { archived: !lec.archived }); adopt(out, true); if (out.archived) S.cur = null; else S.view = "main"; render(); } catch (e){ fail(e); } } }, lec.archived ? "Move out of archive" : "Archive"),
+        lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { archived: !lec.archived }); adopt(out, true); if (out.archived){ S.cur = null; toast("“" + out.title + "” moved to the archive.", async () => { await api("PATCH", "/api/lectures/" + out.id, { archived: false }); await openLecture(out.id); }); } else S.view = "main"; render(); } catch (e){ fail(e); } } }, lec.archived ? "Move out of archive" : "Archive"),
         lec.deletedAt ? null : h("button", { class: "btn quiet", onclick: async () => {
           if (REC.on) stopRec(); stopPlayer();
-          try { await api("DELETE", "/api/lectures/" + lec.id); lec.deletedAt = Date.now(); adopt(lec, true); S.cur = null; S.err = ""; render(); } catch (e){ fail(e); }
+          try { await api("DELETE", "/api/lectures/" + lec.id); lec.deletedAt = Date.now(); adopt(lec, true); S.cur = null; S.err = ""; render(); toast("“" + lec.title + "” moved to the recycle bin.", async () => { await api("PATCH", "/api/lectures/" + lec.id, { restore: true }); S.view = "main"; await openLecture(lec.id); }); } catch (e){ fail(e); }
         } }, "Delete")))));
   if (S.busy.audio) main.append(h("p", { class: "notice", id: "audioNote", role: "status" }, S.note || "Preparing the audio…"));
   else if (S.info) main.append(h("p", { class: "notice info", role: "status" }, S.info));
@@ -2717,7 +2818,7 @@ function homeView(){
     live.length ? null : h("p", { class: "lede" }, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
     S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
     S.info ? h("p", { class: "notice info", role: "status" }, S.info) : null,
-    h("div", { class: "row" }, h("button", { class: "btn solid", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
+    h("div", { class: "row" }, h("button", { class: "btn solid rec-now", onclick: async () => { try { await newLecture(); startRec(); } catch (e){ fail(e); } } }, h("i"), "Record now"), h("button", { class: "btn", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
       last ? h("button", { class: "btn", onclick: () => openLecture(last.id).catch(fail) }, "Continue “" + (last.title.length > 34 ? last.title.slice(0, 32) + "…" : last.title) + "”") : null));
   if (live.length){
     box.append(h("div", { class: "stats" }, stat(week.filter(l => l.kind !== "note").length, week.filter(l => l.kind !== "note").length === 1 ? "lecture this week" : "lectures this week"), stat(secs >= 3600 ? (secs / 3600).toFixed(1) + " h" : Math.round(secs / 60) + " min", "recorded this week"), stat(live.filter(l => l.hasNotes).length, "with notes"), stat(live.length, "in your library")));
@@ -2779,18 +2880,63 @@ function readStartLink(){
   return out;
 }
 
+/* ---------- storage on this device ---------- */
+async function renderStorage(){
+  const box = $("storage"); if (!box) return;
+  let usage = null; try { if (navigator.storage && navigator.storage.estimate) usage = await navigator.storage.estimate(); } catch (e){}
+  const mb = n => (n / 1048576).toFixed(n > 1048576 * 100 ? 0 : 1) + " MB";
+  const lecs = [...DB.lectures.values()].filter(l => !l.deletedAt), withAudio = lecs.filter(l => (l.audio || []).some(p => DB.has(l.id, p.n)) || (l.sessions || []).some(p => DB.has(l.id, "s" + p.n)));
+  const safe = withAudio.filter(l => DB.sync.on && (l.audio || []).every(p => !DB.has(l.id, p.n) || DB.sync.audio[l.id + ":" + p.n]) && (l.audio || []).some(p => DB.has(l.id, p.n)));
+  const bin = [...DB.lectures.values()].filter(l => l.deletedAt);
+  $("usage").textContent = (usage && usage.usage != null ? "Bizofy is using about " + mb(usage.usage) + " here" + (usage.quota ? ", of roughly " + mb(usage.quota) + " the browser allows" : "") + ". " : "") + lecs.length + (lecs.length === 1 ? " lecture, " : " lectures, ") + withAudio.length + " with audio on this device.";
+  box.replaceChildren(
+    safe.length ? h("div", { class: "row" }, h("button", { type: "button", class: "btn quiet", onclick: async ev => { const b = ev.currentTarget; if (!confirm("Remove the audio of " + safe.length + (safe.length === 1 ? " lecture" : " lectures") + " from this device? It stays in Google Drive and comes back when you press play.")) return; b.disabled = true; for (const l of safe){ await DB.dropAudio(l); (l.audio || []).forEach(p => (p.local = false)); } renderStorage(); if (S.cur) render(); } }, "Free up space: remove audio that is already in Drive (" + safe.length + ")")) : DB.sync.on ? h("p", { class: "hint" }, "All audio here is either not yet in Drive or already removed. Sync first, then this can free space.") : h("p", { class: "hint" }, "With Google Drive connected, audio that is safely in Drive can be removed from this device to free space."),
+    bin.length ? h("div", { class: "row" }, h("button", { type: "button", class: "btn quiet", onclick: async () => { if (!confirm("Empty the recycle bin? " + bin.length + (bin.length === 1 ? " item" : " items") + " will be deleted for good.")) return; for (const l of bin) await DB.remove(l); S.list = await api("GET", "/api/lectures"); if (S.cur && !DB.lectures.get(S.cur.id)) S.cur = null; renderStorage(); render(); } }, "Empty the recycle bin (" + bin.length + ")")) : null);
+}
+
+/* ---------- undo toast ---------- */
+let toastTimer = null;
+function toast(text, undo){
+  const t = $("toast"); clearTimeout(toastTimer);
+  t.replaceChildren(h("span", null, text), undo ? h("button", { class: "linkish", onclick: async () => { t.hidden = true; try { await undo(); S.list = await api("GET", "/api/lectures"); render(); } catch (e){ fail(e); } } }, "Undo") : h("span", { hidden: true }), h("button", { class: "toast-x", "aria-label": "Dismiss", onclick: () => (t.hidden = true) }, "×"));
+  t.hidden = false; toastTimer = setTimeout(() => (t.hidden = true), 8000);
+}
+/* ---------- find and replace in one transcript ---------- */
+function openReplace(){
+  const lec = S.cur; if (!lec) return;
+  $("frFind").value = S.hl || ""; $("frWith").value = ""; $("frCount").textContent = ""; $("frVocab").checked = !!lec.course; $("frVocab").disabled = !lec.course; $("fr").showModal(); $("frFind").focus();
+}
+function frCount(){
+  const lec = S.cur, q = $("frFind").value; if (!lec || !q) return void ($("frCount").textContent = "");
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), n = lec.segments.reduce((c, s) => c + (s.text.match(re) || []).length, 0) + (lec.marks || []).reduce((c, m) => c + (m.text.match(re) || []).length, 0);
+  $("frCount").textContent = n ? n + (n === 1 ? " match" : " matches") + " in this lecture" : "No matches";
+}
+
 /* ---------- settings + login ---------- */
-async function openSettings(){
+function showSec(id){
+  document.querySelectorAll(".set-sec").forEach(s => (s.hidden = s.dataset.sec !== id));
+  document.querySelectorAll(".set-nav button").forEach(b => b.setAttribute("aria-current", b.dataset.sec === id ? "true" : "false"));
+  $("setForm").querySelector(".set-panes").scrollTop = 0;
+}
+document.querySelectorAll(".set-nav button").forEach(b => b.addEventListener("click", () => showSec(b.dataset.sec)));
+$("setClose").addEventListener("click", () => $("settings").close());
+$("showKeys").addEventListener("click", () => $("keys").showModal());
+$("resetPanels").addEventListener("click", () => setTheme({ sideW: 272, pamW: 384, hideSide: false, hidePam: false }));
+async function openSettings(sec){
   const f = $("setForm").elements; $("setErr").hidden = true;
   try {
     const s = await api("GET", "/api/settings");
     f.provider.value = s.provider; f.aiProvider.value = s.aiProvider; f.claudeModel.value = s.claudeModel; f.groqModel.value = s.groqModel;
-    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl; f.googleClientId.value = s.googleClientId; f.syncAudio.checked = s.syncAudio; f.pullAudio.checked = s.pullAudio; f.signinRedirect.checked = s.signinRedirect; f.autoOutline.checked = s.autoOutline; renderAppearance(); $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
-    $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet."; $("driveOff").hidden = !DB.sync.on;
-    for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : k === "groqAiKey" ? "Only if speech-to-text is not on Groq" : "Paste the key"; }
-    $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet.";
+    f.transcribeModel.value = s.transcribeModel; f.transcribeBaseUrl.value = s.transcribeBaseUrl; f.aiBaseUrl.value = s.aiBaseUrl; f.aiModel.value = s.aiModel; f.aiBackupModel.value = s.aiBackupModel; f.updateUrl.value = s.updateUrl; f.googleClientId.value = s.googleClientId;
+    f.syncAudio.checked = s.syncAudio; f.pullAudio.checked = s.pullAudio; f.signinRedirect.checked = s.signinRedirect; f.autoOutline.checked = s.autoOutline;
+    for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]){ f[k].value = ""; f[k].placeholder = s[k] ? "Saved " + s[k] + ". Paste to replace" : "Paste the key"; }
+    $("aiNow").textContent = S.status.ai ? "Running now on " + S.status.aiName + "." : "No AI is switched on yet. Groq needs only the speech-to-text key.";
+    $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet. Paste the client ID from Google Cloud, save, then press Connect Google Drive in the sidebar.";
+    $("driveOff").hidden = !DB.sync.on; $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
+    $("aboutVer").textContent = "Bizofy " + VERSION + ", released " + RELEASED;
+    renderAppearance(); renderStorage();
   } catch (e){}
-  closeDrawers(); $("settings").showModal();
+  closeDrawers(); showSec(sec || (!S.status.transcribe ? "record" : "ai")); $("settings").showModal();
 }
 $("setForm").addEventListener("submit", async ev => {
   if (ev.submitter && ev.submitter.value === "cancel") return;
@@ -2804,8 +2950,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.4.0", RELEASED = "22 September 2026";
+const VERSION = "2.4.1", RELEASED = "22 September 2026";
 const CHANGES = [
+  ["2.4.1", "22 Sep 2026", ["Settings rebuilt into sections: AI and keys, Recording, Appearance, Google Drive, Storage and backup, About", "Record now on the home screen: one tap creates the lecture and starts recording", "Undo after Delete or Archive", "Find and replace in a transcript, with the corrected term added to the course vocabulary", "Storage: see what audio is on this device, free up audio that is already in Drive, empty the recycle bin"]],
   ["2.4.0", "22 Sep 2026", ["Themes: light, dark or automatic, five colour palettes, and compact spacing", "A home screen with your week and recent work", "The library can be resized or hidden, with pins, recents, sorting, multi-select and a right-click menu", "Pambizo: formatted answers, Add to My notes, pinned answers, your own quick actions, and Explain this on any selected passage", "Lecture outlines with clickable chapters, and automatic titles", "Keyboard shortcuts (press ?), and a focus mode for reading", "Google sign-in without a pop-up for phones, a setup link for other devices, and a check on the client ID"]],
   ["2.3.0", "21 Sep 2026", ["Google Drive storage and sync: lectures, notes and audio kept in your own Drive and shared between your laptop and phone", "Audio recorded elsewhere is fetched from Drive when you play, convert or download it", "On phones, Bizofy now notices when the phone pauses a recording, restarts it when you come back, and marks the gap"]],
   ["2.2.5", "20 Sep 2026", ["Save a lecture with its audio as one file, and drop it into Bizofy on another device or copy", "The Audio menu now shows how much audio this device holds, and says so when a lecture has none", "MP3 downloads report their length and warn when audio is missing"]],
@@ -2823,7 +2970,7 @@ const CHANGES = [
 const newer = (a, b) => { const x = String(a).split(".").map(Number), y = String(b).split(".").map(Number); for (let i = 0; i < 3; i++){ if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0); } return false; };
 function renderVersion(){
   $("ver").textContent = "Bizofy " + VERSION;
-  $("changes").replaceChildren(h("p", { class: "hint" }, "You have version " + VERSION + ", released " + RELEASED + "."), ...CHANGES.flatMap(([v, d, items]) => [h("p", { class: "ver-head" }, v, h("span", null, d)), h("ul", null, items.map(i => h("li", null, i)))]));
+  $("changes").replaceChildren(...CHANGES.flatMap(([v, d, items]) => [h("p", { class: "ver-head" }, v, h("span", null, d)), h("ul", null, items.map(i => h("li", null, i)))]));
 }
 // Optional: a small JSON file you host, like {"version":"2.2.0","url":"https://…/bizofy.html","notes":"What changed"}
 async function checkUpdate(){
@@ -2892,6 +3039,24 @@ window.addEventListener("dragleave", e => { if (!hasFiles(e)) return; if (--drag
 window.addEventListener("drop", e => { if (!hasFiles(e)) return; e.preventDefault(); dragDepth = 0; document.body.classList.remove("dragging"); if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
 P.a.addEventListener("play", () => { P.a.playbackRate = S.rate; });
 
+
+$("frForm").addEventListener("submit", async ev => {
+  if (ev.submitter && ev.submitter.value === "cancel") return;
+  ev.preventDefault();
+  const lec = S.cur, q = $("frFind").value, w = $("frWith").value; if (!lec || !q) return;
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"); let n = 0;
+  const segs = lec.segments.map(s2 => { const t = s2.text.replace(re, () => { n++; return w; }); return t !== s2.text ? { id: s2.id, text: t } : null; }).filter(Boolean);
+  const marks = (lec.marks || []).map(m => { const t = m.text.replace(re, () => { n++; return w; }); return t !== m.text ? { id: m.id, text: t } : null; }).filter(Boolean);
+  try {
+    for (const x of segs) await api("PATCH", "/api/lectures/" + lec.id + "/segments/" + x.id, { text: x.text });
+    for (const x of marks) await api("PATCH", "/api/lectures/" + lec.id + "/marks/" + x.id, { text: x.text });
+    if ($("frVocab").checked && lec.course && w.trim()){ const v = getVocab(lec.course); if (!v.toLowerCase().split(/\s*,\s*/).includes(w.trim().toLowerCase())) await setVocab(lec.course, (v ? v + ", " : "") + w.trim()); }
+    if (segs.length || marks.length) lec.digest = null;
+    $("fr").close(); S.cur = getLec(lec.id); S.hl = ""; render();
+    toast(n ? "Replaced " + n + (n === 1 ? " match." : " matches.") : "Nothing to replace.");
+  } catch (e){ $("fr").close(); fail(e); }
+});
+$("frFind").addEventListener("input", frCount);
 $("newBtn").addEventListener("click", () => { closeDrawers(); newLecture().catch(fail); });
 $("settingsBtn").addEventListener("click", openSettings);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ checkRec(); if (typeof syncWake === "function") syncWake(); } if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {}); });

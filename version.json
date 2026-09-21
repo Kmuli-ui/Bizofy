@@ -1,5 +1,5 @@
 {
-  "version": "2.4.0",
+  "version": "2.4.1",
   "url": "./",
-  "notes": "New design: themes, home screen, smarter library and Pambizo, lecture outlines."
+  "notes": "Settings rebuilt into sections; Record now, undo, find and replace, storage tools."
 }
