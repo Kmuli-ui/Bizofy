@@ -471,6 +471,21 @@ dialog.settings #setErr{margin:0 22px}
 .toast .linkish{color:var(--hi);font-size:var(--t-1);font-weight:700}
 .toast-x{border:0;background:none;color:inherit;opacity:.7;font-size:var(--t1);line-height:1;padding:0 2px}
 @media (max-width:760px){.toast{bottom:14px}}
+
+/* 2.5 */
+:root[data-font="sans"] .tx,:root[data-font="sans"] .read p,:root[data-font="sans"] .read li,:root[data-font="sans"] .read dd,:root[data-font="sans"] .msg{font-family:var(--display)}
+.tx{line-height:var(--read-lh,1.68)}
+.read p,.read li,.read dd{line-height:var(--read-lh,1.66)}
+body.hide-ts .seg .ts,body.hide-ts .mark-row .ts,body.hide-ts .chap .ts{visibility:hidden}
+body.hide-chap .chap{display:none}
+body.hide-marks .seg .mk{visibility:hidden}
+.set-sec label input[type=number]{width:120px}
+.set-sec label .hint{display:block;font-weight:400;margin-top:3px}
+.set-sec label.check .hint{display:inline}
+.usage{border-collapse:collapse;font-size:var(--t-2);margin-top:8px;width:100%}
+.usage th,.usage td{text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule)}
+.usage th{color:var(--slate);font-weight:600}
+.set-sec textarea{margin-top:5px;font-size:var(--t-1)}
 </style>
 </head>
 <body>
@@ -514,14 +529,32 @@ dialog.settings #setErr{margin:0 22px}
     </div>
     <div class="set-body">
       <nav class="set-nav" aria-label="Settings sections">
-        <button type="button" data-sec="ai" aria-current="true">AI and keys</button>
+        <button type="button" data-sec="gen" aria-current="true">General</button>
+        <button type="button" data-sec="ai">AI and keys</button>
         <button type="button" data-sec="record">Recording</button>
+        <button type="button" data-sec="tx">Transcript</button>
+        <button type="button" data-sec="courses">Courses</button>
         <button type="button" data-sec="look">Appearance</button>
+        <button type="button" data-sec="keys">Shortcuts</button>
         <button type="button" data-sec="drive">Google Drive</button>
         <button type="button" data-sec="data">Storage and backup</button>
         <button type="button" data-sec="about">About</button>
       </nav>
       <div class="set-panes">
+
+        <section class="set-sec" data-sec="gen" hidden>
+          <h3>General</h3>
+          <div id="genBox"></div>
+          <h3>All settings</h3>
+          <div class="row">
+            <button type="button" class="btn quiet" id="expSettings">Export settings</button>
+            <button type="button" class="btn quiet" id="impSettings">Import settings</button>
+            <input type="file" id="impIn" accept=".json,application/json" hidden>
+            <button type="button" class="btn quiet" id="resetSettings">Reset to defaults</button>
+          </div>
+          <label class="check"><input type="checkbox" id="expKeys"> Include my API keys in the export (only for a file you keep private)</label>
+          <p class="hint">Use export and import to make your laptop and phone match. Reset keeps your keys, lectures and Drive connection.</p>
+        </section>
 
         <section class="set-sec" data-sec="ai">
           <h3>Which AI writes your notes</h3>
@@ -549,6 +582,14 @@ dialog.settings #setErr{margin:0 22px}
             <label>Model <input name="aiModel" type="text" autocomplete="off" placeholder="The model's exact name"></label>
             <label>Backup model on the same service, used when the first is overloaded <input name="aiBackupModel" type="text" autocomplete="off" placeholder="For example a lighter model"></label>
           </details>
+          <h3>Which AI does each job</h3>
+          <div id="aiForBox"></div>
+          <h3>How the AI writes</h3>
+          <div id="aiStyleBox"></div>
+          <h3>After each lecture, automatically</h3>
+          <div id="afterBox"></div>
+          <h3>Usage this month</h3>
+          <div id="usageBox"></div>
           <p class="hint foot">Keys stay in this browser on this device and are only sent to the service they belong to. They are never saved to Google Drive.</p>
         </section>
 
@@ -567,9 +608,26 @@ dialog.settings #setErr{margin:0 22px}
             <label>Model, leave blank for the default <input name="transcribeModel" type="text" autocomplete="off"></label>
             <label>Base URL, leave blank for the default <input name="transcribeBaseUrl" type="url" autocomplete="off" placeholder="https://…/v1"></label>
           </details>
-          <h3>After each lecture</h3>
-          <label class="check"><input type="checkbox" name="autoOutline"> Give it a title and an outline automatically (uses a little AI)</label>
-          <p class="hint foot">Course vocabulary, the terms the transcriber should know, is set per course from the lecture page.</p>
+          <h3>How Bizofy records</h3>
+          <div id="recBox"></div>
+          <input type="checkbox" name="autoOutline" hidden>
+          <p class="hint foot">Course vocabulary and per-course choices live under Courses.</p>
+        </section>
+
+        <section class="set-sec" data-sec="tx" hidden>
+          <h3>Reading the transcript</h3>
+          <div id="txBox"></div>
+        </section>
+
+        <section class="set-sec" data-sec="courses" hidden>
+          <h3>Course profiles</h3>
+          <p class="hint">A course can have its own language, AI, notes style, folder and vocabulary. Anything left as "same as general" follows the settings above.</p>
+          <div id="coursesBox"></div>
+        </section>
+
+        <section class="set-sec" data-sec="keys" hidden>
+          <h3>Keyboard shortcuts</h3>
+          <div id="keysBox"></div>
         </section>
 
         <section class="set-sec" data-sec="look" hidden>
@@ -772,7 +830,7 @@ const DB = {
 function cfg(){
   const s = DB.settings, provider = s.provider || "groq", p = PRESETS[provider] || PRESETS.openai;
   const gKey = s.groqAiKey || (provider === "groq" ? s.transcribeKey : "") || "";
-  let ai = s.aiProvider || "auto";
+  let ai = (typeof aiFor === "function" && AI_CTX.task ? aiFor(AI_CTX.task, AI_CTX.course) : "") || s.aiProvider || "auto";
   if (ai === "auto") ai = s.anthropicKey ? "claude" : "groq";
   return { provider, tKey: s.transcribeKey || "", tBase: (s.transcribeBaseUrl || p.base).replace(/\/+$/, ""), tModel: s.transcribeModel || p.model,
     aKey: s.anthropicKey || "", aModel: s.claudeModel || "claude-sonnet-5", ai, gKey, gModel: s.groqModel || "",
@@ -801,6 +859,7 @@ async function whisper(blob, filename, opts){
     throw new AppError(r.status === 401 ? "The speech-to-text key was rejected. Check it in Settings." : r.status === 429 ? "The transcription service is rate limiting this key. Wait a minute, then try again." : "Transcription failed: " + why);
   }
   if (!j) return { segments: [], duration: 0 };
+  noteUsage("whisper", "minutes", (+j.duration || 0) / 60);
   let segs = Array.isArray(j.segments) ? j.segments.filter(s => !(s.no_speech_prob > 0.6 && s.avg_logprob < -1)).map(s => ({ start: +s.start || 0, end: +s.end || 0, text: String(s.text || "").trim() })) : [];
   if (!segs.length && j.text && String(j.text).trim()) segs = [{ start: 0, end: +j.duration || 0, text: String(j.text).trim() }];
   return { segments: segs.filter(s => s.text), duration: +j.duration || (segs.length ? segs[segs.length - 1].end : 0) };
@@ -846,7 +905,8 @@ async function transcribePart(id, n){
   for (const s of paragraphs(result.segments)) lec.segments.push({ id: newId("s"), t: Math.round(part.offset + s.start), end: Math.round(part.offset + s.end), text: s.text, flag: false, part: n });
   lec.segments.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t));
   // "Mark as important" presses highlight what was being said just before the press.
-  for (const f of part.flags || []) for (const s of lec.segments) if (s.part === n || s.part === n - 1) if (s.t != null && s.t <= f + 1 && (s.end == null ? s.t + 20 : s.end) >= f - 5) s.flag = true;
+  const back = Math.max(5, Math.min(60, +pref("rec.flagBack") || 20));
+  for (const f of part.flags || []) for (const s of lec.segments) if (s.part === n || s.part === n - 1) if (s.t != null && s.t <= f + 1 && (s.end == null ? s.t + 20 : s.end) >= f - (back - 15)) s.flag = true;
   await DB.save(lec);
   return lec;
 }
@@ -873,6 +933,69 @@ async function splitAudio(file){
 }
 
 /* Claude */
+/* ---------- preferences: one object with defaults, read everywhere through pref() ---------- */
+const DEFAULTS = {
+  gen: { openOn: "home", defaultFolder: "", defaultCourse: "", confirm: true, homeStats: true, homeTiles: true },
+  rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 0 },
+  tx: { font: "serif", lineHeight: "1.68", showTs: true, showChapters: true, showMarks: true, autoScroll: true },
+  ai: { for: { notes: "default", summary: "default", study: "default", pambizo: "default", outline: "default", polish: "default" },
+        notes: { detail: "standard", form: "bullets", actions: true, review: true, lang: "" },
+        study: { cards: 12, quiz: 6, difficulty: "mixed" },
+        pam: { length: "standard", scope: "lecture" },
+        after: { title: true, outline: true, summary: false, notes: false } },
+  keys: { enabled: true }
+};
+const deepMerge = (a, b) => { const out = { ...a }; for (const k in b || {}) out[k] = b[k] && typeof b[k] === "object" && !Array.isArray(b[k]) ? deepMerge(a[k] || {}, b[k]) : b[k]; return out; };
+function pref(path){ let cur = deepMerge(DEFAULTS, DB.settings.prefs || {}); for (const k of path.split(".")){ cur = cur == null ? undefined : cur[k]; } return cur; }
+async function setPref(path, value){
+  const keys = path.split("."), root = DB.settings.prefs = DB.settings.prefs || {}; let cur = root;
+  for (const k of keys.slice(0, -1)) cur = cur[k] = cur[k] && typeof cur[k] === "object" ? cur[k] : {};
+  cur[keys[keys.length - 1]] = value;
+  await DB.saveSettings(); applyPrefs();
+}
+/* per-course profiles: anything a course sets wins over the general setting */
+const courseProfile = course => ((DB.settings.courses || {})[courseKey(course)] || {});
+async function setCourseProfile(course, patch){ DB.settings.courses = DB.settings.courses || {}; const k = courseKey(course); DB.settings.courses[k] = { ...(DB.settings.courses[k] || {}), ...patch }; for (const key in DB.settings.courses[k]) if (DB.settings.courses[k][key] === "" || DB.settings.courses[k][key] == null) delete DB.settings.courses[k][key]; await DB.saveSettings(); }
+const AI_CTX = { task: "", course: "" };
+function aiFor(task, course){ const cp = courseProfile(course); if (cp.ai && cp.ai !== "default") return cp.ai; const t = pref("ai.for." + task); return t && t !== "default" ? t : ""; }
+function applyPrefs(){
+  const tx = pref("tx"), root = document.documentElement;
+  root.dataset.font = tx.font; root.style.setProperty("--read-lh", tx.lineHeight);
+  document.body.classList.toggle("hide-ts", !tx.showTs); document.body.classList.toggle("hide-chap", !tx.showChapters); document.body.classList.toggle("hide-marks", !tx.showMarks);
+}
+const okAsk = msg => (pref("gen.confirm") ? confirm(msg) : true);
+
+/* usage per AI service, by month */
+function noteUsage(service, kind, amount){
+  const m = new Date().toISOString().slice(0, 7), u = DB.settings.usage = DB.settings.usage || {}; u[m] = u[m] || {}; const row = u[m][service] = u[m][service] || { calls: 0, chars: 0, minutes: 0 };
+  if (kind === "minutes") row.minutes += amount; else { row.calls++; row.chars += amount; }
+  clearTimeout(noteUsage.t); noteUsage.t = setTimeout(() => DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}), 2000);
+}
+function usageView(){
+  const u = DB.settings.usage || {}, months = Object.keys(u).sort().reverse().slice(0, 3);
+  if (!months.length) return h("p", { class: "hint" }, "Nothing used yet this month.");
+  const name = { claude: "Claude", groq: "Groq", custom: "Other service", whisper: "Speech-to-text" };
+  return h("table", { class: "usage" }, h("thead", null, h("tr", null, h("th", null, "Month"), h("th", null, "Service"), h("th", null, "Requests"), h("th", null, "Text sent, approx."), h("th", null, "Audio"))),
+    h("tbody", null, months.flatMap(m => Object.keys(u[m]).map(s => h("tr", null, h("td", null, m), h("td", null, name[s] || s), h("td", null, u[m][s].calls || ""), h("td", null, u[m][s].chars ? Math.round(u[m][s].chars / 4000) + "k tokens" : ""), h("td", null, u[m][s].minutes ? Math.round(u[m][s].minutes) + " min" : ""))))));
+}
+
+/* export, import, reset */
+function settingsFile(withKeys){
+  const s = DB.settings, out = { app: "bizofy-settings", version: VERSION, prefs: s.prefs || {}, courses: s.courses || {}, vocab: s.vocab || {}, folders: s.folders || [], chips: s.chips || [], theme: s.theme || {}, readSize: s.readSize, sort: s.sort,
+    provider: s.provider, aiProvider: s.aiProvider, claudeModel: s.claudeModel, groqModel: s.groqModel, aiBaseUrl: s.aiBaseUrl, aiModel: s.aiModel, aiBackupModel: s.aiBackupModel, transcribeModel: s.transcribeModel, transcribeBaseUrl: s.transcribeBaseUrl, googleClientId: s.googleClientId, syncAudio: s.syncAudio, pullAudio: s.pullAudio, signinRedirect: s.signinRedirect };
+  if (withKeys) for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (s[k]) out[k] = s[k];
+  return JSON.stringify(out, null, 2);
+}
+async function importSettings(text){
+  let j; try { j = JSON.parse(text); } catch (e){ throw new AppError("That file is not a Bizofy settings file."); }
+  if (!j || j.app !== "bizofy-settings") throw new AppError("That file is not a Bizofy settings file.");
+  const s = DB.settings, keep = ["prefs", "courses", "vocab", "folders", "chips", "theme", "readSize", "sort", "provider", "aiProvider", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "transcribeModel", "transcribeBaseUrl", "googleClientId", "syncAudio", "pullAudio", "signinRedirect", "transcribeKey", "anthropicKey", "groqAiKey", "aiKey"];
+  let n = 0; for (const k of keep) if (j[k] !== undefined){ s[k] = j[k]; n++; }
+  await DB.saveSettings(); applyTheme(); applyPrefs(); groqPicked = null; delete s.groqSmall;
+  return n;
+}
+async function resetSettings(){ const s = DB.settings; for (const k of ["prefs", "theme", "readSize", "sort", "shut", "quickShut", "outlineShut"]) delete s[k]; await DB.saveSettings(); applyTheme(); applyPrefs(); }
+
 /* AI: runs on Claude or on Groq, whichever key is available */
 const GROQ_BASE = "https://api.groq.com/openai/v1";
 const sleep = (ms, signal) => new Promise((res, rej) => { const t = setTimeout(res, ms); if (signal) signal.addEventListener("abort", () => { clearTimeout(t); rej(Object.assign(new Error("aborted"), { name: "AbortError" })); }, { once: true }); });
@@ -919,6 +1042,7 @@ async function llmClaude(c, o){
       : r.status === 404 ? 'Claude does not know the model "' + c.aModel + '". Change it in Settings, under Advanced.'
       : r.status === 429 ? "Claude is rate limiting this key. Wait a minute, then try again." : "Claude returned an error: " + why);
   }
+  noteUsage("claude", "chars", JSON.stringify(system).length + JSON.stringify(o.messages).length);
   if (o.onText) return readSSE(r, ev => (ev.type === "content_block_delta" && ev.delta && ev.delta.type === "text_delta" ? ev.delta.text : ""), o.onText);
   const j = await r.json();
   return (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
@@ -939,6 +1063,7 @@ async function llmOpenAI(c, o){
     try { r = await fetch(base + "/chat/completions", { method: "POST", signal: o.signal, headers: Object.assign({ "content-type": "application/json" }, key ? { Authorization: "Bearer " + key } : {}), body: JSON.stringify(body) }); }
     catch (e){ if (e.name === "AbortError") throw e; throw new AppError(custom ? "Could not reach the AI service. Check the address in Settings and the internet connection. Some services do not accept requests from a web page." : "Could not reach the AI service. Check the internet connection."); }
     if (r.ok){
+      noteUsage(custom ? "custom" : "groq", "chars", JSON.stringify(body.messages).length);
       if (o.onText) return readSSE(r, ev => (ev.choices && ev.choices[0] && ev.choices[0].delta && ev.choices[0].delta.content) || "", o.onText);
       const j = await r.json(), text = (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || "";
       if (!String(text).trim()) throw new AppError("The AI sent back an empty answer. Try again; if it keeps happening, try a different model in Settings.");
@@ -1068,7 +1193,7 @@ async function makeSummary(lec, note){
 }
 async function makeStudy(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You write study material from a university lecture that tests understanding, not trivia." + RULES + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with 12 flashcards and 6 quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
+    system: "You write study material from a university lecture that tests understanding, not trivia." + RULES + ({ easy: " Keep the questions straightforward: recall of key facts and definitions.", hard: " Make the questions demanding: application, comparison and reasoning, not recall." }[pref("ai.study.difficulty")] || "") + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with ' + (+pref("ai.study.cards") || 12) + " flashcards and " + (+pref("ai.study.quiz") || 6) + ' quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
     messages: [{ role: "user", content: "Write the JSON study material now." }] }), note));
   lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
     quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
@@ -1084,11 +1209,18 @@ async function makeOutline(lec, note){
   const title = String(r.title || "").replace(/["“”]/g, "").trim().slice(0, 120);
   if (title && /^untitled/i.test(lec.title)) lec.title = title;
 }
+const notesStyle = course => {
+  const n = { ...pref("ai.notes"), ...(courseProfile(course).notes || {}) };
+  return ({ brief: " Keep the notes short: only the main ideas, about a third of the usual length.", thorough: " Be thorough: keep every example, figure, name and caveat the lecturer gave." }[n.detail] || "")
+    + (n.form === "prose" ? " Write in short paragraphs under '## ' topic headings (end each heading with the [m:ss] time where it starts) and '### ' subtopics, with **bold** for key terms; use bullets only for lists of items." : NOTES_STYLE)
+    + (n.lang ? " Write the notes in " + n.lang + "." : "");
+};
+const notesEnd = course => { const n = { ...pref("ai.notes"), ...(courseProfile(course).notes || {}) }; return (n.actions ? " Finish with '## Action points' as '- [ ] ' items (readings, deadlines, tasks; write '- None mentioned' if there are none)" : "") + (n.review ? (n.actions ? " and then" : " Finish with") + " '## Questions to review' with 3 to 6 bullets" : "") + (n.actions || n.review ? "." : ""); };
 const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
 async function makeNotes(lec, note){
   const c = cfg(), wait = (s, why) => note(waitText(s, why));
   const whole = () => llm({ max: c.ai === "claude" ? 8000 : 4000, onWait: wait, context: headerText(lec) + "\nTranscript:\n" + fullText(lec),
-    system: "You turn a university lecture transcript into complete, well-organised study notes." + RULES + NOTES_STYLE + " Finish with '## Action points' as '- [ ] ' items (readings, deadlines, tasks; write '- None mentioned' if there are none) and then '## Questions to review' with 3 to 6 bullets.",
+    system: "You turn a university lecture transcript into complete, well-organised study notes." + RULES + notesStyle(lec.course) + notesEnd(lec.course),
     messages: [{ role: "user", content: "Write the notes now." }] });
   let md;
   if (!(c.ai !== "claude" && DB.settings.groqSmall)){
@@ -1099,7 +1231,7 @@ async function makeNotes(lec, note){
     for (let i = 0; i < chunks.length; i++){
       note("Writing notes for part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
       parts.push(await llm({ max: 900, onWait: (s, why) => note(waitText(s, why) + " Part " + (i + 1) + " of " + chunks.length + "."),
-        system: "You turn one part of a university lecture transcript into well-organised study notes." + RULES + NOTES_STYLE + " Do not add an introduction, a conclusion, or action points.",
+        system: "You turn one part of a university lecture transcript into well-organised study notes." + RULES + notesStyle(lec.course) + " Do not add an introduction, a conclusion, or action points.",
         messages: [{ role: "user", content: chunks[i] }] }));
     }
     md = parts.join("\n\n");
@@ -1109,10 +1241,12 @@ async function makeNotes(lec, note){
   lec.notes = { md: md.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(), madeAt: Date.now() };
 }
 function askAI(lec, question, scope, signal, onText, note){
+  AI_CTX.task = "pambizo"; AI_CTX.course = lec.course;
+  const len = pref("ai.pam.length"), lenText = len === "short" ? " Answer in a few sentences at most." : len === "long" ? " Answer fully, with detail and examples." : " Be concise.";
   const history = (lec.chat || []).slice(-13, -1).map(m => ({ role: m.role, content: m.content }));
   while (history.length && history[0].role !== "user") history.shift();
-  return withContext(lec, scope, ctx => llm({ max: 2000, signal, onText, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly. Be concise. Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Format lightly in Markdown so it reads well in a narrow panel: '- ' bullets for lists, **bold** for key terms, and a short '### ' heading only when the answer has several parts. Write emails and messages as plain paragraphs.",
+  return withContext(lec, scope, ctx => llm({ max: len === "long" ? 3500 : len === "short" ? 700 : 2000, signal, onText, context: ctx, onWait: (s, why) => note(waitText(s, why)),
+    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly." + lenText + " Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Format lightly in Markdown so it reads well in a narrow panel: '- ' bullets for lists, **bold** for key terms, and a short '### ' heading only when the answer has several parts. Write emails and messages as plain paragraphs.",
     messages: [...history, { role: "user", content: question }] }), note, signal);
 }
 
@@ -1327,6 +1461,7 @@ const POLISH = {
   enrich: ["Fill gaps from the transcript", "Improve these notes using the lecture transcript: correct anything that contradicts it and add important points the notes missed, marking each addition with the [m:ss] time it came from. Keep the student's structure where it works."]
 };
 async function polishNotes(lec, mode, note){
+  AI_CTX.task = "polish"; AI_CTX.course = lec.course;
   const mine = myNotesMd(lec);
   if (mine.length < 20) throw new AppError("Write a few lines first, then run the AI over them.");
   const useTranscript = mode === "enrich" && lec.segments.length;
@@ -1510,7 +1645,7 @@ async function api(method, url, body, note){
   if (p[0] !== "lectures") throw new AppError("Not found.");
   if (!p[1]){
     if (method === "GET") return [...DB.lectures.values()].map(metaOf).sort((a, b) => b.createdAt - a.createdAt);
-    const lec = { id: newId("l"), course: String(b.course || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", folder: String(b.folder || "").slice(0, 80), archived: false, language: "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
+    const lec = { id: newId("l"), course: String(b.course || pref("gen.defaultCourse") || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", folder: String(b.folder || pref("gen.defaultFolder") || "").slice(0, 80), archived: false, language: (courseProfile(b.course || pref("gen.defaultCourse")).language) || pref("rec.language") || "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
     DB.lectures.set(lec.id, lec); await DB.save(lec); return lec;
   }
   const lec = getLec(p[1]);
@@ -1520,7 +1655,7 @@ async function api(method, url, body, note){
       lec.deletedAt = Date.now(); await DB.save(lec); return { ok: true };   // to the recycle bin first
     }
     if (method === "PATCH"){
-      if (typeof b.course === "string"){ const was = lec.course; lec.course = b.course.trim().slice(0, 120); if (lec.folder && lec.folder === was) lec.folder = ""; }
+      if (typeof b.course === "string"){ const was = lec.course; lec.course = b.course.trim().slice(0, 120); if (lec.folder && lec.folder === was) lec.folder = ""; const cp = courseProfile(lec.course); if (cp.folder && !lec.folder) lec.folder = cp.folder; if (cp.language && lec.language === "auto") lec.language = cp.language; }
       if (typeof b.folder === "string") lec.folder = b.folder.trim().slice(0, 80);
       if (typeof b.archived === "boolean") lec.archived = b.archived;
       if (typeof b.pinned === "boolean") lec.pinned = b.pinned;
@@ -1556,6 +1691,7 @@ async function api(method, url, body, note){
   if (p[2] === "audio" && p[4] === "transcribe") return transcribePart(lec.id, Number(p[3]));
   if (p[2] === "summary" || p[2] === "study" || p[2] === "notes" || p[2] === "outline"){
     if (!lec.segments.length) throw new AppError("Add a transcript first.");
+    AI_CTX.task = p[2]; AI_CTX.course = lec.course;
     await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : makeNotes)(lec, note || (() => {}));
     await DB.save(lec); return lec;
   }
@@ -1786,6 +1922,7 @@ async function newLecture(seed){
   if (REC.on) stopRec();
   stopPlayer();
   const lec = await api("POST", "/api/lectures", seed || {});
+  DB.settings.recent = [lec.id, ...(DB.settings.recent || []).filter(x => x !== lec.id)].slice(0, 8); DB.tx("kv", "readwrite", st => st.put(DB.settings, "settings")).catch(() => {});
   S.list.unshift(metaOf(lec)); S.cur = lec; S.tab = "transcript"; S.err = ""; S.pamErr = ""; S.search = null; S.hl = ""; S.q = ""; S.editNotes = false; $("search").value = "";
   if (lec.kind === "note") S.tab = "mynotes";
   render();
@@ -1796,6 +1933,8 @@ function fail(e){ S.err = e.message || String(e); render(); }
 
 /* ---------- recorder ---------- */
 const PART_SEC = 45;
+const partSec = () => Math.max(20, Math.min(180, +pref("rec.partSec") || 45));
+const bitrate = () => ({ light: 32000, standard: 48000, high: 96000 })[pref("rec.quality")] || 48000;
 const MIME = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
 const REC = { on: false, stream: null, mr: null, startMs: 0, base: 0, flags: [], rot: null, tick: null, ctx: null, raf: 0, wake: null, lecId: null, msg: "" };
 const Q = { items: [], busy: false, waiting: false };
@@ -1828,7 +1967,7 @@ async function startRec(){
 }
 function startFull(){
   try {
-    const full = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 }), bits = [], base = nowAbs(), lecId = REC.lecId;
+    const full = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: bitrate() } : { audioBitsPerSecond: bitrate() }), bits = [], base = nowAbs(), lecId = REC.lecId;
     full.ondataavailable = e => { if (e.data && e.data.size) bits.push(e.data); };
     full.onstop = async () => {
       try {
@@ -1904,7 +2043,7 @@ function checkRec(){
 }
 function startPart(){
   const startAbs = nowAbs(), lecId = REC.lecId, chunks = [];
-  const mr = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: 48000 } : { audioBitsPerSecond: 48000 });
+  const mr = new MediaRecorder(REC.stream, MIME ? { mimeType: MIME, audioBitsPerSecond: bitrate() } : { audioBitsPerSecond: bitrate() });
   mr.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
   mr.onstop = () => {
     const endAbs = mr._endAbs || nowAbs();
@@ -1915,7 +2054,7 @@ function startPart(){
   };
   mr.start();
   REC.mr = mr;
-  REC.rot = setTimeout(() => { if (!REC.on) return; const old = REC.mr; old._endAbs = nowAbs(); startPart(); old.stop(); }, PART_SEC * 1000);
+  REC.rot = setTimeout(() => { if (!REC.on) return; const old = REC.mr; old._endAbs = nowAbs(); startPart(); old.stop(); }, partSec() * 1000);
 }
 function stopRec(){
   if (!REC.on) return;
@@ -1963,7 +2102,7 @@ function liveLine(){
   const n = Q.items.length;
   const n2 = n + (Q.busy ? 1 : 0);
   l.textContent = !navigator.onLine && REC.on ? "Recording offline. The audio is saved on this device and is transcribed when you are back online."
-    : REC.on ? "Recording. New text appears about every " + PART_SEC + " seconds." + (n > 1 ? " " + n + " parts in line." : "")
+    : REC.on ? "Recording. New text appears about every " + partSec() + " seconds." + (n > 1 ? " " + n + " parts in line." : "")
     : n2 ? "Transcribing the last " + (n2 === 1 ? "part" : n2 + " parts") + "…"
     : idleLine();
 }
@@ -2228,7 +2367,7 @@ window.addEventListener("blur", closeMenu); window.addEventListener("resize", cl
 async function patchLec(id, body){ try { const out = await api("PATCH", "/api/lectures/" + id, body); adopt(out, true); if (S.cur && S.cur.id === id) render(); else renderList(); return out; } catch (e){ fail(e); } }
 async function binLec(id){ try { if (REC.on && REC.lecId === id) stopRec(); const l = getLec(id); await api("DELETE", "/api/lectures/" + id); adopt(l, true); if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } render(); toast("“" + l.title + "” moved to the recycle bin.", async () => { await api("PATCH", "/api/lectures/" + id, { restore: true }); S.list = await api("GET", "/api/lectures"); render(); }); } catch (e){ fail(e); } }
 function lecMenu(l, x, y){
-  if (l.deletedAt) return openMenu(x, y, [["Restore", () => patchLec(l.id, { restore: true })], ["Delete forever", async () => { if (!confirm("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + l.id + "?forever=1"); S.list = S.list.filter(x2 => x2.id !== l.id); if (S.cur && S.cur.id === l.id) S.cur = null; render(); } catch (e){ fail(e); } }, true]]);
+  if (l.deletedAt) return openMenu(x, y, [["Restore", () => patchLec(l.id, { restore: true })], ["Delete forever", async () => { if (!okAsk("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + l.id + "?forever=1"); S.list = S.list.filter(x2 => x2.id !== l.id); if (S.cur && S.cur.id === l.id) S.cur = null; render(); } catch (e){ fail(e); } }, true]]);
   const others = folders().filter(f => f !== l.folder).slice(0, 8);
   openMenu(x, y, [
     ["Open", () => openLecture(l.id).then(closeDrawers).catch(fail)],
@@ -2677,7 +2816,7 @@ function renderMain(){
   };
   if (lec.deletedAt) main.append(h("div", { class: "failed row" }, h("span", null, "This is in the recycle bin. It will be removed for good " + Math.max(1, 30 - Math.floor((Date.now() - lec.deletedAt) / 864e5)) + " days from now."),
     h("span", { class: "row" }, h("button", { class: "btn quiet", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { restore: true }); S.view = "main"; adopt(out); } catch (e){ fail(e); } } }, "Restore"),
-      h("button", { class: "btn quiet", onclick: async () => { if (!confirm("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + lec.id + "?forever=1"); S.list = S.list.filter(l => l.id !== lec.id); S.cur = null; render(); } catch (e){ fail(e); } } }, "Delete forever"))));
+      h("button", { class: "btn quiet", onclick: async () => { if (!okAsk("Delete this for good? This cannot be undone.")) return; try { await api("DELETE", "/api/lectures/" + lec.id + "?forever=1"); S.list = S.list.filter(l => l.id !== lec.id); S.cur = null; render(); } catch (e){ fail(e); } } }, "Delete forever"))));
 
   const here = folderOf(lec);
   const folderSel = h("select", { class: "folder-sel", "aria-label": "Folder", onchange: e => (e.target.value === "\u0000new" ? newFolder(lec.id) : moveTo(lec.id, e.target.value)) },
@@ -2691,7 +2830,7 @@ function renderMain(){
       info.parts || (DB.sync.on && info.away) ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(true); } }, "Download as MP3 (plays everywhere)") : null,
       hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio(false); } }, "Download the original recording") : null,
       hasAudio ? h("button", { onclick: () => { audioMenu.open = false; downloadAudio("pack"); } }, "Save lecture with audio, to move it (.bizofy)") : null,
-      hasAudio ? h("button", { onclick: async () => { audioMenu.open = false; if (!confirm("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text") : null));
+      hasAudio ? h("button", { onclick: async () => { audioMenu.open = false; if (!okAsk("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text") : null));
   main.append(h("div", { class: "head" },
     isNote ? null : h("div", { class: "row course-row" },
       h("input", { class: "course-in", value: lec.course, placeholder: "Course code or name", "aria-label": "Course", list: "courses", onchange: patch("course") }),
@@ -2820,8 +2959,10 @@ function homeView(){
     S.info ? h("p", { class: "notice info", role: "status" }, S.info) : null,
     h("div", { class: "row" }, h("button", { class: "btn solid rec-now", onclick: async () => { try { await newLecture(); startRec(); } catch (e){ fail(e); } } }, h("i"), "Record now"), h("button", { class: "btn", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
       last ? h("button", { class: "btn", onclick: () => openLecture(last.id).catch(fail) }, "Continue “" + (last.title.length > 34 ? last.title.slice(0, 32) + "…" : last.title) + "”") : null));
-  if (live.length){
+  if (live.length && pref("gen.homeStats")){
     box.append(h("div", { class: "stats" }, stat(week.filter(l => l.kind !== "note").length, week.filter(l => l.kind !== "note").length === 1 ? "lecture this week" : "lectures this week"), stat(secs >= 3600 ? (secs / 3600).toFixed(1) + " h" : Math.round(secs / 60) + " min", "recorded this week"), stat(live.filter(l => l.hasNotes).length, "with notes"), stat(live.length, "in your library")));
+  }
+  if (live.length && pref("gen.homeTiles")){
     box.append(h("h2", null, "Recently worked on"), h("div", { class: "tiles" }, recent.map(l => h("button", { class: "tile", onclick: () => openLecture(l.id).catch(fail) },
       h("span", { class: "tile-folder" }, l.folder), h("strong", null, l.title), h("small", null, new Date(l.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short" }) + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" ? ", note" : ""))))));
   }
@@ -2831,11 +2972,17 @@ function homeView(){
 
 /* ---------- outline and automatic titles ---------- */
 async function autoOutline(id){
-  const lec = DB.lectures.get(id);
-  if (!lec || DB.settings.autoOutline === false || !S.status.ai || lec.outline || S.busy.outline || REC.on || lec.kind === "note" || metaOf(lec).words < 300) return;
-  S.busy.outline = true;
-  try { const out = await api("POST", "/api/lectures/" + id + "/outline", null, () => {}); adopt(out, !(S.cur && S.cur.id === id && S.tab === "transcript")); } catch (e){}
-  S.busy.outline = false;
+  const lec = DB.lectures.get(id), after = pref("ai.after");
+  if (!lec || !S.status.ai || REC.on || lec.kind === "note" || metaOf(lec).words < 300) return;
+  const soft = () => !(S.cur && S.cur.id === id && S.tab === "transcript");
+  if ((after.outline || after.title) && !lec.outline && !S.busy.outline){
+    S.busy.outline = true;
+    try { const out = await api("POST", "/api/lectures/" + id + "/outline", null, () => {}); if (!after.outline) out.outline = null; adopt(out, soft()); } catch (e){}
+    S.busy.outline = false;
+  }
+  for (const k of ["summary", "notes"]) if (after[k] && !lec[k] && !S.busy[k]){ S.busy[k] = true; try { adopt(await api("POST", "/api/lectures/" + id + "/" + k, null, () => {}), soft()); } catch (e){} S.busy[k] = false; }
+  const cp = courseProfile(lec.course);
+  if (cp.keepAudio === false && (lec.audio || []).every(p => p.done) && !(DB.sync.on && DB.settings.syncAudio !== false)){ await DB.dropAudio(lec); lec.audio = []; lec.sessions = []; await DB.save(lec); if (S.cur && S.cur.id === id) render(); }
 }
 function outlineBox(lec){
   const o = lec.outline;
@@ -2853,7 +3000,7 @@ function outlineBox(lec){
 const typing = () => { const a = document.activeElement; return a && (a.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
 document.addEventListener("keydown", e => {
   if (e.key === "Escape"){ closeMenu(); hideSelPop(); if (document.body.classList.contains("focus")){ document.body.classList.remove("focus"); } return; }
-  if (e.metaKey || e.ctrlKey || e.altKey || typing() || document.querySelector("dialog[open]")) return;
+  if (e.metaKey || e.ctrlKey || e.altKey || typing() || document.querySelector("dialog[open]") || pref("keys.enabled") === false) return;
   const lec = S.cur, k = e.key;
   if (k === "/"){ e.preventDefault(); if (window.innerWidth <= 760) document.body.classList.add("show-side"); $("search").focus(); }
   else if (k === "?"){ $("keys").showModal(); }
@@ -2934,9 +3081,9 @@ async function openSettings(sec){
     $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet. Paste the client ID from Google Cloud, save, then press Connect Google Drive in the sidebar.";
     $("driveOff").hidden = !DB.sync.on; $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
     $("aboutVer").textContent = "Bizofy " + VERSION + ", released " + RELEASED;
-    renderAppearance(); renderStorage();
+    renderAppearance(); renderStorage(); renderPrefs();
   } catch (e){}
-  closeDrawers(); showSec(sec || (!S.status.transcribe ? "record" : "ai")); $("settings").showModal();
+  closeDrawers(); showSec(sec || (!S.status.transcribe ? "record" : "gen")); $("settings").showModal();
 }
 $("setForm").addEventListener("submit", async ev => {
   if (ev.submitter && ev.submitter.value === "cancel") return;
@@ -2950,8 +3097,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.4.1", RELEASED = "22 September 2026";
+const VERSION = "2.5.0", RELEASED = "22 September 2026";
 const CHANGES = [
+  ["2.5.0", "22 Sep 2026", ["Settings now steer the whole app: General, Recording, Transcript, AI, Courses and Shortcuts sections", "Choose which AI does each job, how detailed the notes are, how many flashcards and quiz questions, how long Pambizo answers", "Recording quality, part length, default language, and what runs automatically after a lecture", "Transcript font, line spacing, what is shown, auto-scroll", "Per-course profiles: language, AI, notes style, folder, vocabulary, keep or discard audio", "Usage meter per AI service", "Export, import and reset settings"]],
   ["2.4.1", "22 Sep 2026", ["Settings rebuilt into sections: AI and keys, Recording, Appearance, Google Drive, Storage and backup, About", "Record now on the home screen: one tap creates the lecture and starts recording", "Undo after Delete or Archive", "Find and replace in a transcript, with the corrected term added to the course vocabulary", "Storage: see what audio is on this device, free up audio that is already in Drive, empty the recycle bin"]],
   ["2.4.0", "22 Sep 2026", ["Themes: light, dark or automatic, five colour palettes, and compact spacing", "A home screen with your week and recent work", "The library can be resized or hidden, with pins, recents, sorting, multi-select and a right-click menu", "Pambizo: formatted answers, Add to My notes, pinned answers, your own quick actions, and Explain this on any selected passage", "Lecture outlines with clickable chapters, and automatic titles", "Keyboard shortcuts (press ?), and a focus mode for reading", "Google sign-in without a pop-up for phones, a setup link for other devices, and a check on the client ID"]],
   ["2.3.0", "21 Sep 2026", ["Google Drive storage and sync: lectures, notes and audio kept in your own Drive and shared between your laptop and phone", "Audio recorded elsewhere is fetched from Drive when you play, convert or download it", "On phones, Bizofy now notices when the phone pauses a recording, restarts it when you come back, and marks the gap"]],
@@ -2993,6 +3141,79 @@ $("setupLink").addEventListener("click", async () => {
   out.hidden = false; out.value = link; out.select();
   try { if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) await navigator.share({ title: "Bizofy setup", url: link }); else { await navigator.clipboard.writeText(link); $("setupLink").textContent = "Link copied. Open it on the other device"; } } catch (e){}
 });
+
+/* ---------- the preference sections ---------- */
+const AI_CHOICES = [["default", "Same as the general choice"], ["claude", "Claude"], ["groq", "Groq"], ["custom", "Other service"]];
+function field(label, path, kind, opts, hint){
+  const v = pref(path);
+  let input;
+  if (kind === "select") input = h("select", { onchange: e => setPref(path, e.target.value === "true" ? true : e.target.value === "false" ? false : isNaN(+e.target.value) || e.target.value === "" ? e.target.value : +e.target.value) }, opts.map(([val, name]) => { const o = h("option", { value: String(val) }, name); if (String(val) === String(v)) o.selected = true; return o; }));
+  else if (kind === "check"){ input = h("input", { type: "checkbox", onchange: e => setPref(path, e.target.checked) }); input.checked = !!v; return h("label", { class: "check" }, input, label, hint ? h("span", { class: "hint" }, " " + hint) : null); }
+  else if (kind === "number") input = h("input", { type: "number", value: v, min: opts[0], max: opts[1], step: opts[2] || 1, onchange: e => setPref(path, Math.max(opts[0], Math.min(opts[1], +e.target.value || opts[0]))) });
+  else input = h("input", { type: "text", value: v || "", placeholder: opts || "", onchange: e => setPref(path, e.target.value.trim()) });
+  return h("label", null, label, input, hint ? h("span", { class: "hint" }, hint) : null);
+}
+function renderPrefs(){
+  $("genBox").replaceChildren(
+    field("When Bizofy opens", "gen.openOn", "select", [["home", "Show the home screen"], ["last", "Open the last lecture I worked on"]]),
+    field("Folder for new lectures", "gen.defaultFolder", "text", "Leave blank to use the course name"),
+    field("Course for new lectures", "gen.defaultCourse", "text", "Leave blank to type it each time"),
+    field("Ask before deleting or removing audio", "gen.confirm", "check"),
+    field("Show this week's numbers on the home screen", "gen.homeStats", "check"),
+    field("Show recent lectures on the home screen", "gen.homeTiles", "check"));
+  $("recBox").replaceChildren(
+    field("Audio quality", "rec.quality", "select", [["light", "Light, about 15 MB an hour"], ["standard", "Standard, about 22 MB an hour"], ["high", "High, about 43 MB an hour"]], "Standard is plenty for speech."),
+    field("How often new text arrives", "rec.partSec", "select", [[30, "Every 30 seconds"], [45, "Every 45 seconds"], [90, "Every 90 seconds"], [180, "Every 3 minutes, fewest requests"]]),
+    field("Language spoken in class, by default", "rec.language", "select", LANGS),
+    field("Mark as important highlights the previous", "rec.flagBack", "select", [[10, "10 seconds"], [20, "20 seconds"], [40, "40 seconds"], [60, "1 minute"]]));
+  $("txBox").replaceChildren(
+    field("Reading font", "tx.font", "select", [["serif", "Serif (Newsreader)"], ["sans", "Sans-serif (Bricolage)"]]),
+    field("Line spacing", "tx.lineHeight", "select", [["1.5", "Tight"], ["1.68", "Normal"], ["1.9", "Loose"]]),
+    h("p", { class: "hint" }, "Text size is the A− and A+ buttons above any transcript."),
+    field("Show timestamps", "tx.showTs", "check"), field("Show chapter headings from the outline", "tx.showChapters", "check"), field("Show highlight squares", "tx.showMarks", "check"),
+    field("Follow the newest text while recording", "tx.autoScroll", "check"));
+  $("aiForBox").replaceChildren(...[["notes", "AI notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"], ["pambizo", "Pambizo"], ["outline", "Outline and title"], ["polish", "Polishing my notes"]].map(([k, name]) => field(name, "ai.for." + k, "select", AI_CHOICES)),
+    h("p", { class: "hint" }, "Put the big jobs on the best model and quick questions on the free one. A choice is only used if that service has a key."));
+  $("aiStyleBox").replaceChildren(
+    field("AI notes: detail", "ai.notes.detail", "select", [["brief", "Brief"], ["standard", "Standard"], ["thorough", "Thorough"]]),
+    field("AI notes: form", "ai.notes.form", "select", [["bullets", "Bullet points"], ["prose", "Short paragraphs"]]),
+    field("AI notes: language", "ai.notes.lang", "text", "Leave blank for the lecture's language"),
+    field("End AI notes with action points", "ai.notes.actions", "check"), field("End AI notes with questions to review", "ai.notes.review", "check"),
+    field("Flashcards per lecture", "ai.study.cards", "number", [4, 40]), field("Quiz questions per lecture", "ai.study.quiz", "number", [3, 20]),
+    field("Quiz difficulty", "ai.study.difficulty", "select", [["easy", "Easy, recall"], ["mixed", "Mixed"], ["hard", "Hard, application"]]),
+    field("Pambizo answers", "ai.pam.length", "select", [["short", "Short"], ["standard", "Standard"], ["long", "Long"]]),
+    field("Pambizo reads, by default", "ai.pam.scope", "select", [["lecture", "This lecture"], ["course", "The whole course"]]));
+  $("afterBox").replaceChildren(field("Give it a title", "ai.after.title", "check"), field("Make an outline", "ai.after.outline", "check"), field("Write the summary", "ai.after.summary", "check"), field("Write the AI notes", "ai.after.notes", "check"),
+    h("p", { class: "hint" }, "Each of these uses the AI once per lecture. On a paid key, keep only what you always want."));
+  $("usageBox").replaceChildren(usageView());
+  renderCourses(); renderKeys2();
+}
+function renderCourses(){
+  const box = $("coursesBox"), byKey = new Map();
+  [...S.list.map(l => l.course), ...Object.keys(DB.settings.courses || {})].filter(Boolean).forEach(c => { const k = courseKey(c); if (!byKey.has(k) || c !== k) byKey.set(k, c); });
+  const cs = [...byKey.values()].sort();
+  if (!cs.length) return void box.replaceChildren(h("p", { class: "hint" }, "Give a lecture a course name and it will appear here."));
+  box.replaceChildren(...cs.map(c => {
+    const cp = courseProfile(c), sel = (label, key, opts, sub) => h("label", null, label, h("select", { onchange: e => setCourseProfile(c, sub ? { notes: { ...(cp.notes || {}), [key]: e.target.value } } : { [key]: e.target.value === "true" ? true : e.target.value === "false" ? false : e.target.value }).then(renderCourses) },
+      opts.map(([v, n]) => { const o = h("option", { value: String(v) }, n); const cur = sub ? (cp.notes || {})[key] : cp[key]; if (String(cur == null ? "" : cur) === String(v)) o.selected = true; return o; })));
+    return h("details", { class: "sub", open: cs.length === 1 }, h("summary", null, c),
+      sel("Language spoken", "language", [["", "Same as general"], ...LANGS.filter(l => l[0] !== "auto"), ["auto", "Detect"]]),
+      sel("AI for this course", "ai", [["", "Same as general"], ["claude", "Claude"], ["groq", "Groq"], ["custom", "Other service"]]),
+      sel("AI notes detail", "detail", [["", "Same as general"], ["brief", "Brief"], ["standard", "Standard"], ["thorough", "Thorough"]], true),
+      h("label", null, "Folder", h("input", { type: "text", value: cp.folder || "", placeholder: "Same as the course name", onchange: e => setCourseProfile(c, { folder: e.target.value.trim() }) })),
+      sel("Keep the audio after transcription", "keepAudio", [["", "Yes"], ["false", "No, delete it to save space (kept if Drive sync saves audio)"]]),
+      h("label", null, "Vocabulary the transcriber should know", h("textarea", { rows: 3, placeholder: "ICER, QALY, Drummond", onchange: e => setVocab(c, e.target.value) }, getVocab(c))));
+  }));
+}
+const KEY_LIST = [["/", "Search every transcript"], ["R", "Start recording"], ["M", "Mark as important, while recording"], ["N", "Type a quick note"], ["Space", "Play or pause"], ["J and L", "Back or forward 10 seconds"], ["F", "Focus mode, Esc to leave"], ["[ and ]", "Hide or show the library and Pambizo"], ["?", "This list"]];
+function renderKeys2(){
+  $("keysBox").replaceChildren(field("Single-key shortcuts are on", "keys.enabled", "check", null, "Turn off if they get in the way. Cmd and Ctrl shortcuts in the notes editor always work."),
+    h("dl", { class: "keys" }, KEY_LIST.flatMap(([k, d]) => [h("dt", null, k), h("dd", null, d)])));
+}
+$("expSettings").addEventListener("click", () => saveFile("bizofy-settings-" + new Date().toISOString().slice(0, 10) + ".json", settingsFile($("expKeys").checked), "application/json"));
+$("impSettings").addEventListener("click", () => $("impIn").click());
+$("impIn").addEventListener("change", async ev => { const f = ev.target.files[0]; ev.target.value = ""; if (!f) return; try { const n = await importSettings(await f.text()); S.status = await api("GET", "/api/status"); renderPrefs(); renderAppearance(); render(); toast("Imported " + n + " settings."); } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; } });
+$("resetSettings").addEventListener("click", async () => { if (!confirm("Reset all preferences to their defaults? Keys, lectures and the Drive connection stay.")) return; await resetSettings(); renderPrefs(); renderAppearance(); render(); toast("Settings reset."); });
 $("backupBtn").addEventListener("click", () => {
   saveFile("bizofy-backup-" + new Date().toISOString().slice(0, 10) + ".json", JSON.stringify({ app: "margin-ai-notes", version: 1, madeWith: VERSION, lectures: [...DB.lectures.values()].map(l => ({ ...l, audio: [], sessions: [] })) }), "application/json");
 });
@@ -3065,6 +3286,7 @@ async function init(){
   try {
     S.status = await api("GET", "/api/status");
     S.list = await api("GET", "/api/lectures");
+    if (pref("gen.openOn") === "last" && !S.cur && !S.info && !S.err){ const last = (DB.settings.recent || []).map(id => DB.lectures.get(id)).filter(l => l && !l.deletedAt)[0]; if (last) S.cur = last; }
     render();
     if (!S.status.transcribe && !S.status.ai && !S.list.length && !S.info) openSettings();
   } catch (e){ fail(e); }
@@ -3073,7 +3295,7 @@ async function init(){
   try { await DB.init(); } catch (e){ S.err = e.message; return render(); }
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(x => { const n = $("usage"); if (n && x.usage != null) n.textContent = "Bizofy is using " + (x.usage / 1048576).toFixed(0) + " MB on this device."; }).catch(() => {});
   S.read = DB.settings.readSize || 17; document.documentElement.style.setProperty("--read-size", S.read + "px");
-  applyTheme(); hookGrips(); renderVersion(); checkUpdate();
+  applyTheme(); applyPrefs(); hookGrips(); S.scope = pref("ai.pam.scope") || "lecture"; renderVersion(); checkUpdate();
   const link = readStartLink();
   if (link.setup && CLIENT_RE.test(link.setup)){ DB.settings.googleClientId = link.setup; await DB.saveSettings(); S.info = "Google Drive is set up on this device. Press Connect Google Drive in the sidebar."; }
   if (link.signError) S.err = link.signError;

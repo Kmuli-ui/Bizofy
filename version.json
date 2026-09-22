@@ -1,5 +1,5 @@
 {
-  "version": "2.4.1",
+  "version": "2.5.0",
   "url": "./",
-  "notes": "Settings rebuilt into sections; Record now, undo, find and replace, storage tools."
+  "notes": "Settings now control the whole app: AI per task, notes style, recording, transcript, course profiles, usage, export and import."
 }
