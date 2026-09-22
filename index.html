@@ -458,7 +458,7 @@ dialog.settings form{display:flex;flex-direction:column;width:100%;min-height:0}
 .set-foot{display:flex;justify-content:flex-end;gap:10px;padding:12px 22px;border-top:1px solid var(--rule);background:var(--sheet)}
 dialog.settings #setErr{margin:0 22px}
 @media (max-width:640px){
-  dialog.settings{width:100vw;height:100dvh;max-height:none;border-radius:0}
+  dialog.settings{width:100vw;max-width:100vw;height:100dvh;max-height:none;border-radius:0;margin:0}
   .set-body{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}
   .set-nav{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--rule);padding:8px 10px}
   .set-nav button{white-space:nowrap;padding:7px 11px}
@@ -486,6 +486,37 @@ body.hide-marks .seg .mk{visibility:hidden}
 .usage th,.usage td{text-align:left;padding:5px 8px 5px 0;border-bottom:1px solid var(--rule)}
 .usage th{color:var(--slate);font-weight:600}
 .set-sec textarea{margin-top:5px;font-size:var(--t-1)}
+
+/* 2.5.1: the transcript scrolls inside its own window */
+.seg-wrap{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 22px;gap:10px}
+.seg-scroll{overflow:auto;overscroll-behavior:contain;padding-right:6px;scroll-behavior:auto;outline:none}
+.seg-scroll:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.spacer{width:100%}
+.scrub{position:relative;background:var(--paper);border-radius:11px;cursor:pointer;user-select:none;min-height:200px}
+.scrub i{position:absolute;left:4px;right:4px;display:block;pointer-events:none}
+.sc-hi{height:3px;background:var(--hi);border-radius:1px}
+.sc-mark{height:2px;left:8px!important;right:8px!important;background:var(--slate);opacity:.6}
+.sc-chap{position:absolute;left:24px;transform:translateY(-50%);font-size:10px;color:var(--slate);white-space:nowrap;pointer-events:none;background:var(--sheet);padding:0 4px;border-radius:3px;max-width:150px;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .15s}
+.scrub:hover .sc-chap,.scrub:focus .sc-chap{opacity:1}
+.sc-view{left:2px;right:2px;background:var(--ink);opacity:.22;border-radius:6px;min-height:8px}
+.sc-now{left:1px;right:1px;height:6px;border-radius:3px;background:var(--rec)}
+.jumps{position:absolute;left:4px;bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:2}
+.jumps button{width:38px;height:34px;border:1.5px solid var(--rule);background:var(--sheet);border-radius:8px;font-size:var(--t-1);color:var(--slate);box-shadow:0 4px 14px rgba(10,20,40,.12)}
+.jumps button:hover{color:var(--ink);border-color:var(--ink)}
+.jumps button.now{width:auto;padding:0 8px;font-weight:700;color:var(--on-hi);background:var(--hi);border-color:var(--hi)}
+.chip-row{position:absolute;left:50%;top:10px;transform:translateX(-50%);display:flex;gap:6px;z-index:2}
+.chip-jump{border:0;background:var(--ink);color:var(--paper);border-radius:999px;padding:6px 14px;font-size:var(--t-2);font-weight:600;box-shadow:0 6px 18px rgba(10,20,40,.25)}
+.add-menu .menu-list{padding:12px;min-width:340px;max-width:420px}
+.add-menu .drop{margin:0}
+.add-menu .add{margin-top:10px}
+.add-menu .drop.slim{flex-direction:column;text-align:center;padding:16px}
+@media (max-width:760px){
+  .seg-wrap{grid-template-columns:minmax(0,1fr) 16px;gap:6px}
+  .jumps{left:0;bottom:8px}
+  .jumps button{width:34px;height:32px}
+  .add-menu .menu-list{min-width:280px;max-width:88vw}
+}
+body.focus .seg-scroll{height:calc(100dvh - 40px)!important}
 </style>
 </head>
 <body>
@@ -2136,10 +2167,9 @@ P.a.addEventListener("timeupdate", () => {
   const t = playAbs(), seek = $("seek"), c = $("clock");
   if (seek && !seek._drag) seek.value = t;
   if (c && !REC.on) c.replaceChildren(fmt(t), h("small", null, " / " + fmt(S.cur.duration)));
-  let now = null;
-  document.querySelectorAll(".seg").forEach(n => { if (n._seg.t != null && n._seg.t <= t + 0.3) now = n; n.classList.remove("now"); });
-  if (now) now.classList.add("now");
+  if (S.tab === "transcript" && V.box) markNow(t);
 });
+P.a.addEventListener("play", () => { V.follow = true; hideFollowChip(); });
 P.a.addEventListener("ended", () => {
   const parts = partsOf(S.cur || {}), i = parts.findIndex(x => x.n === P.n);
   if (i >= 0 && parts[i + 1]) playFrom(parts[i + 1].offset); else syncPlayBtn();
@@ -2483,7 +2513,7 @@ function segNode(lec, seg){
     tx,
     h("button", { class: "mk", "aria-pressed": seg.flag ? "true" : "false", "aria-label": "Highlight as important", title: "Highlight as important", onclick: ev => {
       seg.flag = !seg.flag; row.classList.toggle("on", seg.flag); ev.currentTarget.setAttribute("aria-pressed", seg.flag ? "true" : "false");
-      api("PATCH", "/api/lectures/" + lec.id + "/segments/" + seg.id, { flag: seg.flag }).catch(fail);
+      api("PATCH", "/api/lectures/" + lec.id + "/segments/" + seg.id, { flag: seg.flag }).catch(fail); refreshScrub();
     } }));
   row._seg = seg;
   return row;
@@ -2503,17 +2533,6 @@ function markNode(lec, m){
   row._mark = m;
   return row;
 }
-function fillSegs(box, lec){
-  box.replaceChildren();
-  const rows = [...lec.segments.map(s => ({ t: s.t, s })), ...(lec.marks || []).map(m => ({ t: m.t, m }))];
-  if (lec.outline) lec.outline.chapters.forEach(c => rows.push({ t: c.t, c }));
-  rows.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t) || (a.c ? -1 : b.c ? 1 : a.m ? 1 : -1));
-  rows.forEach(r => box.append(r.c ? h("div", { class: "chap" }, h("span", { class: "ts" }, fmt(r.c.t)), h("h3", null, r.c.title)) : r.s ? segNode(lec, r.s) : markNode(lec, r.m)));
-  const waiting = (lec.audio || []).filter(a => !a.done && a.error);
-  if (waiting.length) box.append(h("div", { class: "failed row" },
-    h("span", null, (waiting.length === 1 ? "1 part of the recording is" : waiting.length + " parts of the recording are") + " saved on this device but not transcribed yet. " + waiting[waiting.length - 1].error),
-    h("button", { class: "btn quiet", disabled: S.busy.retry, onclick: retryWaiting }, S.busy.retry ? "Transcribing…" : "Transcribe now")));
-}
 // Called when new text arrives while you may be typing: only touch the transcript and the numbers.
 let softPending = false;
 function softRefresh(){
@@ -2522,22 +2541,13 @@ function softRefresh(){
   renderList();
   const box = $("segs"), lec = S.cur;
   if (box && lec){
-    const atEnd = window.innerHeight + window.scrollY > document.body.scrollHeight - 200;
-    fillSegs(box, lec);
-    const dz = $("drop"); if (dz && (lec.segments.length || (lec.marks || []).length) && !S.busy.upload) dz.classList.add("slim");
-    if (REC.on && atEnd && box.lastChild) box.lastChild.scrollIntoView({ block: "nearest" });
+    const atEnd = pref("tx.autoScroll") && box.scrollTop + box.clientHeight > box.scrollHeight - 220;
+    fillSegs(box, lec, true);
+    if (REC.on && atEnd){ V.start = Math.max(0, V.rows.length - WINDOW); V.end = V.rows.length; drawWindow(); box.scrollTop = box.scrollHeight; }
+    const sc = $("scrub"); if (sc) sc.replaceWith(scrubberNode(lec));
   }
   const w = $("metaLine"); if (w && lec) w.replaceChildren(...metaBits(lec).filter(Boolean));
   if (lec && hasContent(lec) && $("pam").querySelector(".pam-empty") && document.activeElement !== $("pamIn")) renderPam();
-}
-function jumpSeg(test){
-  let hit = null; document.querySelectorAll(".seg, .mark-row").forEach(n => { if (!hit && test(n)) hit = n; });
-  if (hit){ hit.classList.add("jump"); hit.scrollIntoView({ block: "center" }); setTimeout(() => hit.classList.remove("jump"), 2500); }
-}
-function jumpTo(secs){
-  S.tab = "transcript"; render(); closeDrawers();
-  let best = null; document.querySelectorAll(".seg").forEach(n => { if (n._seg.t != null && n._seg.t <= secs + 2) best = n; });
-  if (best){ jumpSeg(n => n === best); if (S.cur.audio && S.cur.audio.length) playFrom(best._seg.t); }
 }
 const metaBits = lec => [h("span", null, new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })),
   h("span", null, metaOf(lec).words.toLocaleString() + " words"), lec.duration ? h("span", null, fmt(lec.duration) + " recorded") : null];
@@ -2554,23 +2564,47 @@ function dropZone(lec, slim){
       h("button", { class: slim ? "btn quiet" : "btn", disabled: REC.on, onclick: () => input.click() }, "Choose files")]);
 }
 function transcriptPanel(lec){
-  const segs = h("div", { id: "segs" }); fillSegs(segs, lec);
+  const segs = h("div", { id: "segs", class: "seg-scroll", tabindex: "0", "aria-label": "Transcript" }); fillSegs(segs, lec);
+  segs.addEventListener("scroll", onSegScroll, { passive: true });
   const has = lec.segments.length || (lec.marks || []).length;
   const hits = S.hl ? lec.segments.concat(lec.marks || []).reduce((n, s) => n + (s.text.toLowerCase().split(S.hl.toLowerCase()).length - 1), 0) : 0;
   const ta = h("textarea", { placeholder: "Or paste lecture text here. Lines that start with a time like 12:30 keep their timestamp.", "aria-label": "Transcript text to add", value: S.paste, oninput: e => (S.paste = e.target.value) });
-  const size = d => { S.read = Math.max(14, Math.min(24, S.read + d)); document.documentElement.style.setProperty("--read-size", S.read + "px"); DB.settings.readSize = S.read; DB.saveSettings().catch(() => {}); };
-  return h("div", null,
+  const size = d => { S.read = Math.max(14, Math.min(24, S.read + d)); document.documentElement.style.setProperty("--read-size", S.read + "px"); DB.settings.readSize = S.read; DB.saveSettings().catch(() => {}); measure(); };
+  const flags = () => V.rows.map((r, i) => (r.s && r.s.flag ? i : -1)).filter(i => i >= 0);
+  const nextFlag = dir => { const cur = firstVisibleIndex(), list = flags(); const i = dir > 0 ? list.find(x => x > cur + 1) : [...list].reverse().find(x => x < cur); if (i != null) revealIndex(i, { block: "start", flash: true }); else toast(list.length ? "No more highlights in that direction." : "No highlights yet. Click the square beside a paragraph to add one."); };
+  const jumpNow = () => { if (REC.on){ V.start = Math.max(0, V.rows.length - WINDOW); V.end = V.rows.length; drawWindow(); segs.scrollTop = segs.scrollHeight; } else if (P.lecId === lec.id && P.n != null){ V.follow = true; hideFollowChip(); revealIndex(rowIndexAt(playAbs()), { flash: true }); } else revealIndex(V.rows.length - 1, { block: "start" }); };
+  const wrap = h("div", { class: "seg-wrap" }, segs, has ? scrubberNode(lec) : null,
+    has ? h("div", { class: "jumps", role: "toolbar", "aria-label": "Move through the transcript" },
+      h("button", { title: "Top", "aria-label": "Go to the top", onclick: () => revealIndex(0, { block: "start" }) }, "⤒"),
+      h("button", { title: "Previous highlight", "aria-label": "Previous highlight", onclick: () => nextFlag(-1) }, "▲"),
+      h("button", { title: "Next highlight", "aria-label": "Next highlight", onclick: () => nextFlag(1) }, "▼"),
+      h("button", { class: "now", title: REC.on ? "Newest text" : "Where playback is", onclick: jumpNow }, REC.on ? "Newest" : "Now")) : null,
+    h("div", { class: "chip-row", id: "chips" }));
+  const pos = (DB.settings.pos || {})[lec.id];
+  const addMenu = h("details", { class: "menu add-menu" }, h("summary", { class: "btn quiet" }, has ? "Add to this lecture" : "Add a recording or transcript"),
+    h("div", { class: "menu-list wide" }, dropZone(lec, !!has), h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => { addMenu.open = false; addText(ta.value); } }, "Add this text")))));
+  const panel = h("div", null,
     h("div", { class: "toolbar" },
       S.hl ? h("span", { class: "row" }, h("span", null, hits + (hits === 1 ? " match for “" : " matches for “") + S.hl + "”"), h("button", { class: "btn quiet", onclick: () => { S.hl = ""; render(); } }, "Clear highlighting"))
-        : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording below."),
-      h("span", { class: "sizer" }, has ? h("button", { class: "btn quiet", title: "Fix a word the transcriber keeps getting wrong, everywhere in this lecture", onclick: openReplace }, "Replace") : null, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"))),
+        : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording."),
+      h("span", { class: "sizer" }, has ? h("button", { class: "btn quiet", title: "Fix a word the transcriber keeps getting wrong, everywhere in this lecture", onclick: openReplace }, "Replace") : null, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"), has || REC.on || S.busy.upload ? addMenu : null)),
     outlineBox(lec),
-    segs,
-    dropZone(lec, !!has),
-    h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta,
-      h("div", { class: "row" }, h("button", { class: "btn", onclick: () => addText(ta.value) }, "Add this text"))));
+    has || REC.on ? wrap : h("div", null, dropZone(lec, false), h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => addText(ta.value) }, "Add this text")))));
+  requestAnimationFrame(() => {
+    sizeSegs(); measure();
+    if (has && pos && pos.i > 3 && !S.hl && !REC.on && Date.now() - (pos.at || 0) < 90 * 864e5) showChip("Continue from " + (pos.t != null ? fmt(pos.t) : "where you left off"), () => revealIndex(Math.min(pos.i, V.rows.length - 1), { block: "start" }), "pos");
+    else if (REC.on) jumpNow();
+  });
+  return panel;
 }
-
+function showChip(text, onClick, kind){
+  const row = $("chips"); if (!row) return; hideChip(kind);
+  const chip = h("button", { class: "chip-jump", "data-kind": kind, onclick: () => { hideChip(kind); onClick(); } }, text);
+  row.append(chip); if (kind === "pos") setTimeout(() => hideChip("pos"), 12000);
+}
+function hideChip(kind){ const row = $("chips"); if (row) row.querySelectorAll('[data-kind="' + kind + '"]').forEach(n => n.remove()); }
+function showFollowChip(){ showChip("Return to playback", () => { V.follow = true; revealIndex(rowIndexAt(playAbs()), { flash: true }); }, "follow"); }
+function hideFollowChip(){ hideChip("follow"); }
 function aiGate(lec, kind, first, again, has){
   const wrap = h("div", { class: "row gate" });
   if (!lec.segments.length) return wrap.append(h("p", { class: "hint" }, "Add a transcript first. Then come back here.")), wrap;
@@ -2905,6 +2939,134 @@ $("vocabForm").addEventListener("submit", async ev => {
 });
 
 
+/* ---------- the transcript as a window: only what is on screen is drawn, the page never grows ---------- */
+const V = { rows: [], start: 0, end: 0, avg: 64, box: null, lec: null, follow: true, savePos: null, chip: null };
+const WINDOW = 90, EDGE = 25;
+function buildRows(lec){
+  const rows = [...lec.segments.map(s => ({ t: s.t, s })), ...(lec.marks || []).map(m => ({ t: m.t, m }))];
+  if (lec.outline && pref("tx.showChapters")) lec.outline.chapters.forEach(c => rows.push({ t: c.t, c }));
+  rows.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t) || (a.c ? -1 : b.c ? 1 : a.m ? 1 : -1));
+  return rows;
+}
+const rowNode = (lec, r) => (r.c ? h("div", { class: "chap" }, h("span", { class: "ts" }, fmt(r.c.t)), h("h3", null, r.c.title)) : r.s ? segNode(lec, r.s) : markNode(lec, r.m));
+function fillSegs(box, lec, keep){
+  V.box = box; V.lec = lec; V.rows = buildRows(lec);
+  if (!keep){ V.start = 0; V.end = Math.min(V.rows.length, WINDOW); }
+  else { V.start = Math.min(V.start, Math.max(0, V.rows.length - 1)); V.end = Math.min(V.rows.length, Math.max(V.end, V.start + 1)); }
+  drawWindow();
+  const waiting = (lec.audio || []).filter(a => !a.done && a.error);
+  const old = box.querySelector(".failed"); if (old) old.remove();
+  if (waiting.length) box.append(h("div", { class: "failed row" },
+    h("span", null, (waiting.length === 1 ? "1 part of the recording is" : waiting.length + " parts of the recording are") + " saved on this device but not transcribed yet. " + waiting[waiting.length - 1].error),
+    h("button", { class: "btn quiet", disabled: S.busy.retry, onclick: retryWaiting }, S.busy.retry ? "Transcribing…" : "Transcribe now")));
+}
+const drawn = () => [...V.box.children].filter(k => !k.classList.contains("spacer") && !k.classList.contains("failed"));
+// remember which drawn row is at the top of the view, so a redraw does not move the text under the reader
+function anchorNow(){
+  const box = V.box, b = box.getBoundingClientRect(), kids = drawn();
+  for (let k = 0; k < kids.length; k++){ const r = kids[k].getBoundingClientRect(); if (r.bottom > b.top + 1) return { i: V.start + k, off: r.top - b.top }; }
+  return null;
+}
+function drawWindow(anchor){
+  const box = V.box, lec = V.lec; if (!box) return;
+  const top = box.scrollTop, a = anchor === undefined ? anchorNow() : anchor;
+  box.replaceChildren(h("div", { class: "spacer", id: "spTop", style: "height:" + Math.round(V.start * V.avg) + "px" }),
+    ...V.rows.slice(V.start, V.end).map(r => rowNode(lec, r)),
+    h("div", { class: "spacer", id: "spBot", style: "height:" + Math.round((V.rows.length - V.end) * V.avg) + "px" }));
+  if (!V.rows.length) box.append(h("p", { class: "hint", style: "padding:8px 0" }, REC.on ? "Listening. The first lines appear in under a minute." : "Nothing here yet. Press record, or add a recording below."));
+  box.scrollTop = top;
+  measure();
+  if (a && a.i >= V.start && a.i < V.end){ const el = drawn()[a.i - V.start]; if (el){ const r = el.getBoundingClientRect(), b = box.getBoundingClientRect(); box.scrollTop += r.top - b.top - a.off; } }
+  updateScrubber();
+}
+function measure(){
+  const n = V.end - V.start; if (n < 5) return;
+  const first = V.box.querySelector(".spacer + *"), last = $("spBot") && $("spBot").previousElementSibling;
+  if (first && last && last !== first){ const hgt = last.getBoundingClientRect().bottom - first.getBoundingClientRect().top; if (hgt > 0) V.avg = Math.max(28, hgt / n); }
+  const st = $("spTop"), sb = $("spBot"); if (st) st.style.height = Math.round(V.start * V.avg) + "px"; if (sb) sb.style.height = Math.round((V.rows.length - V.end) * V.avg) + "px";
+}
+// called on scroll: shift the drawn window so there is always drawn text above and below the view
+function onSegScroll(){
+  const box = V.box; if (!box || !V.rows.length) return;
+  const top = box.scrollTop, bottom = top + box.clientHeight;
+  const firstVisible = Math.floor(top / V.avg), lastVisible = Math.ceil(bottom / V.avg);
+  let start = V.start, end = V.end;
+  if (firstVisible < V.start + EDGE && V.start > 0) start = Math.max(0, firstVisible - Math.floor(WINDOW / 2));
+  if (lastVisible > V.end - EDGE && V.end < V.rows.length) start = Math.max(0, lastVisible - Math.floor(WINDOW / 2));
+  if (start !== V.start){ V.start = start; V.end = Math.min(V.rows.length, start + WINDOW); drawWindow(); }
+  updateScrubber(); rememberPos();
+  if (!V.quiet && V.follow && P.lecId === V.lec.id && !P.a.paused && Math.abs(box.scrollTop - (V.lastTop || 0)) > 40){ V.follow = false; showFollowChip(); }
+  V.lastTop = box.scrollTop;
+}
+function rowIndexAt(secs){ let best = -1; V.rows.forEach((r, i) => { if (!r.m && r.t != null && r.t <= secs + 2) best = i; }); return best; }
+function firstVisibleIndex(){ const box = V.box; if (!box) return 0; return Math.max(0, Math.min(V.rows.length - 1, Math.floor((box.scrollTop + 8) / V.avg))); }
+function revealIndex(i, opts){
+  const box = V.box; if (!box || i < 0 || i >= V.rows.length) return null;
+  if (!box.style.height){ sizeSegs(); measure(); }
+  if (i < V.start + 3 || i >= V.end - 3){ V.start = Math.max(0, i - Math.floor(WINDOW / 2)); V.end = Math.min(V.rows.length, V.start + WINDOW); V.quiet = true; box.scrollTop = i * V.avg; drawWindow(null); }
+  const el = drawn()[i - V.start]; if (!el) return null;
+  const r = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+  V.quiet = true;
+  if (!(opts && opts.onlyIfHidden) || r.top < b.top + 20 || r.bottom > b.bottom - 20) box.scrollTop += r.top - b.top - (opts && opts.block === "start" ? 12 : (b.height - r.height) / 2);
+  setTimeout(() => (V.quiet = false), 120);
+  if (opts && opts.flash){ el.classList.add("jump"); setTimeout(() => el.classList.remove("jump"), 2500); }
+  return el;
+}
+function jumpSeg(test){
+  let i = -1;
+  V.rows.forEach((r, k) => { if (i < 0 && ((r.s && test({ _seg: r.s })) || (r.m && test({ _mark: r.m })))) i = k; });
+  if (i >= 0) revealIndex(i, { flash: true });
+}
+function jumpTo(secs){
+  S.tab = "transcript"; render(); closeDrawers();
+  const i = rowIndexAt(secs); if (i < 0) return;
+  revealIndex(i, { flash: true });
+  const r = V.rows[i]; if (S.cur.audio && S.cur.audio.length && r.s) playFrom(r.s.t);
+}
+function markNow(t){
+  const i = rowIndexAt(t), box = V.box; if (!box) return;
+  box.querySelectorAll(".seg.now").forEach(n => n.classList.remove("now"));
+  if (i >= 0 && V.follow) revealIndex(i, { onlyIfHidden: true });
+  const el = drawn()[i - V.start]; if (el && el.classList.contains("seg")) el.classList.add("now");
+  V.nowIndex = i; updateScrubber();
+}
+
+/* the scrubber: a map of the whole lecture beside the text */
+function scrubberNode(lec){
+  const rows = buildRows(lec), dur = Math.max(lec.duration || 0, rows.reduce((m, r) => Math.max(m, r.t || 0), 0)), N = rows.length;
+  const pos = r => (dur > 0 && r.t != null ? r.t / dur : N > 1 ? rows.indexOf(r) / (N - 1) : 0) * 100;
+  const bar = h("div", { class: "scrub", id: "scrub", role: "slider", "aria-label": "Position in the lecture", tabindex: "0" },
+    ...rows.filter(r => r.c).map(r => h("span", { class: "sc-chap", style: "top:" + pos(r) + "%", title: r.c.title }, r.c.title)),
+    ...rows.filter(r => r.s && r.s.flag).map(r => h("i", { class: "sc-hi", style: "top:" + pos(r) + "%" })),
+    ...rows.filter(r => r.m).map(r => h("i", { class: "sc-mark", style: "top:" + pos(r) + "%" })),
+    h("i", { class: "sc-view", id: "scView" }), h("i", { class: "sc-now", id: "scNow", hidden: true }));
+  const go = y => { const b = bar.getBoundingClientRect(), f = Math.max(0, Math.min(1, (y - b.top) / b.height)); let i = dur > 0 ? rowIndexAt(f * dur) : Math.round(f * (N - 1)); if (i < 0) i = 0; V.follow = false; revealIndex(i, { block: "start" }); };
+  bar.addEventListener("pointerdown", e => { e.preventDefault(); bar.setPointerCapture(e.pointerId); go(e.clientY); const mv = ev => go(ev.clientY), up = () => { bar.removeEventListener("pointermove", mv); bar.removeEventListener("pointerup", up); }; bar.addEventListener("pointermove", mv); bar.addEventListener("pointerup", up); });
+  bar.addEventListener("keydown", e => { if (e.key === "ArrowDown" || e.key === "ArrowUp"){ e.preventDefault(); revealIndex(Math.max(0, Math.min(N - 1, firstVisibleIndex() + (e.key === "ArrowDown" ? 5 : -5))), { block: "start" }); } });
+  return bar;
+}
+function updateScrubber(){
+  const v = $("scView"), box = V.box; if (!v || !box || !V.rows.length) return;
+  const N = V.rows.length, dur = Math.max(V.lec.duration || 0, V.rows.reduce((m, r) => Math.max(m, r.t || 0), 0)), f = r => (dur > 0 && r.t != null ? r.t / dur : N > 1 ? V.rows.indexOf(r) / (N - 1) : 0);
+  const a = V.rows[firstVisibleIndex()], b = V.rows[Math.max(0, Math.min(N - 1, Math.floor((box.scrollTop + box.clientHeight) / V.avg)))];
+  v.style.top = f(a) * 100 + "%"; v.style.height = Math.max(1.5, (f(b) - f(a)) * 100) + "%";
+  const n = $("scNow"); if (n){ n.hidden = !(V.nowIndex >= 0 && P.lecId === V.lec.id && !P.a.paused); if (!n.hidden) n.style.top = f(V.rows[V.nowIndex]) * 100 + "%"; }
+}
+
+/* remembered position */
+function rememberPos(){
+  clearTimeout(V.savePos);
+  V.savePos = setTimeout(() => { const lec = V.lec, r = V.rows[firstVisibleIndex()]; if (!lec || !r) return; DB.settings.pos = DB.settings.pos || {}; DB.settings.pos[lec.id] = { t: r.t, i: firstVisibleIndex(), at: Date.now() }; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); }, 800);
+}
+function sizeSegs(){
+  const box = V.box; if (!box || !box.isConnected) return;
+  const top = box.getBoundingClientRect().top + window.scrollY, avail = window.innerHeight - (box.getBoundingClientRect().top) - 28;
+  box.style.height = Math.max(Math.round(window.innerHeight * 0.55), avail) + "px";
+}
+window.addEventListener("resize", () => { sizeSegs(); measure(); updateScrubber(); });
+
+function refreshScrub(){ const sc = $("scrub"); if (sc && V.lec) sc.replaceWith(scrubberNode(V.lec)); updateScrubber(); }
+
 /* ---------- appearance: mode, palette, spacing, panel widths ---------- */
 const PALETTES = [["pambizo", "Pambizo", "#14233B", "#FFD84A"], ["savanna", "Savanna", "#3A2A1E", "#F0B03F"], ["forest", "Forest", "#10302A", "#BFE36A"], ["slate", "Slate", "#1D1D22", "#B9C7FF"], ["contrast", "High contrast", "#000000", "#FFE600"]];
 const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -2991,7 +3153,7 @@ function outlineBox(lec){
     return h("div", { class: "outline none" }, S.busy.outline ? h("span", { class: "hint", id: "aiNote", role: "status" }, S.note || "Working out the outline…")
       : h("button", { class: "btn quiet", disabled: !S.status.ai, onclick: async () => { S.busy.outline = true; S.err = ""; render(); try { const out = await api("POST", "/api/lectures/" + lec.id + "/outline", null, aiNote); S.busy.outline = false; adopt(out); } catch (e){ S.busy.outline = false; fail(e); } } }, "Make an outline of this lecture"));
   }
-  return h("details", { class: "outline", open: !DB.settings.outlineShut, ontoggle: e => { DB.settings.outlineShut = !e.target.open; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); } },
+  return h("details", { class: "outline", open: DB.settings.outlineOpen === true, ontoggle: e => { DB.settings.outlineOpen = e.target.open; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); } },
     h("summary", null, "Outline", h("span", { class: "folder-n" }, o.chapters.length + " parts")),
     h("ol", null, o.chapters.map(c => h("li", null, h("button", { class: "chap-link", onclick: () => jumpTo(c.t) }, h("span", { class: "hit-t" }, fmt(c.t)), h("strong", null, c.title), c.gist ? h("span", { class: "gist" }, c.gist) : null)))));
 }
@@ -3097,8 +3259,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.5.0", RELEASED = "22 September 2026";
+const VERSION = "2.5.1", RELEASED = "22 September 2026";
 const CHANGES = [
+  ["2.5.1", "22 Sep 2026", ["Long transcripts: the text scrolls inside its own window so the page never grows", "A scrubber beside the transcript maps chapters, highlights and your notes; click it to jump", "Top, Now and next or previous highlight buttons", "Only the paragraphs on screen are drawn, so two-hour lectures stay fast", "Playback keeps the current paragraph in view, with Return to playback if you scroll away", "Bizofy remembers where you were in each lecture"]],
   ["2.5.0", "22 Sep 2026", ["Settings now steer the whole app: General, Recording, Transcript, AI, Courses and Shortcuts sections", "Choose which AI does each job, how detailed the notes are, how many flashcards and quiz questions, how long Pambizo answers", "Recording quality, part length, default language, and what runs automatically after a lecture", "Transcript font, line spacing, what is shown, auto-scroll", "Per-course profiles: language, AI, notes style, folder, vocabulary, keep or discard audio", "Usage meter per AI service", "Export, import and reset settings"]],
   ["2.4.1", "22 Sep 2026", ["Settings rebuilt into sections: AI and keys, Recording, Appearance, Google Drive, Storage and backup, About", "Record now on the home screen: one tap creates the lecture and starts recording", "Undo after Delete or Archive", "Find and replace in a transcript, with the corrected term added to the course vocabulary", "Storage: see what audio is on this device, free up audio that is already in Drive, empty the recycle bin"]],
   ["2.4.0", "22 Sep 2026", ["Themes: light, dark or automatic, five colour palettes, and compact spacing", "A home screen with your week and recent work", "The library can be resized or hidden, with pins, recents, sorting, multi-select and a right-click menu", "Pambizo: formatted answers, Add to My notes, pinned answers, your own quick actions, and Explain this on any selected passage", "Lecture outlines with clickable chapters, and automatic titles", "Keyboard shortcuts (press ?), and a focus mode for reading", "Google sign-in without a pop-up for phones, a setup link for other devices, and a check on the client ID"]],

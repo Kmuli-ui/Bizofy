@@ -1,5 +1,5 @@
 {
-  "version": "2.5.0",
+  "version": "2.5.1",
   "url": "./",
-  "notes": "Settings now control the whole app: AI per task, notes style, recording, transcript, course profiles, usage, export and import."
+  "notes": "Long transcripts scroll inside their own window, with a scrubber, jump buttons and a remembered position."
 }
