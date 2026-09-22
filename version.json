@@ -1,5 +1,5 @@
 {
-  "version": "2.5.1",
+  "version": "2.5.2",
   "url": "./",
-  "notes": "Long transcripts scroll inside their own window, with a scrubber, jump buttons and a remembered position."
+  "notes": "New library: top strip with the Bizofy mark, fixed search and settings, folders that open one at a time, filters, and a collapsible rail."
 }

@@ -44,11 +44,21 @@ h1,h2,h3{text-wrap:balance}
 mark{background:var(--hi);color:var(--on-hi);border-radius:2px;padding:0 1px}
 
 /* layout: library | lecture || margin */
-.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr) var(--pam-w);min-height:100%}
-.side{border-right:1px solid var(--rule);padding:22px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;overflow:auto}
-.pam{border-left:4px double var(--margin);padding:22px 20px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:0;height:100vh;min-width:0;background:var(--paper)}
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr) var(--pam-w);min-height:calc(100vh - 52px);min-height:calc(100dvh - 52px)}
+.side{border-right:1px solid var(--rule);display:flex;flex-direction:column;position:sticky;top:52px;height:calc(100vh - 52px);height:calc(100dvh - 52px);overflow:hidden}
+.side-top{padding:16px 14px 8px;display:flex;flex-direction:column;gap:10px;flex:none}
+#list{flex:1;min-height:0;overflow:auto;padding:4px 14px 10px;overscroll-behavior:contain}
+.side-bottom{flex:none;padding:10px 14px 14px;border-top:1px solid var(--rule);display:flex;flex-direction:column;gap:8px;background:var(--paper)}
+.pam{border-left:4px double var(--margin);padding:22px 20px 16px;display:flex;flex-direction:column;gap:12px;position:sticky;top:52px;height:calc(100vh - 52px);height:calc(100dvh - 52px);min-width:0;background:var(--paper)}
 main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:100%;margin:0 auto}
-.topbar,.scrim{display:none}
+.scrim{display:none}
+.topbar{display:flex;align-items:center;gap:12px;height:52px;padding:0 14px;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:8;background:var(--paper)}
+.brand-mark{border:0;background:none;padding:0;font-family:var(--display);font-weight:800;font-size:var(--t2);letter-spacing:-.035em;color:inherit;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.brand-mark span{background:linear-gradient(transparent 56%,var(--hi) 56%);padding:0 .12em}
+.brand-mark em{font-style:normal;font-weight:400;color:var(--slate);font-size:var(--t-1);letter-spacing:0}
+.top-title{flex:1;min-width:0;text-align:center;font-size:var(--t-1);font-weight:600;color:var(--slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-right{display:flex;gap:8px}
+#openSide{display:none}
 
 .brand{font-weight:800;font-size:var(--t3);letter-spacing:-.035em;line-height:1}
 .brand span{background:linear-gradient(transparent 56%,var(--hi) 56%);padding:0 .14em}
@@ -289,10 +299,7 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 /* narrower screens: the margin and the library slide in */
 @media (max-width:1180px){
   .app{grid-template-columns:var(--side-w) minmax(0,1fr)}
-  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--rule);position:sticky;top:0;z-index:8;background:var(--paper)}
-  #openSide{visibility:hidden}
-  .side,.deck{top:57px}
-  .side{height:calc(100vh - 57px)}
+  .side,.deck{top:52px}
   .pam{position:fixed;top:0;right:0;bottom:0;width:min(420px,94vw);height:auto;z-index:12;transform:translateX(104%);transition:transform .2s ease;box-shadow:-18px 0 50px rgba(10,20,40,.25)}
   body.show-pam .pam{transform:none}
   .pam-close{display:inline-block}
@@ -300,8 +307,10 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 }
 @media (max-width:760px){
   .app{grid-template-columns:1fr}
-  #openSide{visibility:visible}
+  #openSide{display:inline-block}
+  .brand-mark em,.top-title{display:none}
   .side{position:fixed;top:0;left:0;bottom:0;height:auto;width:min(320px,88vw);z-index:12;background:var(--paper);transform:translateX(-104%);transition:transform .2s ease}
+  .side #hideSide{display:none}
   body.show-side .side{transform:none}
   main{padding:18px 14px 64px}
   .deck{grid-template-columns:auto 1fr;top:57px;border-radius:12px}
@@ -328,17 +337,22 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 body.resizing{cursor:col-resize;user-select:none}
 .brand-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 button.brand{border:0;background:none;padding:0;text-align:left;color:inherit;font-family:inherit}
-.peek{display:none;justify-content:space-between;margin:-10px 0 14px}
-.peek-side,.peek-pam{visibility:hidden}
+.peek{display:none;justify-content:flex-end;margin:-10px 0 14px}
+.peek-pam{visibility:hidden}
 @media (min-width:1181px){
   body.no-side .app{grid-template-columns:0 minmax(0,1fr) var(--pam-w)}
   body.no-pam .app{grid-template-columns:var(--side-w) minmax(0,1fr) 0}
   body.no-side.no-pam .app{grid-template-columns:0 minmax(0,1fr) 0}
   body.no-side .side,body.no-pam .pam{display:none}
+  body.rail-side .app{grid-template-columns:56px minmax(0,1fr) var(--pam-w)}
+  body.rail-side.no-pam .app{grid-template-columns:56px minmax(0,1fr) 0}
+  body.rail-side .side{width:56px;overflow:visible}
+  body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .resizer{display:none}
+  body.rail-side .rail{display:flex}
   body.no-side .peek,body.no-pam .peek{display:flex}
   body.no-side .peek-side,body.no-pam .peek-pam{visibility:visible}
 }
-@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.no-side .peek{display:flex} body.no-side .peek-side{visibility:visible} }
+@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.rail-side .app{grid-template-columns:56px minmax(0,1fr)} body.rail-side .side{width:56px} body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .resizer{display:none} body.rail-side .rail{display:flex} }
 .list-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mini{border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet);padding:3px 6px;font-size:var(--t-2);max-width:100%}
 .lec-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;border-radius:0 6px 6px 0}
@@ -422,7 +436,7 @@ button.brand{border:0;background:none;padding:0;text-align:left;color:inherit;fo
 .keys dd{margin:0;align-self:center}
 
 .exit-focus{display:none;position:fixed;top:12px;right:14px;z-index:30}
-body.focus .side,body.focus .pam,body.focus .deck,body.focus .note-row,body.focus .head .actions,body.focus .course-row .btn,body.focus .peek,body.focus .topbar,body.focus .drop,body.focus .add,body.focus .tabs{display:none!important}
+body.focus .side,body.focus .pam,body.focus .deck,body.focus .note-row,body.focus .head .actions,body.focus .course-row .btn,body.focus .peek,body.focus .top-right,body.focus .drop,body.focus .add,body.focus .tabs{display:none!important}
 body.focus .app{grid-template-columns:minmax(0,1fr)!important}
 body.focus .app>main{grid-column:1}
 body.focus main{max-width:780px}
@@ -517,32 +531,69 @@ body.hide-marks .seg .mk{visibility:hidden}
   .add-menu .menu-list{min-width:280px;max-width:88vw}
 }
 body.focus .seg-scroll{height:calc(100dvh - 40px)!important}
+
+/* 2.5.2: rail, folders, filters */
+.rail{display:none;flex-direction:column;align-items:center;gap:6px;padding:12px 0;height:100%}
+.rail-btn{width:40px;height:40px;border:1.5px solid var(--rule);background:var(--sheet);border-radius:10px;font-size:var(--t1);color:var(--slate);line-height:1}
+.rail-btn:hover{color:var(--ink);border-color:var(--ink)}
+.rail-gap{flex:1}
+.filters{display:flex;gap:4px;flex-wrap:wrap}
+.filters:empty{display:none}
+.fchip{border:1.5px solid var(--rule);background:transparent;border-radius:999px;padding:3px 9px;font-size:var(--t-2);font-weight:500;color:var(--slate)}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.frow{display:flex;align-items:center;gap:8px;width:100%;text-align:left;border:1.5px solid var(--rule);background:var(--sheet);border-radius:10px;padding:9px 10px;margin:4px 0}
+.frow:hover{border-color:var(--ink)}
+.frow.over{outline:2px dashed var(--ink);outline-offset:2px;background:var(--hi-soft)}
+.frow-main{flex:1;min-width:0}
+.frow strong{display:block;font-size:var(--t-1);display:flex;align-items:center;gap:6px}
+.frow small{display:block;color:var(--slate);font-size:var(--t-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow-go{color:var(--slate);font-size:var(--t1)}
+.back-row{display:flex;align-items:center;gap:10px;padding:8px 0 4px;position:sticky;top:0;background:var(--paper);z-index:1}
+.back-row strong{flex:1;font-size:var(--t-1)}
+.back{font-size:var(--t-1);text-decoration:none;font-weight:600}
+.rec-dot,.lec.recording .lec-text::before{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rec);vertical-align:middle}
+.lec.recording .lec-text::before{content:"";margin-right:6px}
+@media (prefers-reduced-motion:no-preference){.rec-dot,.lec.recording .lec-text::before{animation:blink 1.2s ease-in-out infinite}}
+body.focus .topbar{background:transparent;border-color:transparent}
+.course.folder-name{display:flex;justify-content:space-between;align-items:center;border-radius:6px;padding:12px 4px 4px}
+.course.folder-name.over{background:var(--hi-soft);outline:2px dashed var(--ink)}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <button class="btn quiet" id="openSide">Lectures</button>
-  <div class="brand small"><span>Bizofy</span></div>
-  <button class="btn quiet" id="openPam">Pambizo</button>
+  <button class="brand-mark" id="brandBtn" title="Library and home"><span>Bizofy</span><em>Ai Notes</em></button>
+  <div class="top-title" id="topTitle"></div>
+  <div class="top-right">
+    <button class="btn quiet" id="openSide">Lectures</button>
+    <button class="btn quiet" id="openPam">Pambizo</button>
+  </div>
 </header>
 <div class="app">
   <aside class="side" id="side">
     <div class="resizer right" id="sideGrip" title="Drag to resize" aria-hidden="true"></div>
-    <div class="brand-block">
-      <div class="brand-row"><button class="brand" id="homeBtn" title="Home"><span>Bizofy</span> <em>Ai Notes</em></button><button class="btn quiet" id="hideSide" title="Hide the library">Hide</button></div>
-      <div class="brand-sub">Record a class. Get the notes.</div>
+    <div class="side-top">
+      <div class="new-row"><button class="btn solid" id="newBtn">New lecture</button><button class="btn" id="newNoteBtn">New note</button></div>
+      <input class="search" id="search" type="search" placeholder="Search lectures and transcripts" aria-label="Search lectures and transcripts">
+      <div class="filters" id="filters" role="group" aria-label="Show only"></div>
+      <div class="list-tools" id="listTools" hidden></div>
     </div>
-    <div class="new-row"><button class="btn solid" id="newBtn">New lecture</button><button class="btn" id="newNoteBtn">New note</button></div>
-    <input class="search" id="search" type="search" placeholder="Search every transcript" aria-label="Search every transcript">
-    <div class="list-tools" id="listTools" hidden></div>
     <nav id="list" aria-label="Lectures and notes"></nav>
-    <div class="views" id="views"></div>
-    <div class="store">
+    <div class="side-bottom">
+      <div class="views" id="views"></div>
       <div id="syncBox" class="syncbox" hidden></div>
       <div id="update" class="keynote" hidden></div>
       <div id="keyNote" class="keynote" hidden></div>
-      <button class="btn quiet" id="settingsBtn">Settings</button>
+      <div class="row between"><button class="btn quiet" id="settingsBtn">Settings</button><button class="btn quiet" id="hideSide" title="Shrink the library to a rail">Shrink</button></div>
       <div class="ver" id="ver"></div>
+    </div>
+    <div class="rail" id="rail">
+      <button class="rail-btn" id="railOpen" title="Open the library">☰</button>
+      <button class="rail-btn" id="railNew" title="New lecture">+</button>
+      <button class="rail-btn" id="railSearch" title="Search">⌕</button>
+      <button class="rail-btn" id="railHome" title="Home">⌂</button>
+      <div class="rail-gap"></div>
+      <button class="rail-btn" id="railSettings" title="Settings">⚙</button>
+      <button class="rail-btn" id="railHide" title="Hide the library fully. Press [ to bring it back">‹</button>
     </div>
   </aside>
   <main id="main"></main>
@@ -1925,7 +1976,7 @@ function renderSync(){
     : [btn("Sync with Google Drive", true), last ? h("span", { class: "hint" }, "Last synced at " + last + ". Google asks for one tap each session.") : null]).filter(Boolean));
 }
 /* ---------- state ---------- */
-const S = { list: [], cur: null, sel: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
+const S = { list: [], cur: null, sel: null, filter: "all", folderView: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
 let askCtl = null;
 
 const folderOf = l => (l.folder ? l.folder : l.course || "Unfiled");
@@ -2411,7 +2462,7 @@ function lecButton(l){
   const picked = S.sel && S.sel.has(l.id);
   const open = () => { if (S.sel){ picked ? S.sel.delete(l.id) : S.sel.add(l.id); return renderList(); } S.hl = ""; openLecture(l.id).then(closeDrawers).catch(fail); };
   const badges = [l.pinned ? ["Pinned", "●"] : null, l.hasAudio ? ["Has audio", "♪"] : null, l.hasNotes ? ["Has notes", "✎"] : null, unsynced(l) ? ["Not yet saved to Google Drive", "↑"] : null].filter(Boolean);
-  const main = h("button", { class: "lec", "aria-current": S.cur && l.id === S.cur.id ? "true" : null, "aria-pressed": S.sel ? (picked ? "true" : "false") : null, onclick: open },
+  const main = h("button", { class: "lec" + (REC.on && REC.lecId === l.id ? " recording" : ""), "aria-current": S.cur && l.id === S.cur.id ? "true" : null, "aria-pressed": S.sel ? (picked ? "true" : "false") : null, onclick: open },
     S.sel ? h("span", { class: "tick" + (picked ? " on" : ""), "aria-hidden": "true" }) : null,
     h("span", { class: "lec-text" }, l.kind === "note" ? h("span", { class: "kind" }, "Note") : null, l.title,
       h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" || l.words ? "" : ", empty"),
@@ -2422,23 +2473,42 @@ function lecButton(l){
   row.addEventListener("dragstart", e => { e.dataTransfer.setData("text/bizofy-lecture", l.id); e.dataTransfer.effectAllowed = "move"; });
   return row;
 }
+const FILTERS = [["all", "All"], ["lecture", "Lectures"], ["note", "Notes"], ["audio", "With audio"], ["week", "This week"], ["todo", "Unfinished"]];
+const passFilter = l => { const f = S.filter || "all"; return f === "all" || (f === "lecture" && l.kind !== "note") || (f === "note" && l.kind === "note") || (f === "audio" && l.hasAudio) || (f === "week" && Date.now() - l.createdAt < 7 * 864e5) || (f === "todo" && l.kind !== "note" && l.words > 0 && !l.hasNotes); };
+const bucketOf = l => { const d = Date.now() - l.createdAt, dt = new Date(l.createdAt), now = new Date(); if (d < 7 * 864e5) return "This week"; if (dt.getMonth() === now.getMonth() && dt.getFullYear() === now.getFullYear()) return "Earlier this month"; return dt.toLocaleDateString(undefined, { month: "long", year: dt.getFullYear() === now.getFullYear() ? undefined : "numeric" }); };
+function setTopTitle(){ const t = $("topTitle"); if (t) t.textContent = S.cur ? (S.cur.course ? S.cur.course + " · " : "") + S.cur.title : ""; }
+function folderRow(name, mine){
+  const latest = mine[0], up = mine.filter(unsynced).length, rec = mine.some(l => REC.on && REC.lecId === l.id);
+  const row = h("button", { class: "frow", onclick: () => { S.folderView = name; DB.settings.lastFolder = name; renderList(); } },
+    h("span", { class: "frow-main" }, h("strong", null, name, rec ? h("i", { class: "rec-dot", title: "Recording" }) : null), h("small", null, mine.length + (mine.length === 1 ? " item" : " items") + (latest ? " · " + latest.title.slice(0, 40) : "") + (up ? " · " + up + " to sync" : ""))),
+    h("span", { class: "frow-go", "aria-hidden": "true" }, "›"));
+  row.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); row.classList.add("over"); } });
+  row.addEventListener("dragleave", () => row.classList.remove("over"));
+  row.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); row.classList.remove("over"); if (id){ e.preventDefault(); e.stopPropagation(); moveTo(id, name); } });
+  row.addEventListener("contextmenu", e => { if (name === "Unfiled") return; e.preventDefault(); openMenu(e.clientX, e.clientY, [["Open", () => { S.folderView = name; renderList(); }], ["Rename", () => renameFolder(name)], !mine.length ? ["Remove empty folder", async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== name); await DB.saveSettings(); renderList(); }, true] : null]); });
+  return row;
+}
 function renderList(){
-  const nav = $("list"); nav.replaceChildren(); closeMenu();
+  const nav = $("list"); nav.replaceChildren(); closeMenu(); setTopTitle();
   const counts = { archive: S.list.filter(l => !l.deletedAt && l.archived).length, bin: S.list.filter(l => l.deletedAt).length };
-  const go = v => () => { S.view = v; S.search = null; S.sel = null; runSearch(); renderList(); };
+  const go = v => () => { S.view = v; S.search = null; S.sel = null; S.folderView = null; runSearch(); renderList(); };
   $("views").replaceChildren(...[
     S.view !== "main" ? h("button", { class: "linkish", onclick: go("main") }, "Back to all lectures") : null,
     S.view !== "archive" && counts.archive ? h("button", { class: "linkish", onclick: go("archive") }, "Archive (" + counts.archive + ")") : null,
     S.view !== "bin" && counts.bin ? h("button", { class: "linkish", onclick: go("bin") }, "Recycle bin (" + counts.bin + ")") : null].filter(Boolean));
+  $("filters").replaceChildren(...(S.list.length > 3 && S.view === "main" ? FILTERS.map(([k, t]) => h("button", { class: "fchip", "aria-pressed": (S.filter || "all") === k ? "true" : "false", onclick: () => { S.filter = k; renderList(); } }, t)) : []));
   const sortKey = SORTS[DB.settings.sort] ? DB.settings.sort : "new";
+  const inFolder = S.view === "main" && S.folderView;
   $("listTools").hidden = !!S.search || S.list.length < 2;
-  $("listTools").replaceChildren(
-    h("select", { class: "mini", "aria-label": "Sort lectures", onchange: async e => { DB.settings.sort = e.target.value; await DB.saveSettings(); renderList(); } }, Object.keys(SORTS).map(k => { const o = h("option", { value: k }, SORTS[k][0]); if (k === sortKey) o.selected = true; return o; })),
+  $("listTools").replaceChildren(...[
+    inFolder || S.view !== "main" ? h("select", { class: "mini", "aria-label": "Sort lectures", onchange: async e => { DB.settings.sort = e.target.value; await DB.saveSettings(); renderList(); } }, Object.keys(SORTS).map(k => { const o = h("option", { value: k }, SORTS[k][0]); if (k === sortKey) o.selected = true; return o; })) : null,
     h("button", { class: "linkish", onclick: () => { S.sel = S.sel ? null : new Set(); renderList(); } }, S.sel ? "Done" : "Select"),
-    S.view === "main" && !S.sel ? h("button", { class: "linkish", onclick: () => newFolder() }, "New folder") : null);
+    S.view === "main" && !S.sel && !inFolder ? h("button", { class: "linkish", onclick: () => newFolder() }, "New folder") : null].filter(Boolean));
   if (S.search){
+    const q = (S.q || "").toLowerCase(), titles = S.list.filter(l => !l.deletedAt && (l.title.toLowerCase().includes(q) || (l.course || "").toLowerCase().includes(q) || (l.folder || "").toLowerCase().includes(q))).slice(0, 8);
+    if (titles.length){ nav.append(h("div", { class: "course" }, "Lectures and notes")); titles.forEach(l => nav.append(lecButton(l))); }
     const n = S.search.total;
-    nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " item" : " items") : "Nothing found for that search"));
+    nav.append(h("div", { class: "course" }, n ? n + (n === 1 ? " match in " : " matches in ") + S.search.groups.length + (S.search.groups.length === 1 ? " transcript" : " transcripts") : titles.length ? "No matches inside transcripts" : "Nothing found for that search"));
     S.search.groups.forEach(g => {
       const open = async sid => { try { S.hl = S.q; if (!S.cur || S.cur.id !== g.id) await openLecture(g.id); if (sid === "mynotes") S.tab = "mynotes"; else if (S.cur.kind !== "note") S.tab = "transcript"; render(); closeDrawers(); jumpSeg(n2 => (n2._seg && n2._seg.id === sid) || (n2._mark && n2._mark.id === sid)); } catch (e){ fail(e); } };
       nav.append(h("button", { class: "lec", onclick: () => open(g.hits[0] && g.hits[0].sid) }, h("span", { class: "lec-text" }, g.title, h("small", null, (g.course ? g.course + ", " : "") + g.count + (g.count === 1 ? " match" : " matches")))));
@@ -2446,7 +2516,7 @@ function renderList(){
     });
     return;
   }
-  const items = S.list.filter(inView).sort(SORTS[sortKey][1]);
+  const items = S.list.filter(inView).filter(passFilter).sort(SORTS[sortKey][1]);
   if (S.sel){
     const ids = () => [...S.sel], each = async fn => { for (const id of ids()) await fn(id); S.sel = null; S.list = await api("GET", "/api/lectures"); if (S.cur && !DB.lectures.get(S.cur.id)) S.cur = null; render(); };
     nav.append(h("div", { class: "bulk" }, h("strong", null, S.sel.size + " selected"),
@@ -2454,32 +2524,36 @@ function renderList(){
       S.view !== "bin" ? h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(id => api("PATCH", "/api/lectures/" + id, { archived: S.view !== "archive" })).catch(fail) }, S.view === "archive" ? "Unarchive" : "Archive") : h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(id => api("PATCH", "/api/lectures/" + id, { restore: true })).catch(fail) }, "Restore"),
       S.view !== "bin" ? h("button", { class: "btn quiet", disabled: !S.sel.size, onclick: () => each(async id => { if (S.cur && S.cur.id === id){ stopPlayer(); S.cur = null; } await api("DELETE", "/api/lectures/" + id); }).catch(fail) }, "Delete") : null));
   }
+  const grouped = list => { const out = new Map(); list.forEach(l => { const k = sortKey === "az" ? l.title.charAt(0).toUpperCase() : bucketOf(l); (out.get(k) || out.set(k, []).get(k)).push(l); }); return out; };
+  const listGrouped = list => { if (list.length < 8) return list.forEach(l => nav.append(lecButton(l))); grouped(list).forEach((ls, k) => { nav.append(h("div", { class: "course" }, k)); ls.forEach(l => nav.append(lecButton(l))); }); };
   if (S.view !== "main"){
     nav.append(h("div", { class: "course" }, S.view === "bin" ? "Recycle bin. Items are removed for good after 30 days." : "Archive"));
-    items.forEach(l => nav.append(lecButton(l)));
-    if (!items.length) nav.append(h("p", { class: "hint" }, "Nothing here."));
+    listGrouped(items); if (!items.length) nav.append(h("p", { class: "hint" }, "Nothing here."));
     return;
   }
-  const shut = new Set(DB.settings.shut || []);
-  const group = (key, name, mine, opt) => {
-    const box = h("details", { class: "folder" + (opt && opt.special ? " special" : ""), open: !shut.has(key) },
-      h("summary", null, h("span", { class: "folder-name" }, name), h("span", { class: "folder-n" }, mine.length), opt && opt.rename ? h("button", { class: "linkish folder-edit", title: "Rename this folder", onclick: e => { e.preventDefault(); renameFolder(name); } }, "Rename") : null),
-      mine.map(lecButton),
-      !mine.length && opt && opt.rename ? h("p", { class: "hint folder-empty" }, "Empty. Drag a lecture here, or ", h("button", { class: "linkish", onclick: async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== name); await DB.saveSettings(); renderList(); } }, "remove it"), ".") : null);
-    box.addEventListener("toggle", () => { const s2 = new Set(DB.settings.shut || []); box.open ? s2.delete(key) : s2.add(key); DB.settings.shut = [...s2]; DB.saveSettings().catch(() => {}); });
-    if (!opt || !opt.special){
-      box.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); box.classList.add("over"); } });
-      box.addEventListener("dragleave", () => box.classList.remove("over"));
-      box.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); box.classList.remove("over"); if (id){ e.preventDefault(); e.stopPropagation(); moveTo(id, name); } });
-    }
-    nav.append(box);
-  };
+  if (inFolder){
+    const mine = items.filter(l => l.folder === S.folderView);
+    nav.append(h("div", { class: "back-row" }, h("button", { class: "linkish back", onclick: () => { S.folderView = null; delete DB.settings.lastFolder; renderList(); } }, "‹ All folders"), h("strong", null, S.folderView), h("button", { class: "linkish", onclick: () => renameFolder(S.folderView) }, S.folderView === "Unfiled" ? "" : "Rename")));
+    listGrouped(mine); if (!mine.length) nav.append(h("p", { class: "hint" }, S.filter && S.filter !== "all" ? "Nothing here matches that filter." : "Empty. Move a lecture here from its Folder menu."));
+    return void scrollCurrentIntoView();
+  }
   const pinned = items.filter(l => l.pinned), recent = (DB.settings.recent || []).map(id => items.find(l => l.id === id)).filter(Boolean).slice(0, 4);
-  if (pinned.length) group("\u0001pinned", "Pinned", pinned, { special: true });
-  if (recent.length > 1 && items.length > 6 && !S.sel) group("\u0001recent", "Recent", recent, { special: true });
-  folders().forEach(f => group(f, f, items.filter(l => l.folder === f), { rename: f !== "Unfiled" }));
-  if (!items.length && !folders().length) nav.append(h("p", { class: "hint" }, "Your lectures and notes will be listed here in folders."));
+  if (pinned.length){ nav.append(h("div", { class: "course" }, "Pinned")); pinned.forEach(l => nav.append(lecButton(l))); }
+  if (recent.length && items.length > 6){ nav.append(h("div", { class: "course" }, "Recent")); recent.forEach(l => nav.append(lecButton(l))); }
+  const fs = folders();
+  if (items.length <= 6 && fs.length){   // a small library: everything in view, grouped by folder
+    fs.forEach(f => { const mine = items.filter(l => l.folder === f); if (!mine.length && f === "Unfiled") return;
+      const head = h("div", { class: "course folder-name" }, f, h("span", { class: "folder-n" }, mine.length));
+      head.addEventListener("dragover", e => { if ([...e.dataTransfer.types].includes("text/bizofy-lecture")){ e.preventDefault(); head.classList.add("over"); } });
+      head.addEventListener("dragleave", () => head.classList.remove("over"));
+      head.addEventListener("drop", e => { const id = e.dataTransfer.getData("text/bizofy-lecture"); head.classList.remove("over"); if (id){ e.preventDefault(); moveTo(id, f); } });
+      head.addEventListener("contextmenu", e => { if (f === "Unfiled") return; e.preventDefault(); openMenu(e.clientX, e.clientY, [["Rename", () => renameFolder(f)], !mine.length ? ["Remove empty folder", async () => { DB.settings.folders = (DB.settings.folders || []).filter(x => x !== f); await DB.saveSettings(); renderList(); }, true] : null]); });
+      nav.append(head); mine.forEach(l => nav.append(lecButton(l))); if (!mine.length) nav.append(h("p", { class: "hint folder-empty" }, "Empty. Drag a lecture here.")); });
+  } else if (fs.length){ nav.append(h("div", { class: "course" }, "Folders")); fs.forEach(f => nav.append(folderRow(f, items.filter(l => l.folder === f)))); }
+  if (!items.length && !fs.length) nav.append(h("p", { class: "hint" }, "Your lectures and notes will be listed here in folders."));
+  else if (!items.length) nav.append(h("p", { class: "hint" }, "Nothing matches that filter."));
 }
+function scrollCurrentIntoView(){ const el = $("list").querySelector('.lec[aria-current="true"]'); if (el) el.scrollIntoView({ block: "nearest" }); }
 function renderKeys(){
   const n = $("keyNote"), st = S.status;
   const miss = [!st.transcribe && "transcription", !st.ai && "the AI tools"].filter(Boolean);
@@ -2841,7 +2915,7 @@ const RATES = [1, 1.25, 1.5, 2];
 function renderMain(){
   const main = $("main"); main.replaceChildren();
   const lec = S.cur;
-  main.append(h("div", { class: "peek" }, h("button", { class: "btn quiet peek-side", onclick: () => togglePanel("side") }, "Show lectures"), h("button", { class: "btn quiet peek-pam", onclick: () => togglePanel("pam") }, "Show Pambizo")));
+  main.append(h("div", { class: "peek" }, h("span"), h("button", { class: "btn quiet peek-pam", onclick: () => togglePanel("pam") }, "Show Pambizo")));
   if (!lec){ main.append(homeView()); return; }
   const isNote = lec.kind === "note";
   const patch = (field, fallback) => async ev => {
@@ -2927,7 +3001,7 @@ function renderMain(){
   main.append(panel);
   if (!isNote) liveLine();
 }
-function render(){ renderList(); renderKeys(); renderMain(); renderPam(); }
+function render(){ renderList(); renderKeys(); renderMain(); renderPam(); setTopTitle(); }
 
 async function openVocab(course){
   $("vocabCourse").textContent = course; $("vocabText").value = getVocab(course); $("vocab")._course = course; $("vocab").showModal();
@@ -3077,13 +3151,17 @@ function applyTheme(){
   if (t.density === "compact") root.dataset.density = "compact"; else delete root.dataset.density;
   root.style.setProperty("--side-w", Math.max(220, Math.min(440, t.sideW || 272)) + "px");
   root.style.setProperty("--pam-w", Math.max(300, Math.min(620, t.pamW || 384)) + "px");
-  document.body.classList.toggle("no-side", !!t.hideSide); document.body.classList.toggle("no-pam", !!t.hidePam);
+  const sm = t.sideMode || (t.hideSide ? "rail" : "open");
+  document.body.classList.toggle("no-side", sm === "hidden"); document.body.classList.toggle("rail-side", sm === "rail"); document.body.classList.toggle("no-pam", !!t.hidePam);
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = getComputedStyle(root).getPropertyValue("--deck").trim() || "#14233B";
   try { localStorage.setItem("bizofy.theme", JSON.stringify({ mode: t.mode || "auto", palette: root.dataset.palette, density: t.density || "" })); } catch (e){}
 }
 darkQuery.addEventListener("change", () => applyTheme());
 async function setTheme(patch){ DB.settings.theme = { ...(DB.settings.theme || {}), ...patch }; applyTheme(); await DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); }
-function togglePanel(which){ const k = which === "pam" ? "hidePam" : "hideSide"; setTheme({ [k]: !(DB.settings.theme || {})[k] }); }
+function togglePanel(which){ if (which === "pam") return setTheme({ hidePam: !(DB.settings.theme || {}).hidePam }); const m = sideMode(); setSideMode(m === "open" ? "rail" : m === "rail" ? "hidden" : "open"); }
+const sideMode = () => (DB.settings.theme || {}).sideMode || ((DB.settings.theme || {}).hideSide ? "rail" : "open");
+function setSideMode(m){ setTheme({ sideMode: m, hideSide: m !== "open" }); if (m === "open") setTimeout(scrollCurrentIntoView, 50); }
+function goHome(){ if (REC.on) return; stopPlayer(); S.cur = null; S.err = ""; closeDrawers(); render(); }
 function hookGrips(){
   [["sideGrip", "sideW", 1], ["pamGrip", "pamW", -1]].forEach(([id, key, dir]) => {
     const g = $(id); if (!g || g._on) return; g._on = true;
@@ -3259,8 +3337,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.5.1", RELEASED = "22 September 2026";
+const VERSION = "2.5.2", RELEASED = "22 September 2026";
 const CHANGES = [
+  ["2.5.2", "22 Sep 2026", ["A top strip on every screen with the Bizofy mark, the current lecture, and the Pambizo button; the mark opens the library or goes home", "The library has three parts: search and filters stay at the top, Settings at the bottom, only the list scrolls", "Folders open one at a time, with time groups inside; pinned and recent stay on top", "Filters: lectures, notes, with audio, this week, unfinished", "Search matches titles, courses and folders as well as transcripts; arrow keys move through results", "Shrink the library to a rail of icons, or hide it fully; [ cycles through the three"]],
   ["2.5.1", "22 Sep 2026", ["Long transcripts: the text scrolls inside its own window so the page never grows", "A scrubber beside the transcript maps chapters, highlights and your notes; click it to jump", "Top, Now and next or previous highlight buttons", "Only the paragraphs on screen are drawn, so two-hour lectures stay fast", "Playback keeps the current paragraph in view, with Return to playback if you scroll away", "Bizofy remembers where you were in each lecture"]],
   ["2.5.0", "22 Sep 2026", ["Settings now steer the whole app: General, Recording, Transcript, AI, Courses and Shortcuts sections", "Choose which AI does each job, how detailed the notes are, how many flashcards and quiz questions, how long Pambizo answers", "Recording quality, part length, default language, and what runs automatically after a lecture", "Transcript font, line spacing, what is shown, auto-scroll", "Per-course profiles: language, AI, notes style, folder, vocabulary, keep or discard audio", "Usage meter per AI service", "Export, import and reset settings"]],
   ["2.4.1", "22 Sep 2026", ["Settings rebuilt into sections: AI and keys, Recording, Appearance, Google Drive, Storage and backup, About", "Record now on the home screen: one tap creates the lecture and starts recording", "Undo after Delete or Archive", "Find and replace in a transcript, with the corrected term added to the course vocabulary", "Storage: see what audio is on this device, free up audio that is already in Drive, empty the recycle bin"]],
@@ -3398,17 +3477,23 @@ $("restoreBtn").addEventListener("click", () => $("restoreIn").click());
 let searchTimer = null;
 function runSearch(){
   clearTimeout(searchTimer);
-  const q = $("search").value.trim(); S.q = q;
+  const q = $("search").value.trim(); S.q = q; if (q.length > 1 && S.folderView){ S.folderView = null; }
   if (q.length < 2){ S.search = null; if (S.hl){ S.hl = ""; return render(); } return renderList(); }
   searchTimer = setTimeout(async () => { try { S.search = await api("GET", "/api/search?q=" + encodeURIComponent(q) + "&view=" + S.view); renderList(); } catch (x){} }, 220);
 }
 $("search").addEventListener("input", runSearch);
 $("newNoteBtn").addEventListener("click", () => { closeDrawers(); newLecture({ kind: "note", title: "Untitled note" }).catch(fail); });
-$("homeBtn").addEventListener("click", () => { if (REC.on) return; stopPlayer(); S.cur = null; S.err = ""; closeDrawers(); render(); });
-$("hideSide").addEventListener("click", () => { if (window.innerWidth <= 760) closeDrawers(); else togglePanel("side"); });
+$("hideSide").addEventListener("click", () => { if (window.innerWidth <= 760) closeDrawers(); else setSideMode("rail"); });
+$("railOpen").addEventListener("click", () => setSideMode("open"));
+$("railHide").addEventListener("click", () => setSideMode("hidden"));
+$("railNew").addEventListener("click", () => newLecture().catch(fail));
+$("railSearch").addEventListener("click", () => { setSideMode("open"); setTimeout(() => $("search").focus(), 50); });
+$("railHome").addEventListener("click", goHome);
+$("railSettings").addEventListener("click", () => openSettings());
+$("brandBtn").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); return; } if (sideMode() !== "open") setSideMode("open"); else goHome(); });
 $("exitFocus").addEventListener("click", () => document.body.classList.remove("focus"));
 $("exportDlg").addEventListener("click", e => { const k = e.target && e.target.getAttribute && e.target.getAttribute("data-exp"); if (k) exportAs(k); });
-$("openSide").addEventListener("click", () => { document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); });
+$("openSide").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); } else setSideMode(sideMode() === "open" ? "rail" : "open"); });
 $("openPam").addEventListener("click", () => { document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); });
 $("scrim").addEventListener("click", closeDrawers);
 document.addEventListener("click", e => { document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
@@ -3441,6 +3526,16 @@ $("frForm").addEventListener("submit", async ev => {
   } catch (e){ $("fr").close(); fail(e); }
 });
 $("frFind").addEventListener("input", frCount);
+
+$("search").addEventListener("keydown", e => {
+  if (e.key !== "ArrowDown" && e.key !== "Enter") return;
+  const first = $("list").querySelector(".lec, .frow, .hit"); if (first){ e.preventDefault(); e.key === "Enter" ? first.click() : first.focus(); }
+});
+$("list").addEventListener("keydown", e => {
+  if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+  const all = [...$("list").querySelectorAll(".lec, .frow, .hit")], i = all.indexOf(document.activeElement); if (i < 0) return;
+  e.preventDefault(); const n = all[i + (e.key === "ArrowDown" ? 1 : -1)]; if (n) n.focus(); else if (e.key === "ArrowUp") $("search").focus();
+});
 $("newBtn").addEventListener("click", () => { closeDrawers(); newLecture().catch(fail); });
 $("settingsBtn").addEventListener("click", openSettings);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ checkRec(); if (typeof syncWake === "function") syncWake(); } if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {}); });
@@ -3458,7 +3553,7 @@ async function init(){
   try { await DB.init(); } catch (e){ S.err = e.message; return render(); }
   if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(x => { const n = $("usage"); if (n && x.usage != null) n.textContent = "Bizofy is using " + (x.usage / 1048576).toFixed(0) + " MB on this device."; }).catch(() => {});
   S.read = DB.settings.readSize || 17; document.documentElement.style.setProperty("--read-size", S.read + "px");
-  applyTheme(); applyPrefs(); hookGrips(); S.scope = pref("ai.pam.scope") || "lecture"; renderVersion(); checkUpdate();
+  applyTheme(); applyPrefs(); hookGrips(); S.scope = pref("ai.pam.scope") || "lecture"; S.folderView = DB.settings.lastFolder || null; renderVersion(); checkUpdate();
   const link = readStartLink();
   if (link.setup && CLIENT_RE.test(link.setup)){ DB.settings.googleClientId = link.setup; await DB.saveSettings(); S.info = "Google Drive is set up on this device. Press Connect Google Drive in the sidebar."; }
   if (link.signError) S.err = link.signError;
