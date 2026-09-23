@@ -56,9 +56,17 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .brand-mark{border:0;background:none;padding:0;font-family:var(--display);font-weight:800;font-size:var(--t2);letter-spacing:-.035em;color:inherit;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
 .brand-mark span{background:linear-gradient(transparent 56%,var(--hi) 56%);padding:0 .12em}
 .brand-mark em{font-style:normal;font-weight:400;color:var(--slate);font-size:var(--t-1);letter-spacing:0}
-.top-title{flex:1;min-width:0;text-align:center;font-size:var(--t-1);font-weight:600;color:var(--slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.top-right{display:flex;gap:8px}
-#openSide{display:none}
+.top-mid{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:10px}
+.top-title{min-width:0;text-align:center;font-size:var(--t-1);font-weight:600;color:var(--slate);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.panel-btn{border:0;background:none;padding:6px;border-radius:8px;color:var(--slate);display:inline-flex;line-height:0}
+.panel-btn:hover{background:var(--rule);color:var(--ink)}
+.panel-btn[aria-pressed="false"] .fill{fill:none;stroke:currentColor;stroke-width:1.6}
+.pill{display:inline-flex;align-items:center;gap:7px;border:0;border-radius:999px;padding:4px 12px;font-size:var(--t-2);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rec-pill{background:var(--rec);color:#fff}
+.rec-pill i{width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block}
+@media (prefers-reduced-motion:no-preference){.rec-pill i{animation:blink 1.2s ease-in-out infinite}}
+.play-pill{background:var(--ink);color:var(--paper)}
+.play-pill button{border:0;background:none;color:inherit;font-size:var(--t-2);padding:0;line-height:1}
 
 .brand{font-weight:800;font-size:var(--t3);letter-spacing:-.035em;line-height:1}
 .brand span{background:linear-gradient(transparent 56%,var(--hi) 56%);padding:0 .14em}
@@ -300,16 +308,15 @@ dialog textarea{margin-top:10px;font-family:var(--read);font-size:1rem}
 @media (max-width:1180px){
   .app{grid-template-columns:var(--side-w) minmax(0,1fr)}
   .side,.deck{top:52px}
-  .pam{position:fixed;top:0;right:0;bottom:0;width:min(420px,94vw);height:auto;z-index:12;transform:translateX(104%);transition:transform .2s ease;box-shadow:-18px 0 50px rgba(10,20,40,.25)}
+  .pam{position:fixed;top:52px;right:0;bottom:0;width:min(420px,94vw);height:auto;z-index:12;transform:translateX(104%);transition:transform .2s ease;box-shadow:-18px 0 50px rgba(10,20,40,.25)}
   body.show-pam .pam{transform:none}
   .pam-close{display:inline-block}
-  body.show-pam .scrim,body.show-side .scrim{display:block;position:fixed;inset:0;z-index:11;background:rgba(10,20,40,.45)}
+  body.show-pam .scrim,body.show-side .scrim{display:block;position:fixed;inset:52px 0 0 0;z-index:11;background:rgba(10,20,40,.45)}
 }
 @media (max-width:760px){
   .app{grid-template-columns:1fr}
-  #openSide{display:inline-block}
   .brand-mark em,.top-title{display:none}
-  .side{position:fixed;top:0;left:0;bottom:0;height:auto;width:min(320px,88vw);z-index:12;background:var(--paper);transform:translateX(-104%);transition:transform .2s ease}
+  .side{position:fixed;top:52px;left:0;bottom:0;height:auto;width:min(320px,88vw);z-index:12;background:var(--paper);transform:translateX(-104%);transition:transform .2s ease}
   .side #hideSide{display:none}
   body.show-side .side{transform:none}
   main{padding:18px 14px 64px}
@@ -347,12 +354,16 @@ button.brand{border:0;background:none;padding:0;text-align:left;color:inherit;fo
   body.rail-side .app{grid-template-columns:56px minmax(0,1fr) var(--pam-w)}
   body.rail-side.no-pam .app{grid-template-columns:56px minmax(0,1fr) 0}
   body.rail-side .side{width:56px;overflow:visible}
-  body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .resizer{display:none}
+  body.rail-side.peek-open .side{position:fixed;top:52px;left:0;bottom:0;width:var(--side-w);height:auto;z-index:12;background:var(--paper);box-shadow:18px 0 50px rgba(10,20,40,.22);overflow:hidden}
+  body.rail-side.peek-open .side-top,body.rail-side.peek-open #list,body.rail-side.peek-open .side-bottom{display:flex}
+  body.rail-side.peek-open #list{display:block}
+  body.rail-side.peek-open .rail{display:none}
+  body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .side .resizer{display:none}
   body.rail-side .rail{display:flex}
   body.no-side .peek,body.no-pam .peek{display:flex}
   body.no-side .peek-side,body.no-pam .peek-pam{visibility:visible}
 }
-@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.rail-side .app{grid-template-columns:56px minmax(0,1fr)} body.rail-side .side{width:56px} body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .resizer{display:none} body.rail-side .rail{display:flex} }
+@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.rail-side .app{grid-template-columns:56px minmax(0,1fr)} body.rail-side .side{width:56px} body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .side .resizer{display:none} body.rail-side .rail{display:flex} body.rail-side.peek-open .side{position:fixed;top:52px;left:0;bottom:0;width:var(--side-w);height:auto;z-index:12;background:var(--paper);box-shadow:18px 0 50px rgba(10,20,40,.22)} body.rail-side.peek-open .side-top,body.rail-side.peek-open .side-bottom{display:flex} body.rail-side.peek-open #list{display:block} body.rail-side.peek-open .rail{display:none} }
 .list-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mini{border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet);padding:3px 6px;font-size:var(--t-2);max-width:100%}
 .lec-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;border-radius:0 6px 6px 0}
@@ -557,16 +568,31 @@ body.focus .seg-scroll{height:calc(100dvh - 40px)!important}
 body.focus .topbar{background:transparent;border-color:transparent}
 .course.folder-name{display:flex;justify-content:space-between;align-items:center;border-radius:6px;padding:12px 4px 4px}
 .course.folder-name.over{background:var(--hi-soft);outline:2px dashed var(--ink)}
+
+/* 2.5.3 */
+.lec-row{position:relative;overflow:hidden}
+.lec-row .swipe-actions{display:none}
+@media (hover:none) and (max-width:760px){
+  .lec-row .swipe-actions{display:flex;position:absolute;top:0;bottom:0;right:0;transform:translateX(100%);transition:transform .15s}
+  .lec-row.swiped .swipe-actions{transform:none}
+  .lec-row.swiped>.lec{transform:translateX(-140px);transition:transform .15s}
+  .swipe-actions button{border:0;width:70px;font-size:var(--t-2);font-weight:700;color:#fff}
+  .swipe-actions .sw-arch{background:var(--slate)}.swipe-actions .sw-del{background:var(--rec)}
+}
+body.focus .topbar{display:flex}
+body.focus .panel-btn{visibility:hidden}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <button class="brand-mark" id="brandBtn" title="Library and home"><span>Bizofy</span><em>Ai Notes</em></button>
-  <div class="top-title" id="topTitle"></div>
-  <div class="top-right">
-    <button class="btn quiet" id="openSide">Lectures</button>
-    <button class="btn quiet" id="openPam">Pambizo</button>
+  <button class="panel-btn" id="sideToggle" aria-label="Show or hide the library" aria-pressed="true" title="Library"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="2" y="3.5" width="16" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect class="fill" x="2" y="3.5" width="6" height="13" rx="2.5" fill="currentColor"/></svg></button>
+  <button class="brand-mark" id="brandBtn" title="Home"><span>Bizofy</span><em>Ai Notes</em></button>
+  <div class="top-mid">
+    <div class="top-title" id="topTitle"></div>
+    <button class="pill rec-pill" id="recPill" hidden><i></i><span id="recPillTime">0:00</span></button>
+    <div class="pill play-pill" id="playPill" hidden><button id="playPillBtn" aria-label="Play or pause">▶</button><span id="playPillTime">0:00</span></div>
   </div>
+  <button class="panel-btn" id="pamToggle" aria-label="Show or hide Pambizo" aria-pressed="true" title="Pambizo"><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><rect x="2" y="3.5" width="16" height="13" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect class="fill" x="12" y="3.5" width="6" height="13" rx="2.5" fill="currentColor"/></svg></button>
 </header>
 <div class="app">
   <aside class="side" id="side">
@@ -583,17 +609,15 @@ body.focus .topbar{background:transparent;border-color:transparent}
       <div id="syncBox" class="syncbox" hidden></div>
       <div id="update" class="keynote" hidden></div>
       <div id="keyNote" class="keynote" hidden></div>
-      <div class="row between"><button class="btn quiet" id="settingsBtn">Settings</button><button class="btn quiet" id="hideSide" title="Shrink the library to a rail">Shrink</button></div>
+      <div class="row between"><button class="btn quiet" id="settingsBtn">Settings</button></div>
       <div class="ver" id="ver"></div>
     </div>
     <div class="rail" id="rail">
-      <button class="rail-btn" id="railOpen" title="Open the library">☰</button>
       <button class="rail-btn" id="railNew" title="New lecture">+</button>
       <button class="rail-btn" id="railSearch" title="Search">⌕</button>
       <button class="rail-btn" id="railHome" title="Home">⌂</button>
       <div class="rail-gap"></div>
       <button class="rail-btn" id="railSettings" title="Settings">⚙</button>
-      <button class="rail-btn" id="railHide" title="Hide the library fully. Press [ to bring it back">‹</button>
     </div>
   </aside>
   <main id="main"></main>
@@ -2468,7 +2492,8 @@ function lecButton(l){
       h("small", null, new Date(l.createdAt).toLocaleDateString() + (l.duration ? ", " + fmt(l.duration) : l.kind === "note" || l.words ? "" : ", empty"),
         badges.length ? h("span", { class: "badges" }, badges.map(([t, g]) => h("span", { title: t, "aria-label": t }, g))) : null)));
   const row = h("div", { class: "lec-row", draggable: S.view === "main" && !S.sel ? "true" : null }, main,
-    S.sel ? null : h("button", { class: "more", "aria-label": "More actions for " + l.title, title: "More", onclick: e => { const r = e.currentTarget.getBoundingClientRect(); lecMenu(l, r.left, r.bottom + 4); } }, "⋯"));
+    S.sel ? null : h("button", { class: "more", "aria-label": "More actions for " + l.title, title: "More", onclick: e => { const r = e.currentTarget.getBoundingClientRect(); lecMenu(l, r.left, r.bottom + 4); } }, "⋯"),
+    S.sel || l.deletedAt ? null : h("div", { class: "swipe-actions" }, h("button", { class: "sw-arch", onclick: () => patchLec(l.id, { archived: !l.archived }) }, l.archived ? "Unarchive" : "Archive"), h("button", { class: "sw-del", onclick: () => binLec(l.id) }, "Delete")));
   row.addEventListener("contextmenu", e => { if (S.sel) return; e.preventDefault(); lecMenu(l, e.clientX, e.clientY); });
   row.addEventListener("dragstart", e => { e.dataTransfer.setData("text/bizofy-lecture", l.id); e.dataTransfer.effectAllowed = "move"; });
   return row;
@@ -2915,7 +2940,6 @@ const RATES = [1, 1.25, 1.5, 2];
 function renderMain(){
   const main = $("main"); main.replaceChildren();
   const lec = S.cur;
-  main.append(h("div", { class: "peek" }, h("span"), h("button", { class: "btn quiet peek-pam", onclick: () => togglePanel("pam") }, "Show Pambizo")));
   if (!lec){ main.append(homeView()); return; }
   const isNote = lec.kind === "note";
   const patch = (field, fallback) => async ev => {
@@ -3151,16 +3175,17 @@ function applyTheme(){
   if (t.density === "compact") root.dataset.density = "compact"; else delete root.dataset.density;
   root.style.setProperty("--side-w", Math.max(220, Math.min(440, t.sideW || 272)) + "px");
   root.style.setProperty("--pam-w", Math.max(300, Math.min(620, t.pamW || 384)) + "px");
-  const sm = t.sideMode || (t.hideSide ? "rail" : "open");
-  document.body.classList.toggle("no-side", sm === "hidden"); document.body.classList.toggle("rail-side", sm === "rail"); document.body.classList.toggle("no-pam", !!t.hidePam);
+  const sm = t.sideMode === "rail" || t.sideMode === "hidden" || (!t.sideMode && t.hideSide) ? "rail" : "open";
+  document.body.classList.remove("no-side"); document.body.classList.toggle("rail-side", sm === "rail");
+  const st = $("sideToggle"), pt = $("pamToggle"); if (st) st.setAttribute("aria-pressed", sm === "open" ? "true" : "false"); if (pt) pt.setAttribute("aria-pressed", t.hidePam ? "false" : "true"); document.body.classList.toggle("no-pam", !!t.hidePam);
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = getComputedStyle(root).getPropertyValue("--deck").trim() || "#14233B";
   try { localStorage.setItem("bizofy.theme", JSON.stringify({ mode: t.mode || "auto", palette: root.dataset.palette, density: t.density || "" })); } catch (e){}
 }
 darkQuery.addEventListener("change", () => applyTheme());
 async function setTheme(patch){ DB.settings.theme = { ...(DB.settings.theme || {}), ...patch }; applyTheme(); await DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); }
-function togglePanel(which){ if (which === "pam") return setTheme({ hidePam: !(DB.settings.theme || {}).hidePam }); const m = sideMode(); setSideMode(m === "open" ? "rail" : m === "rail" ? "hidden" : "open"); }
-const sideMode = () => (DB.settings.theme || {}).sideMode || ((DB.settings.theme || {}).hideSide ? "rail" : "open");
-function setSideMode(m){ setTheme({ sideMode: m, hideSide: m !== "open" }); if (m === "open") setTimeout(scrollCurrentIntoView, 50); }
+function togglePanel(which){ if (which === "pam") return setTheme({ hidePam: !(DB.settings.theme || {}).hidePam }); setSideMode(sideMode() === "open" ? "rail" : "open"); }
+const sideMode = () => ((DB.settings.theme || {}).sideMode === "rail" || (DB.settings.theme || {}).sideMode === "hidden" || (!(DB.settings.theme || {}).sideMode && (DB.settings.theme || {}).hideSide) ? "rail" : "open");
+function setSideMode(m){ document.body.classList.remove("peek-open"); setTheme({ sideMode: m, hideSide: m !== "open" }); if (m === "open") setTimeout(scrollCurrentIntoView, 50); else if (!DB.settings.railHint){ DB.settings.railHint = true; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); toast("Your library is now a slim rail. The icon at the top left brings it back, or hover the rail to peek."); } }
 function goHome(){ if (REC.on) return; stopPlayer(); S.cur = null; S.err = ""; closeDrawers(); render(); }
 function hookGrips(){
   [["sideGrip", "sideW", 1], ["pamGrip", "pamW", -1]].forEach(([id, key, dir]) => {
@@ -3299,6 +3324,17 @@ function frCount(){
   $("frCount").textContent = n ? n + (n === 1 ? " match" : " matches") + " in this lecture" : "No matches";
 }
 
+/* top-strip pills: recording timer and now playing */
+function updatePills(){
+  const rp = $("recPill"), pp = $("playPill"); if (!rp || !pp) return;
+  rp.hidden = !REC.on; if (REC.on) $("recPillTime").textContent = fmt(nowAbs());
+  const playing = S.cur && P.lecId === S.cur.id && P.a.src && !REC.on;
+  pp.hidden = !playing; if (playing){ $("playPillTime").textContent = fmt(playAbs()); $("playPillBtn").textContent = P.a.paused ? "▶" : "❚❚"; }
+}
+setInterval(updatePills, 500);
+$("recPill").addEventListener("click", () => { if (!S.cur || S.cur.id !== REC.lecId){ openLecture(REC.lecId).catch(fail); } else { S.tab = "transcript"; render(); } document.body.classList.remove("focus"); });
+$("playPillBtn").addEventListener("click", () => (P.a.paused ? P.a.play() : P.a.pause()));
+
 /* ---------- settings + login ---------- */
 function showSec(id){
   document.querySelectorAll(".set-sec").forEach(s => (s.hidden = s.dataset.sec !== id));
@@ -3337,8 +3373,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.5.2", RELEASED = "22 September 2026";
+const VERSION = "2.5.3", RELEASED = "23 September 2026";
 const CHANGES = [
+  ["2.5.3", "23 Sep 2026", ["One clear library toggle in the top strip, and a matching one for Pambizo; the Bizofy mark is now simply Home", "The library has two sizes, open and rail; hover the rail to peek at the full list", "A recording timer and a now-playing pill in the top strip, on every tab and in focus mode", "On phones: swipe in from the left edge to open the library, swipe a row for Archive and Delete"]],
   ["2.5.2", "22 Sep 2026", ["A top strip on every screen with the Bizofy mark, the current lecture, and the Pambizo button; the mark opens the library or goes home", "The library has three parts: search and filters stay at the top, Settings at the bottom, only the list scrolls", "Folders open one at a time, with time groups inside; pinned and recent stay on top", "Filters: lectures, notes, with audio, this week, unfinished", "Search matches titles, courses and folders as well as transcripts; arrow keys move through results", "Shrink the library to a rail of icons, or hide it fully; [ cycles through the three"]],
   ["2.5.1", "22 Sep 2026", ["Long transcripts: the text scrolls inside its own window so the page never grows", "A scrubber beside the transcript maps chapters, highlights and your notes; click it to jump", "Top, Now and next or previous highlight buttons", "Only the paragraphs on screen are drawn, so two-hour lectures stay fast", "Playback keeps the current paragraph in view, with Return to playback if you scroll away", "Bizofy remembers where you were in each lecture"]],
   ["2.5.0", "22 Sep 2026", ["Settings now steer the whole app: General, Recording, Transcript, AI, Courses and Shortcuts sections", "Choose which AI does each job, how detailed the notes are, how many flashcards and quiz questions, how long Pambizo answers", "Recording quality, part length, default language, and what runs automatically after a lecture", "Transcript font, line spacing, what is shown, auto-scroll", "Per-course profiles: language, AI, notes style, folder, vocabulary, keep or discard audio", "Usage meter per AI service", "Export, import and reset settings"]],
@@ -3447,7 +3484,7 @@ function renderCourses(){
       h("label", null, "Vocabulary the transcriber should know", h("textarea", { rows: 3, placeholder: "ICER, QALY, Drummond", onchange: e => setVocab(c, e.target.value) }, getVocab(c))));
   }));
 }
-const KEY_LIST = [["/", "Search every transcript"], ["R", "Start recording"], ["M", "Mark as important, while recording"], ["N", "Type a quick note"], ["Space", "Play or pause"], ["J and L", "Back or forward 10 seconds"], ["F", "Focus mode, Esc to leave"], ["[ and ]", "Hide or show the library and Pambizo"], ["?", "This list"]];
+const KEY_LIST = [["/", "Search every transcript"], ["R", "Start recording"], ["M", "Mark as important, while recording"], ["N", "Type a quick note"], ["Space", "Play or pause"], ["J and L", "Back or forward 10 seconds"], ["F", "Focus mode, Esc to leave"], ["[ and ]", "Library open or rail; Pambizo on or off"], ["?", "This list"]];
 function renderKeys2(){
   $("keysBox").replaceChildren(field("Single-key shortcuts are on", "keys.enabled", "check", null, "Turn off if they get in the way. Cmd and Ctrl shortcuts in the notes editor always work."),
     h("dl", { class: "keys" }, KEY_LIST.flatMap(([k, d]) => [h("dt", null, k), h("dd", null, d)])));
@@ -3483,18 +3520,30 @@ function runSearch(){
 }
 $("search").addEventListener("input", runSearch);
 $("newNoteBtn").addEventListener("click", () => { closeDrawers(); newLecture({ kind: "note", title: "Untitled note" }).catch(fail); });
-$("hideSide").addEventListener("click", () => { if (window.innerWidth <= 760) closeDrawers(); else setSideMode("rail"); });
-$("railOpen").addEventListener("click", () => setSideMode("open"));
-$("railHide").addEventListener("click", () => setSideMode("hidden"));
 $("railNew").addEventListener("click", () => newLecture().catch(fail));
 $("railSearch").addEventListener("click", () => { setSideMode("open"); setTimeout(() => $("search").focus(), 50); });
 $("railHome").addEventListener("click", goHome);
 $("railSettings").addEventListener("click", () => openSettings());
-$("brandBtn").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); return; } if (sideMode() !== "open") setSideMode("open"); else goHome(); });
+$("brandBtn").addEventListener("click", () => { closeDrawers(); goHome(); });
+$("sideToggle").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); return; } setSideMode(sideMode() === "open" ? "rail" : "open"); });
+$("pamToggle").addEventListener("click", () => { if (window.innerWidth <= 1180){ document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); return; } togglePanel("pam"); });
+// hover the rail to peek at the full library
+$("side").addEventListener("mouseenter", () => { if (sideMode() === "rail" && window.innerWidth > 760) document.body.classList.add("peek-open"); });
+$("side").addEventListener("mouseleave", () => document.body.classList.remove("peek-open"));
+// phones: swipe in from the left edge opens the library; swipe a row to reveal actions
+let tx0 = null, ty0 = null, swipeRow = null;
+document.addEventListener("touchstart", e => { const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY; swipeRow = e.target.closest && e.target.closest(".lec-row"); }, { passive: true });
+document.addEventListener("touchend", e => {
+  if (tx0 == null) return; const t = e.changedTouches[0], dx = t.clientX - tx0, dy = Math.abs(t.clientY - ty0);
+  if (window.innerWidth <= 760 && dy < 40){
+    if (tx0 < 24 && dx > 60 && !document.body.classList.contains("show-side")){ document.body.classList.add("show-side"); document.body.classList.remove("show-pam"); }
+    else if (dx < -60 && document.body.classList.contains("show-side") && !swipeRow) closeDrawers();
+    else if (swipeRow && Math.abs(dx) > 50){ document.querySelectorAll(".lec-row.swiped").forEach(r => { if (r !== swipeRow) r.classList.remove("swiped"); }); swipeRow.classList.toggle("swiped", dx < 0); }
+  }
+  tx0 = null; swipeRow = null;
+}, { passive: true });
 $("exitFocus").addEventListener("click", () => document.body.classList.remove("focus"));
 $("exportDlg").addEventListener("click", e => { const k = e.target && e.target.getAttribute && e.target.getAttribute("data-exp"); if (k) exportAs(k); });
-$("openSide").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); } else setSideMode(sideMode() === "open" ? "rail" : "open"); });
-$("openPam").addEventListener("click", () => { document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); });
 $("scrim").addEventListener("click", closeDrawers);
 document.addEventListener("click", e => { document.querySelectorAll("details.menu[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawers(); });

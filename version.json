@@ -1,5 +1,5 @@
 {
-  "version": "2.5.2",
+  "version": "2.5.3",
   "url": "./",
-  "notes": "New library: top strip with the Bizofy mark, fixed search and settings, folders that open one at a time, filters, and a collapsible rail."
+  "notes": "A clear library toggle in the top strip, hover-to-peek rail, recording and playback pills, phone swipes."
 }
