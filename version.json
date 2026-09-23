@@ -1,5 +1,5 @@
 {
-  "version": "2.5.3",
+  "version": "2.5.4",
   "url": "./",
-  "notes": "A clear library toggle in the top strip, hover-to-peek rail, recording and playback pills, phone swipes."
+  "notes": "Client ID check fixed for phones, remembered Google account, and a recordings folder on computers."
 }

@@ -760,6 +760,8 @@ body.focus .panel-btn{visibility:hidden}
         </section>
 
         <section class="set-sec" data-sec="data" hidden>
+          <h3>Recordings folder</h3>
+          <div id="folderBox"></div>
           <h3>On this device</h3>
           <p class="hint" id="usage">Lectures are stored on this device only.</p>
           <div id="storage"></div>
@@ -1719,7 +1721,7 @@ async function api(method, url, body, note){
     if (["openai", "groq", "custom"].includes(b.provider)) s.provider = b.provider;
     if (["auto", "claude", "groq", "custom"].includes(b.aiProvider)) s.aiProvider = b.aiProvider;
     for (const k of ["transcribeKey", "anthropicKey", "groqAiKey", "aiKey"]) if (typeof b[k] === "string" && b[k].trim()) s[k] = b[k].trim();
-    if (typeof b.googleClientId === "string"){ b.googleClientId = b.googleClientId.replace(/\s+/g, ""); if (b.googleClientId && !CLIENT_RE.test(b.googleClientId)) throw new AppError("That does not look like a complete Google client ID. It is one long line that ends with .apps.googleusercontent.com. Copy it again with the copy button in Google Cloud."); }
+    if (typeof b.googleClientId === "string"){ b.googleClientId = cleanClientId(b.googleClientId); if (b.googleClientId && !CLIENT_RE.test(b.googleClientId)) S.warn = "The Google client ID was saved, but it does not look like the usual shape (one long line ending in .apps.googleusercontent.com). If Connect fails, copy it again from Google Cloud."; }
     for (const k of ["signinRedirect", "autoOutline"]) if (typeof b[k] === "boolean") s[k] = b[k];
     for (const k of ["transcribeBaseUrl", "transcribeModel", "claudeModel", "groqModel", "aiBaseUrl", "aiModel", "aiBackupModel", "updateUrl", "googleClientId"]) if (typeof b[k] === "string") s[k] = b[k].trim();
     if (typeof b.syncAudio === "boolean") s.syncAudio = b.syncAudio;
@@ -1819,22 +1821,26 @@ function gToken(interactive){
   if (!interactive) return Promise.reject(needAuth());
   const id = (DB.settings.googleClientId || "").trim();
   if (!id) return Promise.reject(new AppError("Add your Google client ID in Settings first."));
-  if (!CLIENT_RE.test(id)) return Promise.reject(new AppError("The Google client ID in Settings looks incomplete. Copy it again from Google Cloud."));
+  if (!/\.apps\.googleusercontent\.com$/i.test(id)) return Promise.reject(new AppError("The Google client ID in Settings does not end in .apps.googleusercontent.com. Copy it again from Google Cloud."));
   const standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
   if (DB.settings.signinRedirect || standalone){   // go to Google's page and come back: works on phones and from a home-screen icon
     if (REC.on) return Promise.reject(new AppError("Stop the recording before you sign in to Google."));
-    location.href = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + encodeURIComponent(id) + "&redirect_uri=" + encodeURIComponent(location.origin + location.pathname) + "&response_type=token&include_granted_scopes=true&state=bizofy-sync&scope=" + encodeURIComponent("https://www.googleapis.com/auth/drive.file");
+    location.href = "https://accounts.google.com/o/oauth2/v2/auth?client_id=" + encodeURIComponent(id) + "&redirect_uri=" + encodeURIComponent(location.origin + location.pathname) + "&response_type=token&include_granted_scopes=true&state=bizofy-sync" + (DB.sync.email ? "&login_hint=" + encodeURIComponent(DB.sync.email) : "") + "&scope=" + encodeURIComponent("https://www.googleapis.com/auth/drive.file openid email");
     return new Promise(() => {});
   }
   return new Promise(async (res, rej) => {
     try { await loadScript(GIS_URL, () => !!(window.google && google.accounts && google.accounts.oauth2)); } catch (e){ return rej(new AppError("Could not reach Google. Check the internet connection.")); }
     try {
-      google.accounts.oauth2.initTokenClient({ client_id: id, scope: "https://www.googleapis.com/auth/drive.file", prompt: "",
-        callback: r => { if (r && r.access_token){ G.token = r.access_token; G.exp = Date.now() + (+r.expires_in || 3600) * 1000; res(G.token); } else rej(new AppError("Google did not give access" + (r && r.error ? " (" + r.error + ")." : "."))); },
+      google.accounts.oauth2.initTokenClient({ client_id: id, scope: "https://www.googleapis.com/auth/drive.file openid email", prompt: "", hint: DB.sync.email || undefined,
+        callback: r => { if (r && r.access_token){ G.token = r.access_token; G.exp = Date.now() + (+r.expires_in || 3600) * 1000; rememberAccount(); res(G.token); } else rej(new AppError("Google did not give access" + (r && r.error ? " (" + r.error + ")." : "."))); },
         error_callback: e => rej(new AppError(e && e.type === "popup_failed_to_open" ? "The browser blocked Google's sign-in window. Allow pop-ups for Bizofy, or turn on “Sign in without a pop-up window” in Settings, then press Sync again." : e && e.type === "popup_closed" ? "Google's sign-in window was closed before it finished." : "Google sign-in did not finish."))
       }).requestAccessToken();
     } catch (e){ rej(new AppError("Google sign-in could not start. Check the client ID in Settings.")); }
   });
+}
+async function rememberAccount(){
+  if (DB.sync.email) return;
+  try { const j = await (await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + G.token } })).json(); if (j && j.email){ DB.sync.email = j.email; await DB.saveSync(); renderSync(); } } catch (e){}
 }
 async function gfetch(url, opt){
   for (let attempt = 0; ; attempt++){
@@ -1996,7 +2002,7 @@ function renderSync(){
     : G.state === "error" ? [h("span", { class: "sync-err", role: "alert" }, G.msg), btn("Try again")]
     : G.state === "offline" ? [h("span", null, "Offline. Changes are kept here and will sync later.")]
     : !DB.sync.on ? [btn("Connect Google Drive", true)]
-    : G.state === "ok" ? [h("span", { class: "sync-dot ok" }), h("span", null, "Synced with Drive" + (last ? " at " + last : "")), btn("Sync now")]
+    : G.state === "ok" ? [h("span", { class: "sync-dot ok" }), h("span", null, "Synced with Drive" + (last ? " at " + last : "") + (DB.sync.email ? " as " + DB.sync.email : "")), btn("Sync now")]
     : [btn("Sync with Google Drive", true), last ? h("span", { class: "hint" }, "Last synced at " + last + ". Google asks for one tap each session.") : null]).filter(Boolean));
 }
 /* ---------- state ---------- */
@@ -2083,6 +2089,7 @@ function startFull(){
         const n = l.sessions.reduce((m, x) => Math.max(m, x.n), 0) + 1;
         await DB.putAudio(lecId, "s" + n, blob);
         l.sessions.push({ n, mime: blob.type, offset: base, dur, size: blob.size }); await DB.save(l);
+        setTimeout(() => mirrorSession(lecId, n), 4000);
       } catch (e){}
     };
     full.start(10000); REC.full = full;
@@ -3281,7 +3288,9 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---------- setting up another device, and coming back from Google's sign-in page ---------- */
-const CLIENT_RE = /^\d{6,}-[a-z0-9]{10,}\.apps\.googleusercontent\.com$/i;
+const CLIENT_RE = /^[a-z0-9-]{8,}\.apps\.googleusercontent\.com$/i;
+// phones and copy buttons sometimes swap the hyphen for a look-alike or add invisible characters
+const cleanClientId = v => String(v || "").normalize("NFKC").replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, "-").replace(/[\s\u200B-\u200D\uFEFF\u00A0]/g, "").replace(/^https?:\/\//i, "").replace(/[.,;:]+$/, "");
 function readStartLink(){
   const hash = new URLSearchParams(location.hash.replace(/^#/, "")), out = {};
   if (hash.get("state") === "bizofy-sync" && (hash.get("access_token") || hash.get("error"))){
@@ -3335,6 +3344,50 @@ setInterval(updatePills, 500);
 $("recPill").addEventListener("click", () => { if (!S.cur || S.cur.id !== REC.lecId){ openLecture(REC.lecId).catch(fail); } else { S.tab = "transcript"; render(); } document.body.classList.remove("focus"); });
 $("playPillBtn").addEventListener("click", () => (P.a.paused ? P.a.play() : P.a.pause()));
 
+/* ---------- a folder of your own for recordings (desktop Chrome and Edge) ---------- */
+const FOLDER_OK = typeof window.showDirectoryPicker === "function";
+const FOLDER = { handle: null };
+async function folderHandle(){ if (FOLDER.handle) return FOLDER.handle; try { return (FOLDER.handle = (await DB.tx("kv", "readonly", s => s.get("recFolder"))) || null); } catch (e){ return null; } }
+async function chooseFolder(){
+  if (!FOLDER_OK) throw new AppError("This browser cannot save into a folder of your choosing. Chrome or Edge on a computer can.");
+  const handle = await window.showDirectoryPicker({ id: "bizofy-recordings", mode: "readwrite", startIn: "documents" });
+  FOLDER.handle = handle; DB.settings.recFolderName = handle.name; await DB.saveSettings();
+  try { await DB.tx("kv", "readwrite", s => s.put(handle, "recFolder")); } catch (e){}
+  return handle;
+}
+async function folderReady(handle, ask){
+  if (!handle) return false;
+  try { const p = await handle.queryPermission({ mode: "readwrite" }); if (p === "granted") return true; if (!ask) return false; return (await handle.requestPermission({ mode: "readwrite" })) === "granted"; } catch (e){ return false; }
+}
+// after a session ends: write the MP3 (or the original) into the folder, quietly
+async function mirrorSession(lecId, n){
+  if (!FOLDER_OK || DB.settings.mirror === false) return;
+  const handle = await folderHandle(); if (!(await folderReady(handle, false))) return;
+  try {
+    const lec = getLec(lecId), blob = await DB.getAudio(lecId, "s" + n); if (!blob) return;
+    const base = fileBase(lec) + " " + new Date(lec.createdAt).toISOString().slice(0, 10) + (n > 1 ? " part " + n : "");
+    let out = blob, ext = extFor(blob.type);
+    if (DB.settings.mirrorMp3 !== false){ try { const r = await toMp3({ ...lec, audio: (lec.audio || []).filter(p => p.offset >= (lec.sessions.find(s => s.n === n) || {}).offset - 1 && p.offset < ((lec.sessions.find(s => s.n === n) || {}).offset + (lec.sessions.find(s => s.n === n) || {}).dur)) }, () => {}); out = r.blob; ext = "mp3"; } catch (e){} }
+    const dir = lec.course ? await handle.getDirectoryHandle(lec.course.replace(/[\/\\:*?"<>|]+/g, "-"), { create: true }) : handle;
+    const f = await dir.getFileHandle(base + "." + ext, { create: true }), w = await f.createWritable(); await w.write(out); await w.close();
+    toast("Saved to your recordings folder: " + base + "." + ext);
+  } catch (e){}
+}
+function renderFolderBox(){
+  const box = $("folderBox"); if (!box) return;
+  if (!FOLDER_OK) return void box.replaceChildren(h("p", { class: "hint" }, "Recordings are always kept in Bizofy's own storage on this device. On a computer with Chrome or Edge, Bizofy can also save each recording as a file into a folder you choose, so it shows up in Finder or Explorer."));
+  folderHandle().then(async handle => {
+    const ok = await folderReady(handle, false);
+    box.replaceChildren(
+      h("p", { class: "hint" }, handle ? "Recordings are also saved into “" + (DB.settings.recFolderName || handle.name) + "”" + (ok ? "." : ", but the browser needs permission again for this session.") : "Recordings are kept in Bizofy's own storage on this device. Choose a folder to also get a file for each recording, sorted by course."),
+      h("div", { class: "row" },
+        h("button", { type: "button", class: "btn quiet", onclick: async () => { try { await chooseFolder(); renderFolderBox(); toast("Recordings will also be saved there."); } catch (e){ if (e.name !== "AbortError"){ $("setErr").hidden = false; $("setErr").textContent = e.message; } } } }, handle ? "Change folder" : "Choose a folder"),
+        handle && !ok ? h("button", { type: "button", class: "btn quiet", onclick: async () => { await folderReady(handle, true); renderFolderBox(); } }, "Allow again") : null,
+        handle ? h("button", { type: "button", class: "btn quiet", onclick: async () => { FOLDER.handle = null; await DB.tx("kv", "readwrite", s => s.delete("recFolder")).catch(() => {}); delete DB.settings.recFolderName; await DB.saveSettings(); renderFolderBox(); } }, "Stop saving to a folder") : null),
+      handle ? h("label", { class: "check", style: "margin-top:10px" }, (() => { const c = h("input", { type: "checkbox", onchange: async e => { DB.settings.mirrorMp3 = e.target.checked; await DB.saveSettings(); } }); c.checked = DB.settings.mirrorMp3 !== false; return c; })(), "Save as MP3 (plays everywhere) rather than the original .webm") : null);
+  });
+}
+
 /* ---------- settings + login ---------- */
 function showSec(id){
   document.querySelectorAll(".set-sec").forEach(s => (s.hidden = s.dataset.sec !== id));
@@ -3357,7 +3410,7 @@ async function openSettings(sec){
     $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet. Paste the client ID from Google Cloud, save, then press Connect Google Drive in the sidebar.";
     $("driveOff").hidden = !DB.sync.on; $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
     $("aboutVer").textContent = "Bizofy " + VERSION + ", released " + RELEASED;
-    renderAppearance(); renderStorage(); renderPrefs();
+    renderAppearance(); renderStorage(); renderPrefs(); renderFolderBox();
   } catch (e){}
   closeDrawers(); showSec(sec || (!S.status.transcribe ? "record" : "gen")); $("settings").showModal();
 }
@@ -3368,13 +3421,14 @@ $("setForm").addEventListener("submit", async ev => {
   try {
     await api("PUT", "/api/settings", { provider: f.provider.value, aiProvider: f.aiProvider.value, transcribeKey: f.transcribeKey.value, anthropicKey: f.anthropicKey.value, groqAiKey: f.groqAiKey.value, aiKey: f.aiKey.value, aiBaseUrl: f.aiBaseUrl.value, aiModel: f.aiModel.value, aiBackupModel: f.aiBackupModel.value, updateUrl: f.updateUrl.value, googleClientId: f.googleClientId.value, syncAudio: f.syncAudio.checked, pullAudio: f.pullAudio.checked, signinRedirect: f.signinRedirect.checked, autoOutline: f.autoOutline.checked, claudeModel: f.claudeModel.value, groqModel: f.groqModel.value, transcribeModel: f.transcribeModel.value, transcribeBaseUrl: f.transcribeBaseUrl.value });
     S.status = await api("GET", "/api/status");
-    $("settings").close(); render(); renderSync(); checkUpdate();
+    $("settings").close(); render(); renderSync(); checkUpdate(); if (S.warn){ toast(S.warn); S.warn = ""; }
   } catch (e){ $("setErr").hidden = false; $("setErr").textContent = e.message; }
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.5.3", RELEASED = "23 September 2026";
+const VERSION = "2.5.4", RELEASED = "23 September 2026";
 const CHANGES = [
+  ["2.5.4", "23 Sep 2026", ["The Google client ID check no longer rejects a good ID typed on a phone; it cleans up look-alike characters and only warns", "Bizofy remembers which Google account you chose, so Sync no longer asks you to pick it each time", "On a computer, choose a folder and every recording is also saved there as an MP3, sorted by course"]],
   ["2.5.3", "23 Sep 2026", ["One clear library toggle in the top strip, and a matching one for Pambizo; the Bizofy mark is now simply Home", "The library has two sizes, open and rail; hover the rail to peek at the full list", "A recording timer and a now-playing pill in the top strip, on every tab and in focus mode", "On phones: swipe in from the left edge to open the library, swipe a row for Archive and Delete"]],
   ["2.5.2", "22 Sep 2026", ["A top strip on every screen with the Bizofy mark, the current lecture, and the Pambizo button; the mark opens the library or goes home", "The library has three parts: search and filters stay at the top, Settings at the bottom, only the list scrolls", "Folders open one at a time, with time groups inside; pinned and recent stay on top", "Filters: lectures, notes, with audio, this week, unfinished", "Search matches titles, courses and folders as well as transcripts; arrow keys move through results", "Shrink the library to a rail of icons, or hide it fully; [ cycles through the three"]],
   ["2.5.1", "22 Sep 2026", ["Long transcripts: the text scrolls inside its own window so the page never grows", "A scrubber beside the transcript maps chapters, highlights and your notes; click it to jump", "Top, Now and next or previous highlight buttons", "Only the paragraphs on screen are drawn, so two-hour lectures stay fast", "Playback keeps the current paragraph in view, with Return to playback if you scroll away", "Bizofy remembers where you were in each lecture"]],
@@ -3608,7 +3662,7 @@ async function init(){
   if (link.signError) S.err = link.signError;
   if (DB.sync.on && !link.signedIn) setSync("needs", ""); else renderSync();
   await init();
-  if (link.signedIn) syncNow(true);
+  if (link.signedIn){ rememberAccount(); syncNow(true); }
 })();
 })();
 </script>
