@@ -581,6 +581,8 @@ body.focus .topbar{background:transparent;border-color:transparent}
 }
 body.focus .topbar{display:flex}
 body.focus .panel-btn{visibility:hidden}
+#cloudBox textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-2);line-height:1.4}
+#cloudOut{margin-top:8px;font-size:var(--t-2)}
 </style>
 </head>
 <body>
@@ -642,6 +644,7 @@ body.focus .panel-btn{visibility:hidden}
         <button type="button" data-sec="courses">Courses</button>
         <button type="button" data-sec="look">Appearance</button>
         <button type="button" data-sec="keys">Shortcuts</button>
+        <button type="button" data-sec="cloud">Sync across devices</button>
         <button type="button" data-sec="drive">Google Drive</button>
         <button type="button" data-sec="data">Storage and backup</button>
         <button type="button" data-sec="about">About</button>
@@ -744,8 +747,14 @@ body.focus .panel-btn{visibility:hidden}
           <div class="row"><button type="button" class="btn quiet" id="resetPanels">Reset panel sizes</button><button type="button" class="btn quiet" id="showKeys">Keyboard shortcuts</button></div>
         </section>
 
+        <section class="set-sec" data-sec="cloud" hidden>
+          <h3>Sync across devices, with a sync code</h3>
+          <div id="cloudBox"></div>
+          <p class="hint foot">Google Drive, in the next section, is optional and only needed if you also want audio backed up and fetched between devices.</p>
+        </section>
+
         <section class="set-sec" data-sec="drive" hidden>
-          <h3>Google Drive storage and sync</h3>
+          <h3>Google Drive: audio backup and sync</h3>
           <p class="hint" id="driveState"></p>
           <label>Google client ID <input name="googleClientId" type="text" autocomplete="off" placeholder="Ends with .apps.googleusercontent.com"></label>
           <div class="row"><button type="button" class="btn quiet" id="setupLink" hidden>Set up another device</button><button type="button" class="btn quiet" id="driveOff" hidden>Stop syncing on this device</button></div>
@@ -919,7 +928,7 @@ const DB = {
     this.akeys = new Set(await this.tx("audio", "readonly", s => s.getAllKeys()));
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
   },
-  save(lec){ lec.updatedAt = Date.now(); const p = this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); if (typeof localChange === "function") localChange(); return p; },
+  save(lec){ lec.updatedAt = Date.now(); const p = this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); if (typeof localChange === "function") localChange(); if (typeof cloudChange === "function") cloudChange(); return p; },
   saveRaw(lec){ return this.tx("lectures", "readwrite", s => s.put(JSON.parse(JSON.stringify(lec)))); },   // from sync: keeps the edit time as it came
   saveSync(){ return this.tx("kv", "readwrite", s => s.put(this.sync, "sync")); },
   has(id, n){ return this.akeys.has(id + ":" + n); },
@@ -929,11 +938,12 @@ const DB = {
     (lec.audio || []).forEach(a => this.akeys.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => this.akeys.delete(lec.id + ":s" + a.n));
     this.lectures.delete(lec.id);
     if (this.sync.on){ this.sync.tomb[lec.id] = Date.now(); delete this.sync.files[lec.id]; await this.saveSync(); if (typeof localChange === "function") localChange(); }
+    if (typeof cloudTomb === "function" && !this._fromCloud) await cloudTomb(lec.id);
   },
   async putAudio(id, n, blob){ const buf = await blob.arrayBuffer(); await this.tx("audio", "readwrite", s => s.put({ buf, type: blob.type }, id + ":" + n)); this.akeys.add(id + ":" + n); },
   async getAudio(id, n){ const r = await this.tx("audio", "readonly", s => s.get(id + ":" + n)); return r ? new Blob([r.buf], { type: r.type }) : null; },
   async dropAudio(lec){ (lec.audio || []).forEach(a => this.akeys.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => this.akeys.delete(lec.id + ":s" + a.n)); await this.tx("audio", "readwrite", s => { (lec.audio || []).forEach(a => s.delete(lec.id + ":" + a.n)); (lec.sessions || []).forEach(a => s.delete(lec.id + ":s" + a.n)); }); },
-  saveSettings(){ this.settings.metaU = Date.now(); return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
+  saveSettings(){ this.settings.metaU = Date.now(); if (typeof cloudChange === "function") cloudChange(); return this.tx("kv", "readwrite", s => s.put(this.settings, "settings")); }
 };
 function cfg(){
   const s = DB.settings, provider = s.provider || "groq", p = PRESETS[provider] || PRESETS.openai;
@@ -1995,7 +2005,17 @@ async function disconnectDrive(){ G.token = ""; DB.sync = { files: {}, audio: {}
 
 function renderSync(){
   const box = $("syncBox"); if (!box) return;
-  const has = !!(DB.settings.googleClientId || "").trim(); box.hidden = !has; if (!has) return;
+  const has = !!(DB.settings.googleClientId || "").trim();
+  if (typeof cloudOn === "function" && cloudOn()){
+    box.hidden = false; const cs = DB.sync.cloud || {}, when = cs.last ? new Date(cs.last).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+    box.replaceChildren(...(C.state === "working" ? [h("span", { class: "sync-dot spin" }), h("span", { role: "status" }, C.msg || "Syncing…")]
+      : C.state === "error" ? [h("span", { class: "sync-err", role: "alert" }, C.msg), h("button", { class: "linkish", onclick: () => cloudSync(true) }, "Try again")]
+      : C.state === "offline" ? [h("span", null, "Offline. Changes are kept here and will sync later.")]
+      : [h("span", { class: "sync-dot ok" }), h("span", null, "Synced across your devices" + (when ? " at " + when : "")), h("button", { class: "linkish", onclick: () => cloudSync(true) }, "Sync now")]),
+      has && DB.sync.on ? h("span", { class: "hint", style: "width:100%" }, "Drive: " + (G.state === "ok" ? "audio backed up" : G.state === "working" ? G.msg : "press Sync in Settings for audio backup")) : null);
+    return;
+  }
+  box.hidden = !has; if (!has) return;
   const last = DB.sync.last ? new Date(DB.sync.last).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
   const btn = (label, solid) => h("button", { class: solid ? "btn solid" : "linkish", onclick: () => syncNow(true) }, label);
   box.replaceChildren(...(G.state === "working" ? [h("span", { class: "sync-dot spin" }), h("span", { role: "status" }, G.msg || "Syncing…")]
@@ -2004,6 +2024,111 @@ function renderSync(){
     : !DB.sync.on ? [btn("Connect Google Drive", true)]
     : G.state === "ok" ? [h("span", { class: "sync-dot ok" }), h("span", null, "Synced with Drive" + (last ? " at " + last : "") + (DB.sync.email ? " as " + DB.sync.email : "")), btn("Sync now")]
     : [btn("Sync with Google Drive", true), last ? h("span", { class: "hint" }, "Last synced at " + last + ". Google asks for one tap each session.") : null]).filter(Boolean));
+}
+
+/* ---------- sync code: text sync through a small database of your own (Supabase), no Google sign-in ----------
+   Everything except audio is kept in one table, filtered by a private library code that only your devices know.
+   The database refuses any request that does not carry the code, so the project key alone reads nothing. */
+const C = { busy: false, again: false, state: "idle", msg: "", timer: null, poll: null };
+const cloudCfg = () => { const s = DB.settings; return { url: (s.cloudUrl || "").replace(/\/+$/, ""), key: s.cloudKey || "", lib: s.cloudLib || "" }; };
+const cloudOn = () => { const c = cloudCfg(); return !!(c.url && c.key && c.lib); };
+const newLibCode = () => { const a = new Uint8Array(24); crypto.getRandomValues(a); return "biz_" + [...a].map(x => "abcdefghijkmnpqrstuvwxyz23456789"[x % 32]).join(""); };
+function setCloud(state, msg){ C.state = state; C.msg = msg || ""; if (typeof renderSync === "function") renderSync(); }
+async function cfetch(path, opt){
+  const c = cloudCfg(); let r;
+  try { r = await fetch(c.url + "/rest/v1/" + path, { ...opt, headers: { apikey: c.key, Authorization: "Bearer " + c.key, "x-bizofy-lib": c.lib, "Content-Type": "application/json", ...(opt && opt.headers) } }); }
+  catch (e){ const err = new AppError("No connection to the sync database. Changes are kept here and will sync later."); err.offline = true; throw err; }
+  if (r.ok) return r;
+  let why = ""; try { const j = await r.json(); why = j.message || j.hint || j.error || ""; } catch (e){}
+  throw new AppError(r.status === 401 || r.status === 403 ? "The sync database refused the key. Check the project URL and key in Settings." : /relation .* does not exist/i.test(why) ? "The sync table is not set up yet. Run the setup script in your Supabase project (Settings, Sync across devices)." : "The sync database returned an error (" + r.status + ")" + (why ? ": " + why : "."));
+}
+const cloudRow = lec => ({ id: lec.id, lib: cloudCfg().lib, kind: lec.kind || "lecture", updated_at: lec.updatedAt || 0, deleted: false, data: (() => { const o = forDrive(lec); o.audio = (o.audio || []).map(p => ({ ...p, away: true })); o.sessions = []; return o; })() });
+const metaRow = () => { const s = DB.settings; return { id: "meta", lib: cloudCfg().lib, kind: "meta", updated_at: s.metaU || 0, deleted: false, data: { folders: s.folders || [], vocab: s.vocab || {}, courses: s.courses || {}, chips: s.chips || [], recent: [] } }; };
+
+async function cloudSync(force){
+  if (!cloudOn()) return;
+  if (C.busy){ C.again = true; return; }
+  C.busy = true; C.again = false; clearTimeout(C.timer);
+  const cs = DB.sync.cloud = DB.sync.cloud || { pushed: {}, since: 0, tomb: {} };
+  let changed = false;
+  try {
+    setCloud("working", "Syncing…");
+    const c = cloudCfg(), lib = encodeURIComponent(c.lib);
+    // 1. what changed elsewhere since we last looked
+    const rows = await (await cfetch("bizofy_items?lib=eq." + lib + "&updated_at=gt." + (cs.since || 0) + "&order=updated_at.asc&limit=500&select=id,kind,updated_at,deleted,data")).json();
+    let newest = cs.since || 0;
+    for (const row of rows){
+      newest = Math.max(newest, +row.updated_at || 0);
+      if (row.id === "meta"){
+        const s = DB.settings, d = row.data || {};
+        if ((+row.updated_at || 0) > (s.metaU || 0)){ s.folders = [...new Set([...(s.folders || []), ...(d.folders || [])])]; s.vocab = { ...(s.vocab || {}), ...(d.vocab || {}) }; s.courses = { ...(s.courses || {}), ...(d.courses || {}) }; s.chips = (d.chips && d.chips.length) ? d.chips : (s.chips || []); s.metaU = +row.updated_at; await DB.tx("kv", "readwrite", st => st.put(s, "settings")); changed = true; }
+        continue;
+      }
+      const local = DB.lectures.get(row.id);
+      if (REC.on && REC.lecId === row.id) continue;
+      if (row.deleted){ if (local){ const on = DB.sync.on; DB.sync.on = false; DB._fromCloud = true; await DB.remove(local); DB._fromCloud = false; DB.sync.on = on; changed = true; } cs.pushed[row.id] = +row.updated_at; continue; }
+      const inc = row.data; if (!okShape(inc) || inc.id !== row.id) continue;
+      const ru = +row.updated_at || 0;
+      if (!local || ru > (local.updatedAt || 0)){
+        if (local && (cs.pushed[row.id] || 0) > 0 && (local.updatedAt || 0) > cs.pushed[row.id]){ const copy = { ...forDrive(local), id: newId("l"), title: local.title + " (copy from this device)", audio: [], sessions: [] }; DB.lectures.set(copy.id, copy); await DB.saveRaw(copy); }
+        if (local){ inc.audio = (local.audio || []).length ? local.audio : (inc.audio || []); inc.sessions = local.sessions || []; }   // audio stays where it was recorded
+        DB.lectures.set(row.id, inc); await DB.saveRaw(inc); cs.pushed[row.id] = ru; changed = true;
+      }
+    }
+    cs.since = newest;
+    // 2. what changed here
+    const out = [];
+    for (const l of DB.lectures.values()) if ((l.updatedAt || 0) > (cs.pushed[l.id] || 0)) out.push(cloudRow(l));
+    for (const id of Object.keys(cs.tomb || {})) out.push({ id, lib: c.lib, kind: "lecture", updated_at: cs.tomb[id], deleted: true, data: null });
+    if ((DB.settings.metaU || 0) > (cs.metaPushed || 0)) out.push(metaRow());
+    for (let i = 0; i < out.length; i += 20){
+      setCloud("working", "Saving " + (out.length > 20 ? (i + 1) + " of " + out.length : "changes") + "…");
+      await cfetch("bizofy_items?on_conflict=id", { method: "POST", headers: { Prefer: "resolution=merge-duplicates,return=minimal" }, body: JSON.stringify(out.slice(i, i + 20)) });
+    }
+    for (const r of out){ if (r.id === "meta") cs.metaPushed = r.updated_at; else { cs.pushed[r.id] = r.updated_at; if (r.deleted) delete cs.tomb[r.id]; } }
+    if (out.length){ const mine = out.filter(r => !r.deleted && r.id !== "meta").reduce((m, r) => Math.max(m, r.updated_at), 0); cs.since = Math.max(cs.since, mine); }
+    cs.last = Date.now(); await DB.saveSync();
+    setCloud("ok", "");
+    if (changed){ S.list = await api("GET", "/api/lectures"); if (S.cur){ const fresh = DB.lectures.get(S.cur.id); const a = document.activeElement, typing = a && (a.isContentEditable || /INPUT|TEXTAREA/.test(a.tagName)); if (!fresh) S.cur = null; else if (fresh !== S.cur && !typing) S.cur = fresh; if (!typing) render(); else renderList(); } else render(); }
+  } catch (e){ setCloud(e.offline ? "offline" : "error", e.message); }
+  C.busy = false;
+  if (C.again) cloudChange();
+}
+function cloudChange(){ if (!cloudOn()) return; clearTimeout(C.timer); C.timer = setTimeout(() => cloudSync(false), REC.on ? 45000 : 6000); }
+function cloudWake(){ if (cloudOn() && document.visibilityState === "visible" && Date.now() - ((DB.sync.cloud || {}).last || 0) > 30000) cloudSync(false); }
+setInterval(cloudWake, 45000);
+window.addEventListener("online", () => { if (C.state === "offline") cloudSync(false); });
+document.addEventListener("visibilitychange", cloudWake);
+async function cloudTomb(id, at){ if (!cloudOn()) return; const cs = DB.sync.cloud = DB.sync.cloud || { pushed: {}, since: 0, tomb: {} }; cs.tomb[id] = at || Date.now(); delete cs.pushed[id]; await DB.saveSync(); cloudChange(); }
+async function cloudForget(){ delete DB.sync.cloud; await DB.saveSync(); setCloud("idle", ""); }
+
+const SETUP_SQL = `-- Bizofy sync: run this once in your Supabase project (SQL Editor, then Run)
+create table if not exists public.bizofy_items (
+  id text primary key, lib text not null, kind text, updated_at bigint not null default 0,
+  deleted boolean not null default false, data jsonb
+);
+create index if not exists bizofy_items_lib_updated on public.bizofy_items (lib, updated_at);
+alter table public.bizofy_items enable row level security;
+drop policy if exists bizofy_by_code on public.bizofy_items;
+create policy bizofy_by_code on public.bizofy_items for all to anon
+  using (lib = (current_setting('request.headers', true)::json ->> 'x-bizofy-lib'))
+  with check (lib = (current_setting('request.headers', true)::json ->> 'x-bizofy-lib'));`;
+
+function renderCloudBox(){
+  const box = $("cloudBox"); if (!box) return;
+  const s = DB.settings, on = cloudOn(), cs = DB.sync.cloud || {};
+  box.replaceChildren(
+    h("p", { class: "hint" }, on ? "Sync is on. Transcripts, notes, highlights, folders and course settings follow you to any device that has the same three values." + (cs.last ? " Last synced " + new Date(cs.last).toLocaleString() + "." : "") : "Sync transcripts, notes and settings between your devices through a free database of your own. No Google sign-in. Audio stays on the device that recorded it."),
+    h("label", null, "Project URL", h("input", { type: "url", value: s.cloudUrl || "", placeholder: "https://xxxx.supabase.co", onchange: async e => { s.cloudUrl = e.target.value.trim().replace(/\/+$/, ""); await DB.saveSettings(); renderCloudBox(); renderSync(); } })),
+    h("label", null, "Project key (the anon public key)", h("input", { type: "password", value: s.cloudKey || "", placeholder: "eyJ…", onchange: async e => { s.cloudKey = e.target.value.trim(); await DB.saveSettings(); renderCloudBox(); renderSync(); } })),
+    h("label", null, "Sync code (keep it private: it is the key to your transcripts)", h("div", { class: "row", style: "margin-top:5px;flex-wrap:nowrap" }, h("input", { type: "text", value: s.cloudLib || "", placeholder: "Press Generate, or paste the code from your other device", style: "margin:0", onchange: async e => { s.cloudLib = e.target.value.trim(); await cloudForget(); await DB.saveSettings(); renderCloudBox(); renderSync(); } }), h("button", { type: "button", class: "btn quiet", onclick: async () => { if (s.cloudLib && !confirm("Make a new code? Your other devices will need the new one, and what is already in the database under the old code stays there.")) return; s.cloudLib = newLibCode(); await cloudForget(); await DB.saveSettings(); renderCloudBox(); renderSync(); } }, s.cloudLib ? "New code" : "Generate"))),
+    h("details", { class: "sub" }, h("summary", null, "One-time setup script for the database"), h("p", { class: "hint" }, "In Supabase open SQL Editor, paste this, and press Run. It creates one table that only accepts requests carrying your sync code."), h("textarea", { readonly: true, rows: 6, "aria-label": "Setup script", onclick: e => e.target.select() }, SETUP_SQL), h("button", { type: "button", class: "btn quiet", onclick: ev => { navigator.clipboard.writeText(SETUP_SQL).then(() => { ev.target.textContent = "Copied"; setTimeout(() => (ev.target.textContent = "Copy the script"), 1500); }).catch(() => {}); } }, "Copy the script")),
+    h("div", { class: "row" },
+      on ? h("button", { type: "button", class: "btn solid", onclick: () => { cloudSync(true); } }, "Sync now") : null,
+      on ? h("button", { type: "button", class: "btn quiet", onclick: async () => { const link = location.origin + location.pathname + "#cloud=" + encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify({ u: s.cloudUrl, k: s.cloudKey, l: s.cloudLib }))))); $("cloudOut").hidden = false; $("cloudOut").value = link; $("cloudOut").select(); try { if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) await navigator.share({ title: "Bizofy sync", url: link }); else { await navigator.clipboard.writeText(link); toast("Link copied. Open it on the other device, and only on your own devices: it carries the sync code."); } } catch (e){} } }, "Set up another device") : null,
+      on ? h("button", { type: "button", class: "btn quiet", onclick: async () => { if (!confirm("Stop syncing on this device? Nothing is deleted here or in the database.")) return; delete s.cloudLib; await cloudForget(); await DB.saveSettings(); renderCloudBox(); renderSync(); } }, "Stop syncing here") : null),
+    h("input", { id: "cloudOut", type: "text", readonly: true, hidden: true, "aria-label": "Setup link" }),
+    C.state === "error" ? h("p", { class: "notice err" }, C.msg) : null);
 }
 /* ---------- state ---------- */
 const S = { list: [], cur: null, sel: null, filter: "all", folderView: null, info: "", view: "main", polish: null, exportSel: null, tab: "transcript", status: {}, busy: {}, err: "", pamErr: "", search: null, q: "", hl: "", course: "", scope: "lecture", draft: "", paste: "", markDraft: "", note: "", up: null, rate: 1, read: 17, editNotes: false, notesDraft: "" };
@@ -3297,6 +3422,7 @@ function readStartLink(){
     if (hash.get("access_token")){ G.token = hash.get("access_token"); G.exp = Date.now() + (+hash.get("expires_in") || 3600) * 1000; out.signedIn = true; }
     else out.signError = hash.get("error") === "access_denied" ? "Google sign-in was cancelled." : "Google sign-in did not finish (" + hash.get("error") + ").";
   } else if (hash.get("setup")) out.setup = hash.get("setup").trim();
+  if (hash.get("cloud")){ try { const j = JSON.parse(decodeURIComponent(escape(atob(hash.get("cloud"))))); if (j && j.u && j.k && j.l) out.cloud = { u: String(j.u), k: String(j.k), l: String(j.l) }; } catch (e){} }
   if (Object.keys(out).length) history.replaceState(null, "", location.pathname + location.search);
   return out;
 }
@@ -3410,7 +3536,7 @@ async function openSettings(sec){
     $("driveState").textContent = DB.sync.on ? "Connected. Your lectures are in the Bizofy folder of your Google Drive." + (DB.sync.last ? " Last synced " + new Date(DB.sync.last).toLocaleString() + "." : "") : "Not connected yet. Paste the client ID from Google Cloud, save, then press Connect Google Drive in the sidebar.";
     $("driveOff").hidden = !DB.sync.on; $("setupLink").hidden = !CLIENT_RE.test(s.googleClientId); $("setupOut").hidden = true;
     $("aboutVer").textContent = "Bizofy " + VERSION + ", released " + RELEASED;
-    renderAppearance(); renderStorage(); renderPrefs(); renderFolderBox();
+    renderAppearance(); renderStorage(); renderPrefs(); renderFolderBox(); renderCloudBox();
   } catch (e){}
   closeDrawers(); showSec(sec || (!S.status.transcribe ? "record" : "gen")); $("settings").showModal();
 }
@@ -3426,8 +3552,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.5.4", RELEASED = "23 September 2026";
+const VERSION = "2.6.0", RELEASED = "23 September 2026";
 const CHANGES = [
+  ["2.6.0", "23 Sep 2026", ["Sync across devices with a sync code: transcripts, notes, highlights, folders and course settings follow you, through a free database of your own, with no Google sign-in", "Set up another device with one link", "Google Drive stays optional, for audio"]],
   ["2.5.4", "23 Sep 2026", ["The Google client ID check no longer rejects a good ID typed on a phone; it cleans up look-alike characters and only warns", "Bizofy remembers which Google account you chose, so Sync no longer asks you to pick it each time", "On a computer, choose a folder and every recording is also saved there as an MP3, sorted by course"]],
   ["2.5.3", "23 Sep 2026", ["One clear library toggle in the top strip, and a matching one for Pambizo; the Bizofy mark is now simply Home", "The library has two sizes, open and rail; hover the rail to peek at the full list", "A recording timer and a now-playing pill in the top strip, on every tab and in focus mode", "On phones: swipe in from the left edge to open the library, swipe a row for Archive and Delete"]],
   ["2.5.2", "22 Sep 2026", ["A top strip on every screen with the Bizofy mark, the current lecture, and the Pambizo button; the mark opens the library or goes home", "The library has three parts: search and filters stay at the top, Settings at the bottom, only the list scrolls", "Folders open one at a time, with time groups inside; pinned and recent stay on top", "Filters: lectures, notes, with audio, this week, unfinished", "Search matches titles, courses and folders as well as transcripts; arrow keys move through results", "Shrink the library to a rail of icons, or hide it fully; [ cycles through the three"]],
@@ -3659,10 +3786,12 @@ async function init(){
   applyTheme(); applyPrefs(); hookGrips(); S.scope = pref("ai.pam.scope") || "lecture"; S.folderView = DB.settings.lastFolder || null; renderVersion(); checkUpdate();
   const link = readStartLink();
   if (link.setup && CLIENT_RE.test(link.setup)){ DB.settings.googleClientId = link.setup; await DB.saveSettings(); S.info = "Google Drive is set up on this device. Press Connect Google Drive in the sidebar."; }
+  if (link.cloud){ DB.settings.cloudUrl = link.cloud.u; DB.settings.cloudKey = link.cloud.k; DB.settings.cloudLib = link.cloud.l; await cloudForget(); await DB.saveSettings(); S.info = "Sync is set up on this device. Your lectures will appear in a moment."; }
   if (link.signError) S.err = link.signError;
   if (DB.sync.on && !link.signedIn) setSync("needs", ""); else renderSync();
   await init();
   if (link.signedIn){ rememberAccount(); syncNow(true); }
+  if (cloudOn()) cloudSync(true);
 })();
 })();
 </script>

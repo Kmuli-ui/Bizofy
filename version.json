@@ -1,5 +1,5 @@
 {
-  "version": "2.5.4",
+  "version": "2.6.0",
   "url": "./",
-  "notes": "Client ID check fixed for phones, remembered Google account, and a recordings folder on computers."
+  "notes": "Sync across devices with a sync code: no Google sign-in needed."
 }
