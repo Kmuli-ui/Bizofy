@@ -1,5 +1,5 @@
 {
-  "version": "2.6.2",
+  "version": "2.6.3",
   "url": "./",
-  "notes": "Fix: the silence watch no longer pauses a live class. It now only asks, unless you turn auto-pause on, and resumes by itself when voices are heard."
+  "notes": "Every tab now scrolls inside its own window; the page never stretches."
 }
