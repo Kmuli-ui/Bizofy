@@ -1,5 +1,5 @@
 {
-  "version": "2.6.1",
+  "version": "2.6.2",
   "url": "./",
-  "notes": "Recording you can trust: pause and resume, silence watch, battery and storage warnings, auto-stop, recovery, microphone choice, tagged marks."
+  "notes": "Fix: the silence watch no longer pauses a live class. It now only asks, unless you turn auto-pause on, and resumes by itself when voices are heard."
 }

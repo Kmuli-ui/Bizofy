@@ -1077,7 +1077,7 @@ async function splitAudio(file){
 /* ---------- preferences: one object with defaults, read everywhere through pref() ---------- */
 const DEFAULTS = {
   gen: { openOn: "home", defaultFolder: "", defaultCourse: "", confirm: true, homeStats: true, homeTiles: true },
-  rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 180, quietWatch: true, quietMin: 3, quietGrace: 2, skipSilent: true, tag: "important", micId: "" },
+  rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 180, quietWatch: true, quietPause: false, quietMin: 3, quietGrace: 2, skipSilent: true, tag: "important", micId: "" },
   tx: { font: "serif", lineHeight: "1.68", showTs: true, showChapters: true, showMarks: true, autoScroll: true },
   ai: { for: { notes: "default", summary: "default", study: "default", pambizo: "default", outline: "default", polish: "default" },
         notes: { detail: "standard", form: "bullets", actions: true, review: true, lang: "" },
@@ -2224,7 +2224,7 @@ async function startRec(){
   preflight();
   startPart();
   startFull(); watchTrack();
-  REC.tick = setInterval(() => { liveLine(); checkRec(); watchQuiet(); }, 500);
+  REC.tick = setInterval(() => { liveLine(); checkRec(); listen(); watchQuiet(); }, 500);
   startMeter();
   if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {});
   render();
@@ -2252,19 +2252,10 @@ function startMeter(){
     if (REC.ctx) REC.ctx.close().catch(() => {});
     cancelAnimationFrame(REC.raf);
     REC.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const an = REC.ctx.createAnalyser(); an.fftSize = 512;
+    const an = REC.ctx.createAnalyser(); an.fftSize = 1024;
     REC.ctx.createMediaStreamSource(REC.stream).connect(an);
-    const buf = new Uint8Array(an.fftSize);
-    const loop = () => {
-      an.getByteTimeDomainData(buf);
-      let sum = 0; for (const v of buf){ const x = (v - 128) / 128; sum += x * x; }
-      const rms = Math.sqrt(sum / buf.length), bar = $("level"); if (bar) bar.style.width = Math.min(100, rms * 320) + "%";
-      if (!REC.paused){
-        if (rms < REC.floor * 1.5) REC.floor = REC.floor * 0.995 + rms * 0.005; else if (rms < REC.floor) REC.floor = rms;
-        if (rms > Math.max(0.012, REC.floor * 3.5)){ REC.lastVoice = Date.now(); REC.partVoice = true; if (REC.quietNotice) quietClear(); }
-      }
-      REC.raf = requestAnimationFrame(loop);
-    };
+    REC.an = an; REC.buf = new Uint8Array(an.fftSize);
+    const loop = () => { const rms = levelNow(), bar = $("level"); if (bar) bar.style.width = Math.min(100, rms * 320) + "%"; REC.raf = requestAnimationFrame(loop); };
     loop();
   } catch (e){}
 }
@@ -2328,14 +2319,14 @@ function startPart(){
 }
 function pauseRec(){
   if (!REC.on || REC.paused) return;
-  REC.paused = true; REC.pauseAt = Date.now(); clearTimeout(REC.rot); quietClear();
+  REC.paused = true; REC.pauseAt = Date.now(); REC.autoPaused = false; clearTimeout(REC.rot); quietClear();
   if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr._voice = REC.partVoice; REC.mr.stop(); }
   try { if (REC.full && REC.full.state === "recording") REC.full.pause(); } catch (e){}
   REC.msg = ""; render();
 }
 function resumeRec(){
   if (!REC.on || !REC.paused) return;
-  REC.pausedMs += Date.now() - REC.pauseAt; REC.paused = false; REC.pauseAt = 0; REC.lastVoice = Date.now();
+  REC.pausedMs += Date.now() - REC.pauseAt; REC.paused = false; REC.pauseAt = 0; REC.lastVoice = Date.now(); REC.autoPaused = false; REC.warned.long = false;
   try { if (REC.full && REC.full.state === "paused") REC.full.resume(); } catch (e){}
   startPart(); render();
 }
@@ -2355,6 +2346,28 @@ function stopRec(){
   render();
 }
 const TAGS = [["important", "Important"], ["exam", "Exam"], ["homework", "Homework"], ["question", "Question"]];
+function levelNow(){
+  if (REC._fakeLevel != null) return REC._fakeLevel;
+  if (!REC.an) return 0;
+  REC.an.getByteTimeDomainData(REC.buf);
+  let sum = 0; for (const v of REC.buf){ const x = (v - 128) / 128; sum += x * x; }
+  return Math.sqrt(sum / REC.buf.length);
+}
+// runs every half second, in the background too: is anyone speaking?
+function listen(){
+  if (!REC.on || !REC.an) return;
+  const now = Date.now();
+  if (REC.lastTick && now - REC.lastTick > 5000) REC.lastVoice = now;   // the page was asleep: that time is unknown, not silence
+  REC.lastTick = now;
+  const rms = levelNow();
+  if (rms < REC.floor * 1.5) REC.floor = Math.max(0.0015, REC.floor * 0.99 + rms * 0.01); else if (rms < REC.floor) REC.floor = rms;
+  const voice = rms > Math.max(0.006, REC.floor * 2.5);
+  if (voice){
+    REC.lastVoice = now; if (!REC.paused) REC.partVoice = true;
+    if (REC.quietNotice) quietClear();
+    if (REC.paused && REC.autoPaused){ REC.autoPaused = false; const gap = (now - REC.pauseAt) / 1000; resumeRec(); api("POST", "/api/lectures/" + REC.lecId + "/marks", { t: Math.round(nowAbs()), text: "Bizofy paused itself for " + fmt(gap) + " thinking the room was quiet, then heard voices and resumed." }).catch(() => {}); toast("Voices heard: recording resumed by itself after " + fmt(gap) + "."); }
+  }
+}
 function markImportant(tag){
   if (!REC.on || REC.paused) return;
   const t = nowAbs(), tg = tag || pref("rec.tag") || "important";
@@ -2366,14 +2379,16 @@ function markImportant(tag){
 }
 /* silence watch: notice after a quiet spell, pause by itself if nobody answers */
 function watchQuiet(){
-  if (!REC.on || REC.paused || pref("rec.quietWatch") === false) return;
+  if (!REC.on || pref("rec.quietWatch") === false) return;
+  if (REC.paused) return;
   const quietFor = (Date.now() - REC.lastVoice) / 1000, warnAt = 60 * (+pref("rec.quietMin") || 3), pauseAt = warnAt + 60 * (+pref("rec.quietGrace") || 2);
   const limit = 60 * (+pref("rec.autoStopMin") || 0);
   if (limit && nowAbs() - REC.base > limit){ stopRec(); REC.msg = "Recording stopped by itself after " + fmt(limit) + ", the limit set in Settings."; toast(REC.msg); const m = $("recMsg"); if (m){ m.hidden = false; m.textContent = REC.msg; } return; }
-  if (quietFor > pauseAt){ pauseRec(); REC.msg = "Nothing was heard for " + fmt(quietFor) + " and nobody answered, so the recording paused itself. Press Resume when class continues."; render(); notify("Bizofy paused the recording", "Nothing has been heard for " + fmt(quietFor) + "."); return; }
-  if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording? It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes."; } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
+  if (quietFor > pauseAt && pref("rec.quietPause") === true){ pauseRec(); REC.autoPaused = true; REC.msg = "Nothing was heard for " + fmt(quietFor) + " and nobody answered, so the recording paused itself. It will resume by itself as soon as voices are heard, or press Resume."; render(); notify("Bizofy paused the recording", "Nothing has been heard for " + fmt(quietFor) + ". It resumes when voices are heard."); return; }
+  if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
+  if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -3647,8 +3662,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.1", RELEASED = "25 September 2026";
+const VERSION = "2.6.2", RELEASED = "25 September 2026";
 const CHANGES = [
+  ["2.6.2", "25 Sep 2026", ["Fix: the silence watch could pause a live class when the phone screen dimmed or the tab was in the background, because the voice detector stopped with the screen. It now listens in the background too", "Pausing by itself is now off by default: Bizofy only asks. If you turn it on, it resumes by itself the moment voices are heard, and marks the gap"]],
   ["2.6.1", "25 Sep 2026", ["Pause and resume while recording, with proper Record, Pause and Stop buttons; the timer stops while paused", "Silence watch: after a quiet spell Bizofy asks whether class is still on, then pauses by itself if nobody answers", "Silent parts are not sent for transcription", "Warnings for low battery and low storage, and an automatic stop after a set length", "Recovery when a recording ended unexpectedly", "Choose the microphone, and mark moments as Important, Exam, Homework or Question"]],
   ["2.6.0", "23 Sep 2026", ["Sync across devices with a sync code: transcripts, notes, highlights, folders and course settings follow you, through a free database of your own, with no Google sign-in", "Set up another device with one link", "Google Drive stays optional, for audio"]],
   ["2.5.4", "23 Sep 2026", ["The Google client ID check no longer rejects a good ID typed on a phone; it cleans up look-alike characters and only warns", "Bizofy remembers which Google account you chose, so Sync no longer asks you to pick it each time", "On a computer, choose a folder and every recording is also saved there as an MP3, sorted by course"]],
@@ -3723,7 +3739,8 @@ function renderPrefs(){
     field("Language spoken in class, by default", "rec.language", "select", LANGS),
     field("Mark highlights the previous", "rec.flagBack", "select", [[10, "10 seconds"], [20, "20 seconds"], [40, "40 seconds"], [60, "1 minute"]]),
     h("h3", null, "Silence and limits"),
-    field("Watch for silence and pause by itself", "rec.quietWatch", "check", null, "Bizofy asks first, then pauses if nobody answers."),
+    field("Watch for silence and ask whether class is still on", "rec.quietWatch", "check"),
+    field("Also pause by itself if nobody answers", "rec.quietPause", "check", null, "Off by default. If on, it resumes by itself the moment voices are heard."),
     field("Ask after this much silence", "rec.quietMin", "select", [[2, "2 minutes"], [3, "3 minutes"], [5, "5 minutes"], [10, "10 minutes"]]),
     field("Pause by itself this much later", "rec.quietGrace", "select", [[1, "1 minute"], [2, "2 minutes"], [5, "5 minutes"]]),
     field("Do not transcribe silent parts", "rec.skipSilent", "check", null, "Saves API usage and avoids blank paragraphs; the audio is still kept."),
