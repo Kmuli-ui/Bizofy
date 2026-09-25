@@ -583,6 +583,29 @@ body.focus .topbar{display:flex}
 body.focus .panel-btn{visibility:hidden}
 #cloudBox textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:var(--t-2);line-height:1.4}
 #cloudOut{margin-top:8px;font-size:var(--t-2)}
+
+/* 2.6.1: recording controls, silence watch, tags */
+.rec-ctl{display:flex;gap:8px;align-items:center}
+.recbtn.small{width:50px;height:50px;color:var(--deck-ink)}
+.recbtn.stop{border-color:#E0483D;color:#E0483D}
+.recbtn.small:hover{background:rgba(255,255,255,.1)}
+.clock.paused{opacity:.6}
+.mark-ctl{display:flex;gap:6px}
+.mark-ctl .flag{flex:1}
+.tag-sel{background:transparent;color:inherit;border:1px solid rgba(255,255,255,.35);border-radius:6px;padding:4px 6px;font-size:var(--t-2);max-width:120px}
+.tag-sel option{color:#14233B;background:#fff}
+.quiet{grid-column:1/-1;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;background:var(--hi);color:var(--on-hi);border-radius:10px;padding:10px 14px;font-size:var(--t-1);font-weight:600}
+.quiet .btn{border-color:rgba(20,35,59,.35);color:var(--on-hi);font-weight:600}
+.rec-pill.paused{background:var(--slate)}
+.rec-pill.paused i{animation:none}
+.seg.tag-exam .tx{background:#FFD1D1;box-shadow:-4px 0 0 #FFD1D1,4px 0 0 #FFD1D1}
+.seg.tag-homework .tx{background:#D6EAFF;box-shadow:-4px 0 0 #D6EAFF,4px 0 0 #D6EAFF}
+.seg.tag-question .tx{background:#E3D9FF;box-shadow:-4px 0 0 #E3D9FF,4px 0 0 #E3D9FF}
+:root[data-mode="dark"] .seg.tag-exam .tx{background:#5A2323;box-shadow:-4px 0 0 #5A2323,4px 0 0 #5A2323}
+:root[data-mode="dark"] .seg.tag-homework .tx{background:#1F3A5A;box-shadow:-4px 0 0 #1F3A5A,4px 0 0 #1F3A5A}
+:root[data-mode="dark"] .seg.tag-question .tx{background:#3A2E5A;box-shadow:-4px 0 0 #3A2E5A,4px 0 0 #3A2E5A}
+.sc-hi.tag-exam{background:#E0483D}.sc-hi.tag-homework{background:#2F6FE4}.sc-hi.tag-question{background:#7B5CD6}
+@media (max-width:760px){.mark-ctl{flex:1}}
 </style>
 </head>
 <body>
@@ -1024,7 +1047,7 @@ async function transcribePart(id, n){
   lec.segments.sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t));
   // "Mark as important" presses highlight what was being said just before the press.
   const back = Math.max(5, Math.min(60, +pref("rec.flagBack") || 20));
-  for (const f of part.flags || []) for (const s of lec.segments) if (s.part === n || s.part === n - 1) if (s.t != null && s.t <= f + 1 && (s.end == null ? s.t + 20 : s.end) >= f - (back - 15)) s.flag = true;
+  for (const f of part.flags || []) for (const s of lec.segments) if (s.part === n || s.part === n - 1) if (s.t != null && s.t <= f + 1 && (s.end == null ? s.t + 20 : s.end) >= f - (back - 15)){ s.flag = true; const tg = (part.tags || {})[String(f.toFixed(1))]; if (tg && tg !== "important") s.tag = tg; }
   await DB.save(lec);
   return lec;
 }
@@ -1054,7 +1077,7 @@ async function splitAudio(file){
 /* ---------- preferences: one object with defaults, read everywhere through pref() ---------- */
 const DEFAULTS = {
   gen: { openOn: "home", defaultFolder: "", defaultCourse: "", confirm: true, homeStats: true, homeTiles: true },
-  rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 0 },
+  rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 180, quietWatch: true, quietMin: 3, quietGrace: 2, skipSilent: true, tag: "important", micId: "" },
   tx: { font: "serif", lineHeight: "1.68", showTs: true, showChapters: true, showMarks: true, autoScroll: true },
   ai: { for: { notes: "default", summary: "default", study: "default", pambizo: "default", outline: "default", polish: "default" },
         notes: { detail: "standard", form: "bullets", actions: true, review: true, lang: "" },
@@ -2175,7 +2198,8 @@ const bitrate = () => ({ light: 32000, standard: 48000, high: 96000 })[pref("rec
 const MIME = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find(m => window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || "";
 const REC = { on: false, stream: null, mr: null, startMs: 0, base: 0, flags: [], rot: null, tick: null, ctx: null, raf: 0, wake: null, lecId: null, msg: "" };
 const Q = { items: [], busy: false, waiting: false };
-const nowAbs = () => REC.base + (Date.now() - REC.startMs) / 1000;
+const nowAbs = () => REC.base + (Date.now() - REC.startMs - (REC.pausedMs || 0) - (REC.paused ? Date.now() - REC.pauseAt : 0)) / 1000;
+const micConstraints = () => ({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true, ...(pref("rec.micId") ? { deviceId: { exact: pref("rec.micId") } } : {}) } });
 
 async function startRec(){
   const lec = S.cur; if (!lec) return;
@@ -2187,17 +2211,20 @@ async function startRec(){
     return render();
   }
   stopPlayer();
-  try { REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } }); }
+  try { REC.stream = await navigator.mediaDevices.getUserMedia(micConstraints()); }
   catch (e){
     REC.msg = e.name === "NotFoundError" ? "No microphone was found. Plug one in, then press record."
       : "Microphone access was refused. Click the icon at the left of the address bar, allow the microphone, then press record.";
     return render();
   }
-  REC.on = true; REC.lecId = lec.id; REC.flags = [];
+  REC.on = true; REC.lecId = lec.id; REC.flags = []; REC.tags = {}; REC.paused = false; REC.pausedMs = 0; REC.pauseAt = 0;
   REC.base = Math.ceil(lec.duration || 0); REC.startMs = Date.now(); REC.beat = REC.base; REC.muteAt = null;
+  REC.lastVoice = Date.now(); REC.floor = 0.004; REC.partVoice = false; REC.quietNotice = false; REC.warned = {};
+  DB.settings.recActive = { lecId: lec.id, at: Date.now() }; DB.tx("kv", "readwrite", st => st.put(DB.settings, "settings")).catch(() => {});
+  preflight();
   startPart();
   startFull(); watchTrack();
-  REC.tick = setInterval(() => { liveLine(); checkRec(); }, 500);
+  REC.tick = setInterval(() => { liveLine(); checkRec(); watchQuiet(); }, 500);
   startMeter();
   if (navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {});
   render();
@@ -2231,7 +2258,11 @@ function startMeter(){
     const loop = () => {
       an.getByteTimeDomainData(buf);
       let sum = 0; for (const v of buf){ const x = (v - 128) / 128; sum += x * x; }
-      const bar = $("level"); if (bar) bar.style.width = Math.min(100, Math.sqrt(sum / buf.length) * 320) + "%";
+      const rms = Math.sqrt(sum / buf.length), bar = $("level"); if (bar) bar.style.width = Math.min(100, rms * 320) + "%";
+      if (!REC.paused){
+        if (rms < REC.floor * 1.5) REC.floor = REC.floor * 0.995 + rms * 0.005; else if (rms < REC.floor) REC.floor = rms;
+        if (rms > Math.max(0.012, REC.floor * 3.5)){ REC.lastVoice = Date.now(); REC.partVoice = true; if (REC.quietNotice) quietClear(); }
+      }
       REC.raf = requestAnimationFrame(loop);
     };
     loop();
@@ -2256,7 +2287,7 @@ async function recoverRec(since){
   REC.full = null; REC.muteAt = null;
   try { REC.stream.getTracks().forEach(t => t.stop()); } catch (e){}
   try {
-    REC.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } });
+    REC.stream = await navigator.mediaDevices.getUserMedia(micConstraints());
     const gap = nowAbs() - at;
     if (gap > 3) await api("POST", "/api/lectures/" + lecId + "/marks", { t: at, text: "Recording paused here for " + fmt(gap) + ", while Bizofy was in the background or the screen was locked." }).catch(() => {});
     REC.beat = nowAbs();
@@ -2272,7 +2303,7 @@ async function recoverRec(since){
   if (S.tab === "transcript") softRefresh();
 }
 function checkRec(){
-  if (!REC.on || REC.recovering) return;
+  if (!REC.on || REC.recovering || REC.paused) return;
   const t = REC.stream && REC.stream.getAudioTracks()[0], frozenFor = nowAbs() - (REC.beat || nowAbs());
   if (!t || t.readyState === "ended" || (REC.mr && REC.mr.state === "inactive")) return void recoverRec();
   if (t.muted && REC.muteAt == null) REC.muteAt = REC.beat;
@@ -2287,18 +2318,34 @@ function startPart(){
     const endAbs = mr._endAbs || nowAbs();
     const blob = new Blob(chunks, { type: (mr.mimeType || MIME || "audio/webm").split(";")[0] });
     if (blob.size < 800 || endAbs - startAbs < 0.8) return;
-    Q.items.push({ lecId, blob, offset: startAbs, dur: endAbs - startAbs, flags: REC.flags.filter(f => f >= startAbs - 0.5 && f < endAbs + 0.5), lang: (S.cur && S.cur.language) || "auto" });
+    if (!mr._voice && pref("rec.skipSilent") !== false && endAbs - startAbs > 10){ const l = DB.lectures.get(lecId); if (l){ l.audio = l.audio || []; const n = l.audio.reduce((m, a) => Math.max(m, a.n), 0) + 1; l.audio.push({ n, file: "r" + n + "." + extFor(blob.type), mime: blob.type, offset: startAbs, dur: endAbs - startAbs, flags: [], done: true, silent: true }); l.duration = Math.max(l.duration || 0, endAbs); DB.putAudio(lecId, n, blob).then(() => DB.save(l)).catch(() => {}); } return; }
+    Q.items.push({ lecId, blob, offset: startAbs, dur: endAbs - startAbs, flags: REC.flags.filter(f => f >= startAbs - 0.5 && f < endAbs + 0.5), tags: REC.tags, lang: (S.cur && S.cur.language) || "auto" });
     pump();
   };
-  mr.start();
+  mr.start(); REC.partVoice = false;
   REC.mr = mr;
-  REC.rot = setTimeout(() => { if (!REC.on) return; const old = REC.mr; old._endAbs = nowAbs(); startPart(); old.stop(); }, partSec() * 1000);
+  REC.rot = setTimeout(() => { if (!REC.on || REC.paused) return; const old = REC.mr; old._endAbs = nowAbs(); old._voice = REC.partVoice; startPart(); old.stop(); }, partSec() * 1000);
+}
+function pauseRec(){
+  if (!REC.on || REC.paused) return;
+  REC.paused = true; REC.pauseAt = Date.now(); clearTimeout(REC.rot); quietClear();
+  if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr._voice = REC.partVoice; REC.mr.stop(); }
+  try { if (REC.full && REC.full.state === "recording") REC.full.pause(); } catch (e){}
+  REC.msg = ""; render();
+}
+function resumeRec(){
+  if (!REC.on || !REC.paused) return;
+  REC.pausedMs += Date.now() - REC.pauseAt; REC.paused = false; REC.pauseAt = 0; REC.lastVoice = Date.now();
+  try { if (REC.full && REC.full.state === "paused") REC.full.resume(); } catch (e){}
+  startPart(); render();
 }
 function stopRec(){
   if (!REC.on) return;
-  REC.on = false;
+  if (REC.paused){ REC.pausedMs += Date.now() - REC.pauseAt; REC.paused = false; }
+  REC.on = false; quietClear();
+  delete DB.settings.recActive; DB.tx("kv", "readwrite", st => st.put(DB.settings, "settings")).catch(() => {});
   clearTimeout(REC.rot); clearInterval(REC.tick); cancelAnimationFrame(REC.raf);
-  if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr.stop(); }
+  if (REC.mr && REC.mr.state !== "inactive"){ REC.mr._endAbs = nowAbs(); REC.mr._voice = REC.partVoice; REC.mr.stop(); }
   if (REC.full && REC.full.state !== "inactive"){ REC.full._endAbs = nowAbs(); REC.full.stop(); }
   REC.full = null;
   const stream = REC.stream;
@@ -2307,12 +2354,37 @@ function stopRec(){
   if (REC.wake){ REC.wake.release().catch(() => {}); REC.wake = null; }
   render();
 }
-function markImportant(){
-  if (!REC.on) return;
-  REC.flags.push(nowAbs());
+const TAGS = [["important", "Important"], ["exam", "Exam"], ["homework", "Homework"], ["question", "Question"]];
+function markImportant(tag){
+  if (!REC.on || REC.paused) return;
+  const t = nowAbs(), tg = tag || pref("rec.tag") || "important";
+  REC.flags.push(t); REC.tags[String(t.toFixed(1))] = tg;
+  if (tg !== "important") api("POST", "/api/lectures/" + REC.lecId + "/marks", { t: Math.round(t), text: "⚑ " + (TAGS.find(x => x[0] === tg) || [tg, tg])[1] }).then(() => { if (S.tab === "transcript") softRefresh(); }).catch(() => {});
   const b = $("flagBtn"); if (!b) return;
   b.classList.add("hit"); b.textContent = "Marked";
-  setTimeout(() => { const x = $("flagBtn"); if (x){ x.classList.remove("hit"); x.textContent = "Mark as important"; } }, 1300);
+  setTimeout(() => { const x = $("flagBtn"); if (x){ x.classList.remove("hit"); x.textContent = "Mark"; } }, 1300);
+}
+/* silence watch: notice after a quiet spell, pause by itself if nobody answers */
+function watchQuiet(){
+  if (!REC.on || REC.paused || pref("rec.quietWatch") === false) return;
+  const quietFor = (Date.now() - REC.lastVoice) / 1000, warnAt = 60 * (+pref("rec.quietMin") || 3), pauseAt = warnAt + 60 * (+pref("rec.quietGrace") || 2);
+  const limit = 60 * (+pref("rec.autoStopMin") || 0);
+  if (limit && nowAbs() - REC.base > limit){ stopRec(); REC.msg = "Recording stopped by itself after " + fmt(limit) + ", the limit set in Settings."; toast(REC.msg); const m = $("recMsg"); if (m){ m.hidden = false; m.textContent = REC.msg; } return; }
+  if (quietFor > pauseAt){ pauseRec(); REC.msg = "Nothing was heard for " + fmt(quietFor) + " and nobody answered, so the recording paused itself. Press Resume when class continues."; render(); notify("Bizofy paused the recording", "Nothing has been heard for " + fmt(quietFor) + "."); return; }
+  if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording? It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes."; } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
+}
+window.__bizofyTest = { elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
+function notify(title, body){
+  if (document.visibilityState === "visible" || !("Notification" in window)) return;
+  if (Notification.permission === "granted"){ try { new Notification(title, { body, tag: "bizofy-quiet" }); } catch (e){} }
+}
+function chime(){ try { const c = REC.ctx || new (window.AudioContext || window.webkitAudioContext)(), o = c.createOscillator(), g = c.createGain(); o.frequency.value = 880; g.gain.value = 0.0001; o.connect(g); g.connect(c.destination); o.start(); g.gain.exponentialRampToValueAtTime(0.08, c.currentTime + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + 0.6); o.stop(c.currentTime + 0.65); } catch (e){} }
+/* before class: battery, storage, notifications */
+async function preflight(){
+  try { if ("Notification" in window && Notification.permission === "default" && pref("rec.quietWatch") !== false) Notification.requestPermission().catch(() => {}); } catch (e){}
+  try { if (navigator.storage && navigator.storage.estimate){ const e = await navigator.storage.estimate(); if (e.quota && e.quota - e.usage < 250 * 1048576) toast("This device has under 250 MB left for Bizofy. A long lecture may not fit. Free some space, or delete audio you no longer need in Settings, Storage."); } } catch (e){}
+  try { if (navigator.getBattery){ const b = await navigator.getBattery(); const check = () => { if (REC.on && !b.charging && b.level <= 0.15 && !REC.warned.battery){ REC.warned.battery = true; toast("Battery is at " + Math.round(b.level * 100) + "%. Plug in so the recording is not cut short."); } }; check(); b.addEventListener("levelchange", check); b.addEventListener("chargingchange", check); } } catch (e){}
 }
 async function pump(){
   if (Q.busy || !Q.items.length) return;
@@ -2321,7 +2393,7 @@ async function pump(){
   try {
     const lec = getLec(it.lecId);
     lec.language = it.lang;
-    const n = addPart(lec, it.blob.type || "audio/webm", it.offset, it.dur, it.flags);
+    const n = addPart(lec, it.blob.type || "audio/webm", it.offset, it.dur, it.flags); const part = lec.audio[lec.audio.length - 1]; part.tags = it.tags || {};
     await DB.putAudio(lec.id, n, it.blob);
     await DB.save(lec);
     try { adopt(await transcribePart(lec.id, n), true); const ae = document.activeElement; if (!REC.on && !$("seek") && !(ae && /INPUT|TEXTAREA/.test(ae.tagName)) && !(ae && ae.isContentEditable)) render(); }
@@ -2340,6 +2412,7 @@ function liveLine(){
   const n = Q.items.length;
   const n2 = n + (Q.busy ? 1 : 0);
   l.textContent = !navigator.onLine && REC.on ? "Recording offline. The audio is saved on this device and is transcribed when you are back online."
+    : REC.on && REC.paused ? "Paused. Press Resume to continue this lecture."
     : REC.on ? "Recording. New text appears about every " + partSec() + " seconds." + (n > 1 ? " " + n + " parts in line." : "")
     : n2 ? "Transcribing the last " + (n2 === 1 ? "part" : n2 + " parts") + "…"
     : idleLine();
@@ -2729,7 +2802,7 @@ function marked(text){
 }
 function segNode(lec, seg){
   const tx = h("div", { class: "tx", contenteditable: "true", spellcheck: "true", "aria-label": "Transcript text, editable" }, marked(seg.text));
-  const row = h("div", { class: "seg" + (seg.flag ? " on" : "") });
+  const row = h("div", { class: "seg" + (seg.flag ? " on" : "") + (seg.tag ? " tag-" + seg.tag : "") });
   tx.addEventListener("blur", () => {
     const v = tx.textContent.trim();
     if (v !== seg.text){
@@ -3120,15 +3193,21 @@ function renderMain(){
     const seek = h("input", { type: "range", id: "seek", min: 0, max: Math.max(1, Math.floor(lec.duration || 0)), step: 1, value: P.lecId === lec.id ? playAbs() : 0, "aria-label": "Position in the recording",
       oninput: e => { e.target._drag = true; }, onchange: e => { e.target._drag = false; playFrom(+e.target.value); } });
     main.append(h("div", { class: "deck" + (REC.on ? " is-live" : "") },
-      h("button", { class: "recbtn", id: "recBtn", "aria-pressed": REC.on ? "true" : "false", "aria-label": REC.on ? "Stop recording" : "Start recording", onclick: () => (REC.on ? stopRec() : startRec()) }, h("i")),
+      h("div", { class: "rec-ctl" },
+        !REC.on ? h("button", { class: "recbtn", id: "recBtn", "aria-pressed": "false", "aria-label": "Start recording", title: "Record (R)", onclick: startRec }, h("i"))
+        : [h("button", { class: "recbtn small", id: "pauseBtn", "aria-label": REC.paused ? "Resume recording" : "Pause recording", title: (REC.paused ? "Resume" : "Pause") + " (space)", onclick: () => (REC.paused ? resumeRec() : pauseRec()) }, REC.paused ? h("svg", { viewBox: "0 0 20 20", width: "22", height: "22", "aria-hidden": "true" }, h("path", { d: "M6 4l10 6-10 6z", fill: "currentColor" })) : h("svg", { viewBox: "0 0 20 20", width: "22", height: "22", "aria-hidden": "true" }, h("rect", { x: "5", y: "4", width: "3.5", height: "12", fill: "currentColor" }), h("rect", { x: "11.5", y: "4", width: "3.5", height: "12", fill: "currentColor" }))),
+           h("button", { class: "recbtn small stop", id: "recBtn", "aria-pressed": "true", "aria-label": "Stop recording", title: "Stop", onclick: stopRec }, h("svg", { viewBox: "0 0 20 20", width: "20", height: "20", "aria-hidden": "true" }, h("rect", { x: "4", y: "4", width: "12", height: "12", rx: "2", fill: "currentColor" })))]),
       h("div", { style: "min-width:0" },
-        h("div", { class: "clock", id: "clock" }, fmt(REC.on ? nowAbs() : lec.duration)),
+        h("div", { class: "clock" + (REC.paused ? " paused" : ""), id: "clock" }, fmt(REC.on ? nowAbs() : lec.duration)),
         h("div", { class: "live", id: "live", role: "status" }),
         REC.on ? h("div", { class: "meter", "aria-hidden": "true" }, h("b", { id: "level" })) : null),
       h("div", { class: "side-ctl" },
-        h("button", { class: "flag", id: "flagBtn", disabled: !REC.on, onclick: markImportant }, "Mark as important"),
-        h("select", { "aria-label": "Spoken language", disabled: REC.on, onchange: async e => { lec.language = e.target.value; api("PATCH", "/api/lectures/" + lec.id, { language: lec.language }).catch(fail); } },
-          LANGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (lec.language || "auto")) o.selected = true; return o; }))),
+        h("div", { class: "mark-ctl" }, h("button", { class: "flag", id: "flagBtn", disabled: !REC.on || REC.paused, title: "Highlight what was just said (M)", onclick: () => markImportant() }, "Mark"),
+          h("select", { class: "tag-sel", "aria-label": "What kind of mark", disabled: !REC.on, onchange: async e => { await setPref("rec.tag", e.target.value); } }, TAGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (pref("rec.tag") || "important")) o.selected = true; return o; }))),
+        REC.on ? null : h("select", { "aria-label": "Spoken language", disabled: REC.on, onchange: async e => { lec.language = e.target.value; api("PATCH", "/api/lectures/" + lec.id, { language: lec.language }).catch(fail); } },
+          LANGS.map(([v, t]) => { const o = h("option", { value: v }, t); if (v === (lec.language || "auto")) o.selected = true; return o; })),
+        !REC.on && S.mics && S.mics.length > 1 ? h("select", { "aria-label": "Microphone", onchange: async e => { await setPref("rec.micId", e.target.value); } }, h("option", { value: "" }, "Default microphone"), S.mics.map(m => { const o = h("option", { value: m.deviceId }, m.label || "Microphone"); if (m.deviceId === pref("rec.micId")) o.selected = true; return o; })) : null),
+      REC.on ? h("div", { class: "quiet", id: "quietBox", role: "alert", hidden: !REC.quietNotice }, h("span", { id: "quietText" }), h("span", { class: "row" }, h("button", { class: "btn quiet", onclick: () => { REC.lastVoice = Date.now(); quietClear(); } }, "Keep recording"), h("button", { class: "btn quiet", onclick: () => { pauseRec(); } }, "Pause"))) : null,
       canPlay && !REC.on ? h("div", { class: "player" },
         h("button", { id: "playBtn", onclick: () => (P.a.paused ? (P.lecId === lec.id && P.a.src ? P.a.play() : playFrom(+seek.value || 0)) : P.a.pause()) }, P.a.paused ? "Play" : "Pause"),
         h("button", { "aria-label": "Back 10 seconds", title: "Back 10 seconds", onclick: () => playFrom(Math.max(0, (P.lecId === lec.id ? playAbs() : +seek.value || 0) - 10)) }, "−10s"),
@@ -3267,7 +3346,7 @@ function scrubberNode(lec){
   const pos = r => (dur > 0 && r.t != null ? r.t / dur : N > 1 ? rows.indexOf(r) / (N - 1) : 0) * 100;
   const bar = h("div", { class: "scrub", id: "scrub", role: "slider", "aria-label": "Position in the lecture", tabindex: "0" },
     ...rows.filter(r => r.c).map(r => h("span", { class: "sc-chap", style: "top:" + pos(r) + "%", title: r.c.title }, r.c.title)),
-    ...rows.filter(r => r.s && r.s.flag).map(r => h("i", { class: "sc-hi", style: "top:" + pos(r) + "%" })),
+    ...rows.filter(r => r.s && r.s.flag).map(r => h("i", { class: "sc-hi" + (r.s.tag ? " tag-" + r.s.tag : ""), style: "top:" + pos(r) + "%", title: r.s.tag || "important" })),
     ...rows.filter(r => r.m).map(r => h("i", { class: "sc-mark", style: "top:" + pos(r) + "%" })),
     h("i", { class: "sc-view", id: "scView" }), h("i", { class: "sc-now", id: "scNow", hidden: true }));
   const go = y => { const b = bar.getBoundingClientRect(), f = Math.max(0, Math.min(1, (y - b.top) / b.height)); let i = dur > 0 ? rowIndexAt(f * dur) : Math.round(f * (N - 1)); if (i < 0) i = 0; V.follow = false; revealIndex(i, { block: "start" }); };
@@ -3404,6 +3483,7 @@ document.addEventListener("keydown", e => {
   else if (k === "[") togglePanel("side");
   else if (k === "]") togglePanel("pam");
   else if (!lec || lec.kind === "note") return;
+  else if (k === " " && REC.on){ e.preventDefault(); REC.paused ? resumeRec() : pauseRec(); }
   else if (k === " " && !REC.on && lec.audio && lec.audio.length){ e.preventDefault(); const b = $("playBtn"); if (b) b.click(); }
   else if ((k === "j" || k === "l") && !REC.on && P.lecId === lec.id){ playFrom(Math.max(0, playAbs() + (k === "j" ? -10 : 10))); }
   else if (k === "r" && !REC.on){ startRec(); }
@@ -3462,7 +3542,7 @@ function frCount(){
 /* top-strip pills: recording timer and now playing */
 function updatePills(){
   const rp = $("recPill"), pp = $("playPill"); if (!rp || !pp) return;
-  rp.hidden = !REC.on; if (REC.on) $("recPillTime").textContent = fmt(nowAbs());
+  rp.hidden = !REC.on; if (REC.on){ $("recPillTime").textContent = fmt(nowAbs()) + (REC.paused ? " paused" : ""); rp.classList.toggle("paused", !!REC.paused); }
   const playing = S.cur && P.lecId === S.cur.id && P.a.src && !REC.on;
   pp.hidden = !playing; if (playing){ $("playPillTime").textContent = fmt(playAbs()); $("playPillBtn").textContent = P.a.paused ? "▶" : "❚❚"; }
 }
@@ -3514,6 +3594,21 @@ function renderFolderBox(){
   });
 }
 
+/* microphones: listed once permission has been given */
+async function listMics(){
+  try { if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return; const all = await navigator.mediaDevices.enumerateDevices(); S.mics = all.filter(d => d.kind === "audioinput" && d.deviceId && d.deviceId !== "default" && d.deviceId !== "communications"); } catch (e){ S.mics = []; }
+}
+if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) navigator.mediaDevices.addEventListener("devicechange", () => listMics().then(() => { if (S.cur && !REC.on) render(); }));
+/* a recording that ended without Stop: the parts already saved are kept, and the gap is marked */
+async function recoverInterrupted(){
+  const ra = DB.settings.recActive; if (!ra || REC.on) return;
+  delete DB.settings.recActive; await DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {});
+  const lec = DB.lectures.get(ra.lecId); if (!lec) return;
+  const at = lec.duration || 0;
+  lec.marks = lec.marks || []; lec.marks.push({ id: newId("m"), t: Math.round(at), text: "Recording ended unexpectedly here, on " + new Date(ra.at).toLocaleString() + ". Everything up to this point was kept." }); await DB.save(lec);
+  S.info = "“" + lec.title + "” was still recording when Bizofy last closed. What was saved is kept; open it to continue."; 
+}
+
 /* ---------- settings + login ---------- */
 function showSec(id){
   document.querySelectorAll(".set-sec").forEach(s => (s.hidden = s.dataset.sec !== id));
@@ -3552,8 +3647,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.0", RELEASED = "23 September 2026";
+const VERSION = "2.6.1", RELEASED = "25 September 2026";
 const CHANGES = [
+  ["2.6.1", "25 Sep 2026", ["Pause and resume while recording, with proper Record, Pause and Stop buttons; the timer stops while paused", "Silence watch: after a quiet spell Bizofy asks whether class is still on, then pauses by itself if nobody answers", "Silent parts are not sent for transcription", "Warnings for low battery and low storage, and an automatic stop after a set length", "Recovery when a recording ended unexpectedly", "Choose the microphone, and mark moments as Important, Exam, Homework or Question"]],
   ["2.6.0", "23 Sep 2026", ["Sync across devices with a sync code: transcripts, notes, highlights, folders and course settings follow you, through a free database of your own, with no Google sign-in", "Set up another device with one link", "Google Drive stays optional, for audio"]],
   ["2.5.4", "23 Sep 2026", ["The Google client ID check no longer rejects a good ID typed on a phone; it cleans up look-alike characters and only warns", "Bizofy remembers which Google account you chose, so Sync no longer asks you to pick it each time", "On a computer, choose a folder and every recording is also saved there as an MP3, sorted by course"]],
   ["2.5.3", "23 Sep 2026", ["One clear library toggle in the top strip, and a matching one for Pambizo; the Bizofy mark is now simply Home", "The library has two sizes, open and rail; hover the rail to peek at the full list", "A recording timer and a now-playing pill in the top strip, on every tab and in focus mode", "On phones: swipe in from the left edge to open the library, swipe a row for Archive and Delete"]],
@@ -3625,7 +3721,13 @@ function renderPrefs(){
     field("Audio quality", "rec.quality", "select", [["light", "Light, about 15 MB an hour"], ["standard", "Standard, about 22 MB an hour"], ["high", "High, about 43 MB an hour"]], "Standard is plenty for speech."),
     field("How often new text arrives", "rec.partSec", "select", [[30, "Every 30 seconds"], [45, "Every 45 seconds"], [90, "Every 90 seconds"], [180, "Every 3 minutes, fewest requests"]]),
     field("Language spoken in class, by default", "rec.language", "select", LANGS),
-    field("Mark as important highlights the previous", "rec.flagBack", "select", [[10, "10 seconds"], [20, "20 seconds"], [40, "40 seconds"], [60, "1 minute"]]));
+    field("Mark highlights the previous", "rec.flagBack", "select", [[10, "10 seconds"], [20, "20 seconds"], [40, "40 seconds"], [60, "1 minute"]]),
+    h("h3", null, "Silence and limits"),
+    field("Watch for silence and pause by itself", "rec.quietWatch", "check", null, "Bizofy asks first, then pauses if nobody answers."),
+    field("Ask after this much silence", "rec.quietMin", "select", [[2, "2 minutes"], [3, "3 minutes"], [5, "5 minutes"], [10, "10 minutes"]]),
+    field("Pause by itself this much later", "rec.quietGrace", "select", [[1, "1 minute"], [2, "2 minutes"], [5, "5 minutes"]]),
+    field("Do not transcribe silent parts", "rec.skipSilent", "check", null, "Saves API usage and avoids blank paragraphs; the audio is still kept."),
+    field("Stop by itself after", "rec.autoStopMin", "select", [[0, "Never"], [120, "2 hours"], [180, "3 hours"], [240, "4 hours"]]));
   $("txBox").replaceChildren(
     field("Reading font", "tx.font", "select", [["serif", "Serif (Newsreader)"], ["sans", "Sans-serif (Bricolage)"]]),
     field("Line spacing", "tx.lineHeight", "select", [["1.5", "Tight"], ["1.68", "Normal"], ["1.9", "Loose"]]),
@@ -3665,7 +3767,7 @@ function renderCourses(){
       h("label", null, "Vocabulary the transcriber should know", h("textarea", { rows: 3, placeholder: "ICER, QALY, Drummond", onchange: e => setVocab(c, e.target.value) }, getVocab(c))));
   }));
 }
-const KEY_LIST = [["/", "Search every transcript"], ["R", "Start recording"], ["M", "Mark as important, while recording"], ["N", "Type a quick note"], ["Space", "Play or pause"], ["J and L", "Back or forward 10 seconds"], ["F", "Focus mode, Esc to leave"], ["[ and ]", "Library open or rail; Pambizo on or off"], ["?", "This list"]];
+const KEY_LIST = [["/", "Search every transcript"], ["R", "Start recording"], ["Space", "Pause or resume while recording; play or pause afterwards"], ["M", "Mark, while recording"], ["N", "Type a quick note"], ["Space", "Play or pause"], ["J and L", "Back or forward 10 seconds"], ["F", "Focus mode, Esc to leave"], ["[ and ]", "Library open or rail; Pambizo on or off"], ["?", "This list"]];
 function renderKeys2(){
   $("keysBox").replaceChildren(field("Single-key shortcuts are on", "keys.enabled", "check", null, "Turn off if they get in the way. Cmd and Ctrl shortcuts in the notes editor always work."),
     h("dl", { class: "keys" }, KEY_LIST.flatMap(([k, d]) => [h("dt", null, k), h("dd", null, d)])));
@@ -3789,6 +3891,7 @@ async function init(){
   if (link.cloud){ DB.settings.cloudUrl = link.cloud.u; DB.settings.cloudKey = link.cloud.k; DB.settings.cloudLib = link.cloud.l; await cloudForget(); await DB.saveSettings(); S.info = "Sync is set up on this device. Your lectures will appear in a moment."; }
   if (link.signError) S.err = link.signError;
   if (DB.sync.on && !link.signedIn) setSync("needs", ""); else renderSync();
+  await recoverInterrupted(); listMics();
   await init();
   if (link.signedIn){ rememberAccount(); syncNow(true); }
   if (cloudOn()) cloudSync(true);
