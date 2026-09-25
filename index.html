@@ -623,6 +623,31 @@ main{padding-top:18px;padding-bottom:20px}
 .deck{padding:12px 16px}
 .recbtn{width:56px;height:56px}
 .clock{font-size:var(--t2)}
+
+/* 2.6.4: the lecture area scrolls, the header rolls away, the tabs stay pinned */
+html,body{height:100%;overflow:hidden}
+.app{height:calc(100vh - 52px);height:calc(100dvh - 52px);min-height:0}
+main{height:100%;overflow:auto;overscroll-behavior:contain;padding-bottom:24px}
+.tabs{position:sticky;top:0;z-index:4;background:var(--paper);margin-top:14px}
+.deck.is-live{top:0}
+.pane-scroll{overflow:visible;height:auto!important;padding:2px 0 0;margin:0}
+@media (min-width:761px){.side{height:100%;top:0}}
+@media (min-width:1181px){.pam{height:100%;top:0}}
+body.focus .app{height:100vh;height:100dvh}
+body.focus main{padding-top:56px}
+body.focus .pane-scroll,body.focus .seg-scroll{height:auto!important}
+body.focus .seg-scroll{height:calc(100dvh - 130px)!important}
+
+.outline{padding:6px 12px;margin-bottom:10px}
+.outline[open]{padding:10px 14px}
+.toolbar{margin-bottom:10px}
+@media (max-width:760px){
+  .toolbar .hint{display:none}
+  .toolbar{justify-content:flex-end}
+  .panel{padding:12px}
+  .deck{padding:10px 12px}
+}
+@media (max-width:760px){.toolbar .sizer{flex-wrap:wrap;justify-content:flex-end;gap:4px}.toolbar{overflow:visible}}
 </style>
 </head>
 <body>
@@ -3261,7 +3286,7 @@ function renderMain(){
   const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", "AI notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
   if (isNote && S.tab !== "mynotes") S.tab = "mynotes";
   if (!isNote) main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
-    h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.info = ""; S.editNotes = false; render(); } }, t))));
+    h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.info = ""; S.editNotes = false; render(); requestAnimationFrame(() => { const m = $("main"), tb = m && m.querySelector(".tabs"); if (tb && m.scrollTop < tb.offsetTop) m.scrollTo({ top: tb.offsetTop, behavior: "smooth" }); }); } }, t))));
   const panel = h("div", { class: "panel" + (isNote ? " solo" : ""), role: "tabpanel" });
   if (S.err) panel.append(h("p", { class: "notice err", role: "alert", style: "margin:0 0 14px" }, S.err));
   if (S.tab === "transcript") panel.append(transcriptPanel(lec));
@@ -3402,16 +3427,11 @@ function rememberPos(){
 }
 function sizeSegs(){
   const box = V.box; if (!box || !box.isConnected) return;
-  const avail = window.innerHeight - box.getBoundingClientRect().top - 80;
-  box.style.height = Math.max(240, avail) + "px";
+  const main = $("main"), tabs = main.querySelector(".tabs"), gap = tabs ? box.getBoundingClientRect().top - tabs.getBoundingClientRect().bottom : 120;
+  box.style.height = Math.max(260, main.clientHeight - (tabs ? tabs.offsetHeight : 0) - gap - 44) + "px";
 }
 // the other tabs get the same window: header, recorder and tabs stay put, only the content scrolls
-function sizePane(){
-  const pane = $("pane"); if (!pane || !pane.isConnected) return;
-  const avail = window.innerHeight - pane.getBoundingClientRect().top - 58;
-  pane.style.height = Math.max(240, avail) + "px";
-  pane.style.setProperty("--pane-top", Math.round(pane.getBoundingClientRect().top) + "px");
-}
+function sizePane(){}
 window.addEventListener("resize", () => { sizeSegs(); sizePane(); measure(); updateScrubber(); });
 
 function refreshScrub(){ const sc = $("scrub"); if (sc && V.lec) sc.replaceWith(scrubberNode(V.lec)); updateScrubber(); }
@@ -3687,8 +3707,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.3", RELEASED = "26 September 2026";
+const VERSION = "2.6.4", RELEASED = "26 September 2026";
 const CHANGES = [
+  ["2.6.4", "26 Sep 2026", ["Bigger reading windows: the lecture header scrolls away and only the tabs stay pinned, so the transcript and notes get nearly the whole screen. The top strip never moves"]],
   ["2.6.3", "26 Sep 2026", ["My notes, AI notes, Summary and Flashcards now scroll inside their own window, like the transcript, so the page never stretches and the top strip stays in place"]],
   ["2.6.2", "25 Sep 2026", ["Fix: the silence watch could pause a live class when the phone screen dimmed or the tab was in the background, because the voice detector stopped with the screen. It now listens in the background too", "Pausing by itself is now off by default: Bizofy only asks. If you turn it on, it resumes by itself the moment voices are heard, and marks the gap"]],
   ["2.6.1", "25 Sep 2026", ["Pause and resume while recording, with proper Record, Pause and Stop buttons; the timer stops while paused", "Silence watch: after a quiet spell Bizofy asks whether class is still on, then pauses by itself if nobody answers", "Silent parts are not sent for transcription", "Warnings for low battery and low storage, and an automatic stop after a set length", "Recovery when a recording ended unexpectedly", "Choose the microphone, and mark moments as Important, Exam, Homework or Question"]],

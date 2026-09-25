@@ -1,5 +1,5 @@
 {
-  "version": "2.6.3",
+  "version": "2.6.4",
   "url": "./",
-  "notes": "Every tab now scrolls inside its own window; the page never stretches."
+  "notes": "Bigger reading windows: the lecture header scrolls away, tabs stay pinned."
 }
