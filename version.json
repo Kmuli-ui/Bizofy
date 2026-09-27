@@ -1,5 +1,5 @@
 {
-  "version": "2.6.4",
+  "version": "2.6.5",
   "url": "./",
-  "notes": "Bigger reading windows: the lecture header scrolls away, tabs stay pinned."
+  "notes": "Recording types (lecture, meeting, sermon, interview) and From a link: paste a YouTube address, then paste its transcript."
 }

@@ -126,6 +126,18 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 
 .head input{border:0;background:transparent;width:100%;padding:2px 0}
 .course-row{flex-wrap:nowrap}
+.head .type-sel{flex:none;width:auto;font-size:var(--t0);font-weight:600;color:var(--slate);background:var(--bg-2,transparent);border:1px solid var(--line);border-radius:999px;padding:4px 10px;max-width:46%}
+.type-pill{border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-weight:600}
+.source{margin:10px 0 4px;display:flex;flex-direction:column;gap:6px}
+.source-card{display:flex;gap:12px;align-items:center;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:12px;padding:8px 10px;max-width:560px}
+.source-card img{width:96px;height:54px;object-fit:cover;border-radius:8px;flex:none}
+.source-text{display:flex;flex-direction:column;min-width:0}
+.source-text b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.source-text small{color:var(--slate)}
+.source-tools{gap:14px}
+.source .steps{margin:0;padding-left:20px;color:var(--ink);font-size:var(--t0);max-width:560px}
+.source .steps li{margin:3px 0}
+.link-in{flex:1;min-width:0}
 .course-row .btn{white-space:nowrap;flex:none}
 .head .course-in{color:var(--slate);font-size:var(--t0);font-weight:500}
 .head .title-in{font-size:clamp(var(--t3),3.6vw,var(--t4));font-weight:800;letter-spacing:-.035em;line-height:1.08;margin-top:2px}
@@ -795,7 +807,7 @@ body.focus .seg-scroll{height:calc(100dvh - 130px)!important}
 
         <section class="set-sec" data-sec="courses" hidden>
           <h3>Course profiles</h3>
-          <p class="hint">A course can have its own language, AI, notes style, folder and vocabulary. Anything left as "same as general" follows the settings above.</p>
+          <p class="hint">A course, team, series or project can have its own recording type (lecture, meeting, sermon, interview), language, AI, notes style, folder and vocabulary. Anything left as "same as general" follows the settings above.</p>
           <div id="coursesBox"></div>
         </section>
 
@@ -1076,7 +1088,7 @@ async function transcribePart(id, n){
   let blob = await DB.getAudio(id, n);
   if (!blob && DB.sync.on){ try { await pullAudio(lec, n); blob = await DB.getAudio(id, n); } catch (e){} }
   if (!blob) throw new AppError("The audio for that part is missing on this device.");
-  const vocab = getVocab(lec.course).slice(0, 340);
+  const vocab = (getVocab(lec.course) || (lec.type === "sermon" ? "Genesis, Exodus, Leviticus, Deuteronomy, Psalms, Proverbs, Isaiah, Jeremiah, Matthew, Mark, Luke, John, Acts, Romans, Corinthians, Galatians, Ephesians, Philippians, Colossians, Thessalonians, Timothy, Hebrews, James, Revelation, Yesu, Mungu, Bwana" : "")).slice(0, 340);
   const prompt = (vocab ? "Terms: " + vocab + ". " : "") + lec.segments.filter(s => s.t != null && s.t < part.offset).slice(-3).map(s => s.text).join(" ").slice(-240);
   let result;
   try { result = await whisper(blob, part.file, { language: lec.language, prompt }); }
@@ -1118,7 +1130,7 @@ async function splitAudio(file){
 /* Claude */
 /* ---------- preferences: one object with defaults, read everywhere through pref() ---------- */
 const DEFAULTS = {
-  gen: { openOn: "home", defaultFolder: "", defaultCourse: "", confirm: true, homeStats: true, homeTiles: true },
+  gen: { defaultType: "lecture", openOn: "home", defaultFolder: "", defaultCourse: "", confirm: true, homeStats: true, homeTiles: true },
   rec: { quality: "standard", partSec: 45, language: "auto", flagBack: 20, autoStopMin: 180, quietWatch: true, quietPause: false, quietMin: 3, quietGrace: 2, skipSilent: true, tag: "important", micId: "" },
   tx: { font: "serif", lineHeight: "1.68", showTs: true, showChapters: true, showMarks: true, autoScroll: true },
   ai: { for: { notes: "default", summary: "default", study: "default", pambizo: "default", outline: "default", polish: "default" },
@@ -1320,7 +1332,7 @@ const transcriptText = lec => lec.segments.map(s => (s.flag ? "[!] " : "") + (s.
 const myNotesMd = lec => (lec.myNotes && lec.myNotes.html ? htmlToMd(lec.myNotes.html).trim() : "");
 const hasContent = lec => !!lec && (lec.segments.length > 0 || myNotesMd(lec).length > 40);
 const fullText = lec => transcriptText(lec) + (myNotesMd(lec) ? "\n\nThe student's own written notes:\n" + myNotesMd(lec) : "") + ((lec.marks || []).length ? "\n\nThe student's own notes taken during the lecture:\n" + lec.marks.map(m => (m.t != null ? "[" + fmt(m.t) + "] " : "") + m.text).join("\n") : "");
-const headerText = lec => "Course: " + (lec.course || "not given") + "\n" + (lec.kind === "note" ? "Note: " : "Lecture: ") + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n";
+const headerText = lec => { const T = typeOf(lec); return T.group + ": " + (lec.course || "not given") + "\n" + (lec.kind === "note" ? "Note: " : T.label + ": ") + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n" + (lec.source && lec.source.url ? "Source: " + lec.source.url + (lec.source.title ? " (" + lec.source.title + ")" : "") + "\n" : ""); };
 const strs = a => (Array.isArray(a) ? a.map(String).filter(Boolean) : []);
 function chunkText(text, size){
   const out = []; let buf = "";
@@ -1365,10 +1377,31 @@ async function withContext(lec, scope, run, note, signal){
   try { return await run(headerText(lec) + "\nLecture content" + (d.length < fullText(lec).length ? " (condensed, because the full transcript is too long for this AI plan)" : "") + ":\n" + d); }
   catch (e){ if (e.tooLarge) throw new AppError("This lecture is too long for your current AI plan, even condensed. Add an Anthropic key in Settings, or upgrade the Groq plan."); throw e; }
 }
-const RULES = " Lines starting with [!] were marked important by the student: give them priority. Use only what the transcript says.";
+
+/* ---------- recording types ---------- */
+const TYPES = {
+  lecture:   { label: "Lecture", plural: "lectures", group: "Course", groupHint: "Course code or name", speaker: "the lecturer", who: "a student", notesLabel: "AI notes", study: "Flashcards and quiz", studyBtn: "Make flashcards and a quiz", exam: "Exam hints", todo: "To do",
+    voice: "a university lecture", summaryExtra: "readings, deadlines and tasks the lecturer mentioned", hintsExtra: "anything signalled as likely to be examined", notesShape: "complete, well-organised study notes",
+    chips: [["Action items", "List every action item, deadline and reading from this lecture, and say who should do what and by when if that was stated."], ["Draft an email", "Draft a short, friendly email to my classmates that sums up this lecture and any deadlines."], ["Translate to Kiswahili", "Translate the key points of this lecture into Kiswahili."], ["Explain simply", "Explain the main idea of this lecture in simple terms, with one everyday example."], ["Likely exam questions", "Write five likely exam questions from this lecture, each with a brief model answer."]] },
+  meeting:   { label: "Meeting", plural: "meetings", group: "Team or project", groupHint: "Team, project or committee", speaker: "the participants", who: "a participant", notesLabel: "Minutes", study: null, studyBtn: "", exam: "Open questions", todo: "Action items",
+    voice: "a meeting", summaryExtra: "decisions taken and action items, each with its owner and due date when one was said", hintsExtra: "questions left open or parked for a later meeting", notesShape: "clear minutes: agenda items in order, what was discussed, decisions, and action items with owners",
+    chips: [["Action items", "List every action item from this meeting with its owner and due date, as a checklist."], ["Decisions", "List every decision that was taken in this meeting, each in one line, with who proposed it if that was said."], ["Draft the minutes email", "Draft a short email to the attendees with the minutes: decisions, action items and the next steps."], ["Who said what", "Summarise the main position each speaker took in this meeting."], ["Open questions", "List the questions that were raised but not resolved in this meeting."]] },
+  sermon:    { label: "Sermon or talk", plural: "sermons and talks", group: "Series or church", groupHint: "Series, church or speaker", speaker: "the speaker", who: "a listener", notesLabel: "Sermon notes", study: "Reflection questions", studyBtn: "Write reflection questions", exam: "Take-aways", todo: "To live out this week",
+    voice: "a sermon or talk", summaryExtra: "practical applications the speaker asked listeners to act on", hintsExtra: "the main take-aways the speaker repeated or stressed", notesShape: "sermon notes: the main points in order, the scripture or sources cited (book, chapter and verse where given), illustrations, and the application",
+    chips: [["Scriptures cited", "List every scripture or source reference mentioned in this talk, in order, with a line on how each was used."], ["Main points", "Give the main points of this talk as a short numbered list."], ["Application", "What did the speaker ask listeners to do or change? Give it as a short checklist."], ["Share message", "Write a short, warm message I can send to a friend that sums up this talk in a few sentences."], ["Explain simply", "Explain the central message of this talk in simple words, with one everyday example."]] },
+  interview: { label: "Interview or research", plural: "interviews", group: "Project or study", groupHint: "Project, study or participant", speaker: "the interviewee", who: "a researcher", notesLabel: "Field notes", study: null, studyBtn: "", exam: "Themes", todo: "Follow-ups",
+    voice: "an interview or research conversation", summaryExtra: "follow-up questions and tasks for the researcher", hintsExtra: "the main themes that emerged", notesShape: "field notes: the questions asked, what the interviewee said on each, notable direct quotes with their times, and emerging themes",
+    chips: [["Key quotes", "Pull out the eight most telling direct quotes from this interview, each with its [m:ss] time and a line on why it matters."], ["Themes", "What themes emerge from this interview? List each with the moments that support it."], ["Follow-up questions", "Which questions should I ask in a follow-up interview, based on what was said and what was left unclear?"], ["Neutral summary", "Summarise what the interviewee said without interpretation, in their own framing."], ["Contradictions", "Point out anything the interviewee said that seems to conflict with something else they said, with the times."]] }
+};
+const typeOf = lec => TYPES[(lec && lec.type) || (lec && courseProfile(lec.course).type) || pref("gen.defaultType")] || TYPES.lecture;
+const typeLabel = lec => typeOf(lec).label;
+const typeWord = lec => ({ meeting: "meeting", sermon: "talk", interview: "interview" })[typeOf(lec) === TYPES.lecture ? "lecture" : (lec && lec.type) || Object.keys(TYPES).find(k => TYPES[k] === typeOf(lec))] || "lecture";
+const startWord = lec => ({ meeting: "the meeting", sermon: "the talk", interview: "the interview" })[typeWord(lec)] || "class";
+const TYPE_LIST = Object.keys(TYPES).map(k => [k, TYPES[k].label]);
+const RULES = " Lines starting with [!] were marked important by the listener: give them priority. Use only what the transcript says.";
 async function makeSummary(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3000, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You write a short summary of a university lecture for a student." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["6 to 12 strings"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["readings, deadlines and tasks the lecturer mentioned; empty array if none"], "examHints": ["anything signalled as likely to be examined; empty array if none"]}',
+    system: "You write a short summary of " + typeOf(lec).voice + " for " + typeOf(lec).who + "." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["6 to 12 strings"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["' + typeOf(lec).summaryExtra + '; empty array if none"], "examHints": ["' + typeOf(lec).hintsExtra + '; empty array if none"]}',
     messages: [{ role: "user", content: "Write the JSON summary now." }] }), note));
   lec.summary = { overview: String(r.overview || ""), keyPoints: strs(r.keyPoints),
     definitions: (Array.isArray(r.definitions) ? r.definitions : []).filter(d => d && d.term).map(d => ({ term: String(d.term), meaning: String(d.meaning || "") })),
@@ -1376,7 +1409,7 @@ async function makeSummary(lec, note){
 }
 async function makeStudy(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You write study material from a university lecture that tests understanding, not trivia." + RULES + ({ easy: " Keep the questions straightforward: recall of key facts and definitions.", hard: " Make the questions demanding: application, comparison and reasoning, not recall." }[pref("ai.study.difficulty")] || "") + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with ' + (+pref("ai.study.cards") || 12) + " flashcards and " + (+pref("ai.study.quiz") || 6) + ' quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
+    system: (typeOf(lec).study && lec.type === "sermon" ? "You write reflection material from a sermon or talk for a listener: flashcards become question-and-answer pairs on its main points, and the quiz checks understanding of what was said." : "You write study material from " + typeOf(lec).voice + " that tests understanding, not trivia.") + RULES + ({ easy: " Keep the questions straightforward: recall of key facts and definitions.", hard: " Make the questions demanding: application, comparison and reasoning, not recall." }[pref("ai.study.difficulty")] || "") + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with ' + (+pref("ai.study.cards") || 12) + " flashcards and " + (+pref("ai.study.quiz") || 6) + ' quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
     messages: [{ role: "user", content: "Write the JSON study material now." }] }), note));
   lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
     quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
@@ -1384,7 +1417,7 @@ async function makeStudy(lec, note){
 }
 async function makeOutline(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 1800, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You divide a university lecture into its main parts so a student can find their way around it. Use only the transcript, and only times that appear in it. Reply with only a JSON object of this shape: {\"title\": \"a specific title for this lecture, at most 9 words, no course code\", \"chapters\": [{\"t\": \"m:ss where this part starts\", \"title\": \"3 to 7 words\", \"gist\": \"one short sentence\"}]} with 4 to 12 chapters in time order, the first at the start.",
+    system: "You divide " + typeOf(lec).voice + " into its main parts so " + typeOf(lec).who + " can find their way around it. Use only the transcript, and only times that appear in it. Reply with only a JSON object of this shape: {\"title\": \"a specific title for this recording, at most 9 words, no course code\", \"chapters\": [{\"t\": \"m:ss where this part starts\", \"title\": \"3 to 7 words\", \"gist\": \"one short sentence\"}]} with 4 to 12 chapters in time order, the first at the start.",
     messages: [{ role: "user", content: "Write the JSON outline now." }] }), note));
   const chapters = (Array.isArray(r.chapters) ? r.chapters : []).map(c => ({ t: /^\d{1,2}(:\d\d){1,2}$/.test(String(c && c.t).trim()) ? parseTs(String(c.t).trim()) : null, title: String((c && c.title) || "").trim().slice(0, 90), gist: String((c && c.gist) || "").trim().slice(0, 220) }))
     .filter(c => c.t != null && c.title).sort((x, y) => x.t - y.t).filter((c, i, all) => !i || c.t - all[i - 1].t >= 20);
@@ -1398,12 +1431,12 @@ const notesStyle = course => {
     + (n.form === "prose" ? " Write in short paragraphs under '## ' topic headings (end each heading with the [m:ss] time where it starts) and '### ' subtopics, with **bold** for key terms; use bullets only for lists of items." : NOTES_STYLE)
     + (n.lang ? " Write the notes in " + n.lang + "." : "");
 };
-const notesEnd = course => { const n = { ...pref("ai.notes"), ...(courseProfile(course).notes || {}) }; return (n.actions ? " Finish with '## Action points' as '- [ ] ' items (readings, deadlines, tasks; write '- None mentioned' if there are none)" : "") + (n.review ? (n.actions ? " and then" : " Finish with") + " '## Questions to review' with 3 to 6 bullets" : "") + (n.actions || n.review ? "." : ""); };
+const notesEnd = (course, lec) => { const n = { ...pref("ai.notes"), ...(courseProfile(course).notes || {}) }, T = typeOf(lec); return (n.actions ? " Finish with '## " + T.todo + "' as '- [ ] ' items (" + T.summaryExtra + "; write '- None mentioned' if there are none)" : "") + (n.review ? (n.actions ? " and then" : " Finish with") + " '## Questions to review' with 3 to 6 bullets" : "") + (n.actions || n.review ? "." : ""); };
 const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
 async function makeNotes(lec, note){
   const c = cfg(), wait = (s, why) => note(waitText(s, why));
   const whole = () => llm({ max: c.ai === "claude" ? 8000 : 4000, onWait: wait, context: headerText(lec) + "\nTranscript:\n" + fullText(lec),
-    system: "You turn a university lecture transcript into complete, well-organised study notes." + RULES + notesStyle(lec.course) + notesEnd(lec.course),
+    system: "You turn the transcript of " + typeOf(lec).voice + " into " + typeOf(lec).notesShape + "." + RULES + notesStyle(lec.course) + notesEnd(lec.course, lec),
     messages: [{ role: "user", content: "Write the notes now." }] });
   let md;
   if (!(c.ai !== "claude" && DB.settings.groqSmall)){
@@ -1414,12 +1447,12 @@ async function makeNotes(lec, note){
     for (let i = 0; i < chunks.length; i++){
       note("Writing notes for part " + (i + 1) + " of " + chunks.length + ". Small AI plans are slow with long lectures.");
       parts.push(await llm({ max: 900, onWait: (s, why) => note(waitText(s, why) + " Part " + (i + 1) + " of " + chunks.length + "."),
-        system: "You turn one part of a university lecture transcript into well-organised study notes." + RULES + notesStyle(lec.course) + " Do not add an introduction, a conclusion, or action points.",
+        system: "You turn one part of the transcript of " + typeOf(lec).voice + " into " + typeOf(lec).notesShape + "." + RULES + notesStyle(lec.course) + " Do not add an introduction, a conclusion, or action points.",
         messages: [{ role: "user", content: chunks[i] }] }));
     }
     md = parts.join("\n\n");
     note("Collecting action points.");
-    md += "\n\n" + await llm({ max: 500, onWait: wait, system: "From these lecture notes, write '## Action points' as '- [ ] ' items (readings, deadlines, tasks; '- None mentioned' if none), then '## Questions to review' with 3 to 6 '- ' bullets. Markdown only, nothing else.", messages: [{ role: "user", content: md.slice(0, 9000) }] });
+    md += "\n\n" + await llm({ max: 500, onWait: wait, system: "From these notes on " + typeOf(lec).voice + ", write '## " + typeOf(lec).todo + "' as '- [ ] ' items (" + typeOf(lec).summaryExtra + "; '- None mentioned' if none), then '## Questions to review' with 3 to 6 '- ' bullets. Markdown only, nothing else.", messages: [{ role: "user", content: md.slice(0, 9000) }] });
   }
   lec.notes = { md: md.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(), madeAt: Date.now() };
 }
@@ -1429,7 +1462,7 @@ function askAI(lec, question, scope, signal, onText, note){
   const history = (lec.chat || []).slice(-13, -1).map(m => ({ role: m.role, content: m.content }));
   while (history.length && history[0].role !== "user") history.shift();
   return withContext(lec, scope, ctx => llm({ max: len === "long" ? 3500 : len === "short" ? 700 : 2000, signal, onText, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You are Pambizo, the study assistant in the margin of a student's lecture transcript. Work only from the lecture content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the student, as asked. If the lecture did not cover something, say so plainly." + lenText + " Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the lecture when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Format lightly in Markdown so it reads well in a narrow panel: '- ' bullets for lists, **bold** for key terms, and a short '### ' heading only when the answer has several parts. Write emails and messages as plain paragraphs.",
+    system: "You are Pambizo, the assistant in the margin of a transcript of " + typeOf(lec).voice + ", read by " + typeOf(lec).who + ". Work only from the content below: answer questions, extract action items, draft emails or messages, translate, explain, or quiz the reader, as asked. If the recording did not cover something, say so plainly." + lenText + " Cite moments as [m:ss] when you rely on a specific part" + (scope === "course" ? ", naming the recording when it is not the one marked THIS LECTURE" : "") + ". Lines starting with [!] were marked important by the student. Format lightly in Markdown so it reads well in a narrow panel: '- ' bullets for lists, **bold** for key terms, and a short '### ' heading only when the answer has several parts. Write emails and messages as plain paragraphs.",
     messages: [...history, { role: "user", content: question }] }), note, signal);
 }
 
@@ -1454,16 +1487,16 @@ const hasSection = (lec, k) => k === "outline" ? !!(lec.outline && lec.outline.c
   : k === "cards" ? !!(lec.study && lec.study.flashcards.length) : k === "quiz" ? !!(lec.study && lec.study.quiz.length) : lec.segments.length > 0;
 function buildDoc(lec, only){
   const want = k => (!only || only.includes(k)) && hasSection(lec, k);
-  const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) }];
+  const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.kind === "note" ? "" : typeLabel(lec) + ". ") + (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + (lec.source && lec.source.url ? ". Source: " + lec.source.url : "") }];
   if (want("outline")) B.push({ k: "h1", t: "Outline" }, ...lec.outline.chapters.map(c => ({ k: "seg", ts: fmt(c.t), t: c.title + (c.gist ? ". " + c.gist : "") })));
   if (want("mine")) B.push({ k: "h1", t: "My notes" }, ...mdBlocks(myNotesMd(lec)));
-  if (want("notes")) B.push({ k: "h1", t: "AI notes" }, ...mdBlocks(lec.notes.md));
+  if (want("notes")) B.push({ k: "h1", t: typeOf(lec).notesLabel }, ...mdBlocks(lec.notes.md));
   const s = lec.summary;
   if (want("summary")){
     B.push({ k: "h1", t: "Summary" }, { k: "p", t: s.overview }, { k: "h2", t: "Key points" }, ...s.keyPoints.map(t => ({ k: "li", t })));
     if (s.definitions.length) B.push({ k: "h2", t: "Definitions" }, ...s.definitions.map(d => ({ k: "li", t: "**" + d.term + "**: " + d.meaning })));
-    if (s.actionItems.length) B.push({ k: "h2", t: "To do" }, ...s.actionItems.map(t => ({ k: "todo", t })));
-    if (s.examHints.length) B.push({ k: "h2", t: "Exam hints" }, ...s.examHints.map(t => ({ k: "li", t })));
+    if (s.actionItems.length) B.push({ k: "h2", t: typeOf(lec).todo }, ...s.actionItems.map(t => ({ k: "todo", t })));
+    if (s.examHints.length) B.push({ k: "h2", t: typeOf(lec).exam }, ...s.examHints.map(t => ({ k: "li", t })));
   }
   if (want("marks")) B.push({ k: "h1", t: "Timestamped notes" }, ...lec.marks.slice().sort((a, b) => (a.t == null ? 1e12 : a.t) - (b.t == null ? 1e12 : b.t)).map(m => ({ k: "seg", ts: m.t != null ? fmt(m.t) : "", t: m.text })));
   if (want("cards")){ B.push({ k: "h1", t: "Flashcards" }); lec.study.flashcards.forEach(c => B.push({ k: "p", t: "**" + c.q.replace(/\*/g, "") + "**" }, { k: "p", t: c.a })); }
@@ -1828,7 +1861,7 @@ async function api(method, url, body, note){
   if (p[0] !== "lectures") throw new AppError("Not found.");
   if (!p[1]){
     if (method === "GET") return [...DB.lectures.values()].map(metaOf).sort((a, b) => b.createdAt - a.createdAt);
-    const lec = { id: newId("l"), course: String(b.course || pref("gen.defaultCourse") || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", folder: String(b.folder || pref("gen.defaultFolder") || "").slice(0, 80), archived: false, language: (courseProfile(b.course || pref("gen.defaultCourse")).language) || pref("rec.language") || "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
+    const lec = { id: newId("l"), course: String(b.course || pref("gen.defaultCourse") || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", type: TYPES[b.type] ? b.type : (courseProfile(b.course || pref("gen.defaultCourse")).type || pref("gen.defaultType") || "lecture"), folder: String(b.folder || pref("gen.defaultFolder") || "").slice(0, 80), archived: false, language: (courseProfile(b.course || pref("gen.defaultCourse")).language) || pref("rec.language") || "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
     DB.lectures.set(lec.id, lec); await DB.save(lec); return lec;
   }
   const lec = getLec(p[1]);
@@ -1847,6 +1880,9 @@ async function api(method, url, body, note){
       if (b.dropAudio){ await DB.dropAudio(lec); lec.audio = []; lec.sessions = []; }
       if (typeof b.title === "string") lec.title = b.title.trim().slice(0, 200) || "Untitled lecture";
       if (typeof b.language === "string") lec.language = b.language.slice(0, 8);
+      if (typeof b.type === "string" && TYPES[b.type]) lec.type = b.type;
+      if (b.source === null) delete lec.source;
+      else if (b.source && typeof b.source === "object" && typeof b.source.url === "string") lec.source = { url: b.source.url.slice(0, 500), site: String(b.source.site || "").slice(0, 20), id: String(b.source.id || "").slice(0, 40), title: String(b.source.title || "").slice(0, 200), thumb: String(b.source.thumb || "").slice(0, 300), author: String(b.source.author || "").slice(0, 120) };
       if (typeof b.notes === "string") lec.notes = b.notes.trim() ? { md: b.notes, madeAt: (lec.notes && lec.notes.madeAt) || Date.now(), edited: true } : null;
       if (b.clearChat) lec.chat = [];
       await DB.save(lec);
@@ -2214,7 +2250,7 @@ function adopt(lec, soft){
 async function openLecture(id){
   if (REC.on) stopRec();
   stopPlayer();
-  S.info = ""; S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.tab = "transcript";
+  S.info = ""; S.err = ""; S.pamErr = ""; S.draft = ""; S.paste = ""; S.markDraft = ""; S.editNotes = false; S.linkOpen = false; S.tab = "transcript";
   S.cur = await api("GET", "/api/lectures/" + id);
   if (S.cur.kind === "note") S.tab = "mynotes";
   DB.settings.recent = [id, ...(DB.settings.recent || []).filter(x => x !== id)].slice(0, 8); DB.tx("kv", "readwrite", st => st.put(DB.settings, "settings")).catch(() => {});
@@ -2430,7 +2466,7 @@ function watchQuiet(){
   if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
   if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { S: () => S, parseText, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -2474,7 +2510,7 @@ function liveLine(){
     : n2 ? "Transcribing the last " + (n2 === 1 ? "part" : n2 + " parts") + "…"
     : idleLine();
 }
-const idleLine = () => (S.cur && S.cur.audio && S.cur.audio.length ? "Press record to continue this lecture, or play it back." : "Press record when class starts.");
+const idleLine = () => (S.cur && S.cur.audio && S.cur.audio.length ? "Press record to continue this " + typeWord(S.cur) + ", or play it back." : "Press record when " + startWord(S.cur) + " starts.");
 window.addEventListener("beforeunload", e => { if (REC.on || Q.items.length || Q.busy){ e.preventDefault(); e.returnValue = ""; } });
 
 /* ---------- player ---------- */
@@ -2532,6 +2568,20 @@ function parseText(raw){
     flush();
     return segs;
   }
+  // YouTube's "Show transcript" copies as a time on its own line, then the words on the next
+  const lines0 = raw.split("\n").map(l => l.trim()).filter(Boolean), TS_ONLY = /^\[?(\d{1,2}:\d\d(?::\d\d)?)\]?$/;
+  if (lines0.filter(l => TS_ONLY.test(l)).length >= 3 && lines0.filter(l => TS_ONLY.test(l)).length >= lines0.length * 0.3){
+    const caps = []; let t = null;
+    lines0.forEach(l => { const m = l.match(TS_ONLY); if (m){ t = parseTs(m[1]); return; } if (t == null && !caps.length) return; caps.push({ t, text: l.replace(/\s+/g, " ") }); t = null; });
+    // captions are short; merge them into paragraphs of about 40 seconds or 500 characters
+    let cur = null;
+    caps.forEach(c => {
+      if (cur && (c.t == null || cur.t == null || c.t - cur.t < 40) && (cur.text + " " + c.text).length <= 500) cur.text += " " + c.text;
+      else { if (cur) segs.push(cur); cur = { t: c.t, text: c.text, flag: false }; }
+    });
+    if (cur) segs.push(cur);
+    return segs;
+  }
   raw.split(/\n/).forEach(p => {
     p = p.trim(); if (!p) return;
     let flag = false;
@@ -2547,7 +2597,7 @@ function parseText(raw){
 }
 async function addText(raw){
   const segs = parseText(raw); if (!segs.length) return;
-  try { S.paste = ""; adopt(await api("POST", "/api/lectures/" + S.cur.id + "/segments", { segments: segs })); } catch (e){ fail(e); }
+  try { S.paste = ""; S.linkOpen = false; adopt(await api("POST", "/api/lectures/" + S.cur.id + "/segments", { segments: segs })); } catch (e){ fail(e); }
 }
 const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i, LECT_RE = /\.bizofy$/i;
 function setUp(label, value){
@@ -2910,7 +2960,7 @@ function softRefresh(){
   const w = $("metaLine"); if (w && lec) w.replaceChildren(...metaBits(lec).filter(Boolean));
   if (lec && hasContent(lec) && $("pam").querySelector(".pam-empty") && document.activeElement !== $("pamIn")) renderPam();
 }
-const metaBits = lec => [h("span", null, new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })),
+const metaBits = lec => [lec.kind === "note" || !lec.type || lec.type === "lecture" ? null : h("span", { class: "type-pill" }, typeLabel(lec)), h("span", null, new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })),
   h("span", null, metaOf(lec).words.toLocaleString() + " words"), lec.duration ? h("span", null, fmt(lec.duration) + " recorded") : null];
 
 function dropZone(lec, slim){
@@ -2929,7 +2979,7 @@ function transcriptPanel(lec){
   segs.addEventListener("scroll", onSegScroll, { passive: true });
   const has = lec.segments.length || (lec.marks || []).length;
   const hits = S.hl ? lec.segments.concat(lec.marks || []).reduce((n, s) => n + (s.text.toLowerCase().split(S.hl.toLowerCase()).length - 1), 0) : 0;
-  const ta = h("textarea", { placeholder: "Or paste lecture text here. Lines that start with a time like 12:30 keep their timestamp.", "aria-label": "Transcript text to add", value: S.paste, oninput: e => (S.paste = e.target.value) });
+  const ta = h("textarea", { placeholder: "Paste text here. Lines that start with a time like 12:30 keep their timestamp, and YouTube's copied transcript (a time on one line, the words on the next) is understood.", "aria-label": "Transcript text to add", value: S.paste, oninput: e => (S.paste = e.target.value) });
   const size = d => { S.read = Math.max(14, Math.min(24, S.read + d)); document.documentElement.style.setProperty("--read-size", S.read + "px"); DB.settings.readSize = S.read; DB.saveSettings().catch(() => {}); measure(); };
   const flags = () => V.rows.map((r, i) => (r.s && r.s.flag ? i : -1)).filter(i => i >= 0);
   const nextFlag = dir => { const cur = firstVisibleIndex(), list = flags(); const i = dir > 0 ? list.find(x => x > cur + 1) : [...list].reverse().find(x => x < cur); if (i != null) revealIndex(i, { block: "start", flash: true }); else toast(list.length ? "No more highlights in that direction." : "No highlights yet. Click the square beside a paragraph to add one."); };
@@ -2942,15 +2992,15 @@ function transcriptPanel(lec){
       h("button", { class: "now", title: REC.on ? "Newest text" : "Where playback is", onclick: jumpNow }, REC.on ? "Newest" : "Now")) : null,
     h("div", { class: "chip-row", id: "chips" }));
   const pos = (DB.settings.pos || {})[lec.id];
-  const addMenu = h("details", { class: "menu add-menu" }, h("summary", { class: "btn quiet" }, has ? "Add to this lecture" : "Add a recording or transcript"),
-    h("div", { class: "menu-list wide" }, dropZone(lec, !!has), h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => { addMenu.open = false; addText(ta.value); } }, "Add this text")))));
+  const addMenu = h("details", { class: "menu add-menu" }, h("summary", { class: "btn quiet" }, has ? "Add to this " + typeWord(lec) : "Add a recording or transcript"),
+    h("div", { class: "menu-list wide" }, dropZone(lec, !!has), h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => { addMenu.open = false; addText(ta.value); } }, "Add this text"))), linkBox(lec, () => { addMenu.open = false; })));
   const panel = h("div", null,
     h("div", { class: "toolbar" },
       S.hl ? h("span", { class: "row" }, h("span", null, hits + (hits === 1 ? " match for “" : " matches for “") + S.hl + "”"), h("button", { class: "btn quiet", onclick: () => { S.hl = ""; render(); } }, "Clear highlighting"))
-        : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when class starts, or add a recording."),
+        : h("span", { class: "hint" }, has ? "Click a time to play from there, the square to highlight, or any text to fix a word." : REC.on ? "Listening. The first lines appear in under a minute." : "Press record when " + startWord(lec) + " starts, or add a recording."),
       h("span", { class: "sizer" }, has ? h("button", { class: "btn quiet", title: "Fix a word the transcriber keeps getting wrong, everywhere in this lecture", onclick: openReplace }, "Replace") : null, h("button", { class: "btn quiet", title: "Hide everything but the text. Press Esc to come back.", onclick: () => document.body.classList.toggle("focus") }, "Focus"), h("button", { class: "btn quiet", "aria-label": "Smaller text", onclick: () => size(-1) }, "A−"), h("button", { class: "btn quiet", "aria-label": "Larger text", onclick: () => size(1) }, "A+"), has || REC.on || S.busy.upload ? addMenu : null)),
     outlineBox(lec),
-    has || REC.on ? wrap : h("div", null, dropZone(lec, false), h("details", { class: "add" }, h("summary", null, "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => addText(ta.value) }, "Add this text")))));
+    has || REC.on ? wrap : h("div", null, dropZone(lec, false), h("details", { class: "add", open: !!(lec.source && lec.source.url) }, h("summary", null, lec.source && lec.source.url ? "Paste the transcript you copied" : "Paste a transcript instead"), ta, h("div", { class: "row" }, h("button", { class: "btn", onclick: () => addText(ta.value) }, "Add this text"))), linkBox(lec)));
   requestAnimationFrame(() => {
     sizeSegs(); measure();
     if (has && pos && pos.i > 3 && !S.hl && !REC.on && Date.now() - (pos.at || 0) < 90 * 864e5) showChip("Continue from " + (pos.t != null ? fmt(pos.t) : "where you left off"), () => revealIndex(Math.min(pos.i, V.rows.length - 1), { block: "start" }), "pos");
@@ -3021,17 +3071,17 @@ function notesPanel(lec){
 }
 function summaryPanel(lec){
   const s = lec.summary, box = h("div", { class: "read" });
-  box.append(aiGate(lec, "summary", "Summarize this lecture", "Summarize again", !!s));
+  box.append(aiGate(lec, "summary", "Summarize this " + typeLabel(lec).toLowerCase().replace(" or talk", "").replace(" or research", ""), "Summarize again", !!s));
   if (!s) return box;
   const list = (title, items, cls) => (items.length ? [h("h2", null, title), h("ul", { class: cls || null }, items.map(i => h("li", { class: cls === "todo" ? "todo" : null }, i)))] : []);
   box.append(h("h2", null, "Overview"), h("p", null, s.overview), ...list("Key points", s.keyPoints));
   if (s.definitions.length) box.append(h("h2", null, "Definitions"), h("dl", null, s.definitions.map(d => [h("dt", null, d.term), h("dd", null, d.meaning)])));
-  box.append(...list("To do", s.actionItems, "todo"), ...list("Exam hints", s.examHints));
+  box.append(...list(typeOf(lec).todo, s.actionItems, "todo"), ...list(typeOf(lec).exam, s.examHints));
   return box;
 }
 function studyPanel(lec){
   const st = lec.study, box = h("div");
-  box.append(aiGate(lec, "study", "Make flashcards and a quiz", "Make a new set", !!st));
+  box.append(aiGate(lec, "study", typeOf(lec).studyBtn || "Make flashcards and a quiz", "Make a new set", !!st));
   if (!st) return box;
   box.append(h("div", { class: "cards" }, st.flashcards.map(c => {
     let back = false;
@@ -3089,18 +3139,18 @@ function answerNode(lec, m){
 function renderPam(){
   const pam = $("pam"), lec = S.cur; pam.replaceChildren(h("div", { class: "resizer left", id: "pamGrip", title: "Drag to resize", "aria-hidden": "true" }));
   pam.append(h("div", { class: "pam-head" },
-    h("div", null, h("h2", null, "Pambizo"), h("p", { class: "hint" }, "Your margin. Ask, draft, translate; it reads the lecture with you.")),
+    h("div", null, h("h2", null, "Pambizo"), h("p", { class: "hint" }, "Your margin. Ask, draft, translate; it reads the " + (lec && lec.kind !== "note" ? typeWord(lec) : "text") + " with you.")),
     h("button", { class: "btn quiet", onclick: () => { if (window.innerWidth <= 1180) closeDrawers(); else togglePanel("pam"); }, title: "Hide Pambizo" }, "Hide")));
   if (!lec || !hasContent(lec)){
-    pam.append(h("p", { class: "hint pam-empty" }, lec ? (lec.kind === "note" ? "Once this note has some text, ask anything about it here." : "Once this lecture has a transcript, ask anything about it here.") : "Open or record a lecture, then ask anything about it here."));
+    pam.append(h("p", { class: "hint pam-empty" }, lec ? (lec.kind === "note" ? "Once this note has some text, ask anything about it here." : "Once this " + typeLabel(lec).toLowerCase() + " has a transcript, ask anything about it here.") : "Open or record something, then ask anything about it here."));
     return void hookGrips();
   }
   const off = S.busy.ask || !S.status.ai, mine = DB.settings.chips || [];
-  if (lec.course) pam.append(h("div", { class: "seg2", role: "group", "aria-label": "What Pambizo reads" }, [["lecture", "This lecture"], ["course", "Whole course"]].map(([v, t]) => h("button", { "aria-pressed": S.scope === v ? "true" : "false", onclick: () => { S.scope = v; renderPam(); } }, t))));
+  if (lec.course) pam.append(h("div", { class: "seg2", role: "group", "aria-label": "What Pambizo reads" }, [["lecture", "This " + (lec.type === "sermon" ? "talk" : lec.type === "interview" ? "interview" : lec.type === "meeting" ? "meeting" : "lecture")], ["course", "Whole " + typeOf(lec).group.toLowerCase().replace("team or project", "series").replace("series or church", "series").replace("project or study", "study")]].map(([v, t]) => h("button", { "aria-pressed": S.scope === v ? "true" : "false", onclick: () => { S.scope = v; renderPam(); } }, t))));
   pam.append(h("details", { class: "quick", open: !DB.settings.quickShut, ontoggle: e => { DB.settings.quickShut = !e.target.open; DB.saveSettings().catch(() => {}); } },
     h("summary", null, "Quick actions"),
     h("div", { class: "chips" },
-      CHIPS.map(([label, prompt]) => h("button", { class: "chip", disabled: off, onclick: () => ask(prompt, label) }, label)),
+      typeOf(lec).chips.map(([label, prompt]) => h("button", { class: "chip", disabled: off, onclick: () => ask(prompt, label) }, label)),
       mine.map((c, i) => h("span", { class: "chip own" }, h("button", { disabled: off, onclick: () => ask(c.prompt, c.label) }, c.label), h("button", { class: "chip-x", "aria-label": "Remove the button " + c.label, onclick: async () => { DB.settings.chips = mine.filter((x, j) => j !== i); await DB.saveSettings(); renderPam(); } }, "×"))),
       h("button", { class: "chip add", onclick: async () => { const label = (prompt("Name your button, for example: Key statistics") || "").trim().slice(0, 40); if (!label) return; const p2 = (prompt("What should Pambizo do when you press “" + label + "”?") || "").trim().slice(0, 600); if (!p2) return; DB.settings.chips = [...mine, { label, prompt: p2 }]; await DB.saveSettings(); renderPam(); } }, "+ Your own"))));
   const pins = (lec.chat || []).filter(m => m.role === "assistant" && m.pinned);
@@ -3199,6 +3249,67 @@ function myNotesPanel(lec){
 
 const LANGS = [["auto", "Detect language"], ["en", "English"], ["sw", "Kiswahili"], ["fr", "Français"], ["es", "Español"], ["ar", "العربية"], ["pt", "Português"], ["de", "Deutsch"]];
 const RATES = [1, 1.25, 1.5, 2];
+
+/* ---------- from a link (YouTube and other pages) ---------- */
+const YT_RE = /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+function parseLink(text){
+  const m = String(text || "").trim().match(/https?:\/\/\S+/); if (!m) return null;
+  let url = m[0].replace(/[),.;]+$/, ""), site = "web", id = "";
+  const yt = url.match(YT_RE);
+  if (yt){ site = "youtube"; id = yt[1]; url = "https://www.youtube.com/watch?v=" + id; }
+  else if (/vimeo\.com\/\d+/.test(url)) site = "vimeo";
+  else if (/(spotify\.com|podcasts\.apple\.com|soundcloud\.com|anchor\.fm)/.test(url)) site = "podcast";
+  return { url, site, id };
+}
+async function linkInfo(src){
+  const out = { ...src };
+  if (src.site === "youtube") out.thumb = "https://i.ytimg.com/vi/" + src.id + "/hqdefault.jpg";
+  const oembed = src.site === "youtube" ? "https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(src.url) : src.site === "vimeo" ? "https://vimeo.com/api/oembed.json?url=" + encodeURIComponent(src.url) : null;
+  if (oembed){
+    try { const ctl = new AbortController(); setTimeout(() => ctl.abort(), 6000); const r = await fetch(oembed, { signal: ctl.signal }); if (r.ok){ const j = await r.json(); out.title = String(j.title || ""); out.author = String(j.author_name || ""); if (j.thumbnail_url && !out.thumb) out.thumb = String(j.thumbnail_url); } } catch (e){}
+  }
+  return out;
+}
+async function attachLink(lec, text){
+  const src = parseLink(text);
+  if (!src) throw new AppError("Paste a full web address, starting with http.");
+  S.info = "Reading the link…"; renderMain();
+  const info = await linkInfo(src);
+  const body = { source: info };
+  if (info.title && /^untitled/i.test(lec.title)) body.title = info.title.slice(0, 200);
+  S.info = ""; S.linkOpen = true;
+  adopt(await api("PATCH", "/api/lectures/" + lec.id, body));
+}
+function linkSteps(src){
+  if (src.site === "youtube") return [
+    "Open the video on YouTube (the card above opens it).",
+    "Under the video, choose “…more” in the description, then “Show transcript”. On the phone app it is under the description as well.",
+    "Tap the three dots at the top of the transcript to toggle timestamps on, then select all of the transcript text and copy it.",
+    "Come back here, paste it in the box below and press “Add this text”. Bizofy keeps the times."];
+  if (src.site === "podcast") return ["Podcast sites do not let a web page read their audio directly.", "Download the episode from the podcast app or site as an MP3 or M4A file, then drop that file here: Bizofy transcribes it on your keys as usual."];
+  if (src.site === "vimeo") return ["If the video has captions, open it on Vimeo, turn on CC, and use the transcript panel to copy the text.", "Otherwise download the video or its audio (if the owner allows it) and drop the file here."];
+  return ["Web pages cannot be read from inside Bizofy, but you can copy the text of the page and paste it below.", "If the page holds an audio or video file, download it and drop it here to transcribe it."];
+}
+function sourceCard(lec){
+  const s = lec.source, name = s.site === "youtube" ? "YouTube" : s.site === "vimeo" ? "Vimeo" : s.site === "podcast" ? "Podcast" : (() => { try { return new URL(s.url).hostname.replace(/^www\./, ""); } catch (e){ return "Link"; } })();
+  const empty = !lec.segments.length;
+  return h("div", { class: "source" + (S.linkOpen || empty ? " open" : "") },
+    h("a", { class: "source-card", href: s.url, target: "_blank", rel: "noopener" },
+      s.thumb ? h("img", { src: s.thumb, alt: "", loading: "lazy", onerror: e => e.target.remove() }) : null,
+      h("span", { class: "source-text" }, h("b", null, s.title || s.url), h("small", null, name + (s.author ? " · " + s.author : "") + " · opens in a new tab"))),
+    h("span", { class: "row source-tools" },
+      h("button", { class: "linkish", onclick: () => { S.linkOpen = !S.linkOpen; renderMain(); } }, S.linkOpen || empty ? "Hide the steps" : "How to get the transcript"),
+      h("button", { class: "linkish", onclick: async () => { try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { source: null })); } catch (e){ fail(e); } } }, "Remove link")),
+    S.linkOpen || empty ? h("ol", { class: "steps" }, linkSteps(s).map(t => h("li", null, t))) : null);
+}
+function linkBox(lec, onDone){
+  const input = h("input", { type: "url", inputmode: "url", class: "link-in", placeholder: "https://www.youtube.com/watch?v=…", "aria-label": "Web address of a video or page" });
+  const go = async () => { const v = input.value.trim(); if (!v) return; try { await attachLink(lec, v); if (onDone) onDone(); } catch (e){ S.info = ""; fail(e); } };
+  input.addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); go(); } });
+  return h("details", { class: "add", open: !!S.linkOpen && !(lec.source && lec.source.url) }, h("summary", null, "From a link (YouTube, podcast, web page)"),
+    h("p", { class: "hint" }, "Bizofy saves the link with this " + typeLabel(lec).toLowerCase() + ", fetches the title, and shows you how to bring the transcript over. Sites do not let a web page download their video, so the audio itself stays with them."),
+    h("div", { class: "row" }, input, h("button", { class: "btn", onclick: go }, "Use this link")));
+}
 function renderMain(){
   const main = $("main"); main.replaceChildren();
   const lec = S.cur;
@@ -3227,10 +3338,12 @@ function renderMain(){
       hasAudio ? h("button", { onclick: async () => { audioMenu.open = false; if (!okAsk("Delete this lecture's audio from this device and keep the text? This frees space and cannot be undone.")) return; stopPlayer(); try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { dropAudio: true })); } catch (e){ fail(e); } } }, "Delete the audio, keep the text") : null));
   main.append(h("div", { class: "head" },
     isNote ? null : h("div", { class: "row course-row" },
-      h("input", { class: "course-in", value: lec.course, placeholder: "Course code or name", "aria-label": "Course", list: "courses", onchange: patch("course") }),
-      h("button", { class: "btn quiet", disabled: !lec.course, title: lec.course ? null : "Name the course first", onclick: () => openVocab(lec.course) }, "Course vocabulary")),
+      h("select", { class: "type-sel", "aria-label": "What kind of recording this is", title: "What kind of recording this is", onchange: async e => { try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { type: e.target.value })); } catch (err){ fail(err); } } }, TYPE_LIST.map(([v, t]) => { const o = h("option", { value: v }, t); if (TYPES[v] === typeOf(lec)) o.selected = true; return o; })),
+      h("input", { class: "course-in", value: lec.course, placeholder: typeOf(lec).groupHint, "aria-label": typeOf(lec).group, list: "courses", onchange: patch("course") }),
+      h("button", { class: "btn quiet", disabled: !lec.course, title: lec.course ? null : "Name the " + typeOf(lec).group.toLowerCase() + " first", onclick: () => openVocab(lec.course) }, "Vocabulary")),
     h("datalist", { id: "courses" }, courses().map(c => h("option", { value: c }))),
-    h("input", { class: "title-in", value: lec.title, "aria-label": isNote ? "Note title" : "Lecture title", onchange: patch("title", isNote ? "Untitled note" : "Untitled lecture") }),
+    h("input", { class: "title-in", value: lec.title, "aria-label": isNote ? "Note title" : typeLabel(lec) + " title", onchange: patch("title", isNote ? "Untitled note" : "Untitled lecture") }),
+    !isNote && lec.source && lec.source.url ? sourceCard(lec) : null,
     h("div", { class: "row meta" },
       h("span", { class: "meta-bits", id: "metaLine" }, metaBits(lec)),
       h("span", { class: "row actions" },
@@ -3275,7 +3388,7 @@ function renderMain(){
 
     // a quick note pinned to the current moment
     const pinT = () => (REC.on ? nowAbs() : P.lecId === lec.id && P.n != null ? playAbs() : null);
-    const noteIn = h("input", { class: "note-in", id: "noteIn", type: "text", value: S.markDraft, placeholder: REC.on ? "Quick note, pinned to this moment in the recording" : "Quick note for this lecture", "aria-label": "Quick note", oninput: e => (S.markDraft = e.target.value), onkeydown: e => { if (e.key === "Enter") addMark(); } });
+    const noteIn = h("input", { class: "note-in", id: "noteIn", type: "text", value: S.markDraft, placeholder: REC.on ? "Quick note, pinned to this moment in the recording" : "Quick note for this " + typeWord(lec), "aria-label": "Quick note", oninput: e => (S.markDraft = e.target.value), onkeydown: e => { if (e.key === "Enter") addMark(); } });
     const addMark = async () => {
       const text = S.markDraft.trim(); if (!text) return;
       try { await api("POST", "/api/lectures/" + lec.id + "/marks", { t: pinT(), text }); S.markDraft = ""; noteIn.value = ""; if (S.tab === "transcript") softRefresh(); else { S.tab = "transcript"; render(); } $("noteIn") && $("noteIn").focus(); } catch (e){ fail(e); }
@@ -3283,8 +3396,10 @@ function renderMain(){
     main.append(h("div", { class: "note-row" }, noteIn, h("button", { class: "btn", onclick: addMark }, "Add note")));
   }
 
-  const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", "AI notes"], ["summary", "Summary"], ["study", "Flashcards and quiz"]];
+  const T = typeOf(lec);
+  const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", T.notesLabel], ["summary", "Summary"], ...(T.study || (lec.study && lec.study.flashcards && lec.study.flashcards.length) ? [["study", T.study || "Flashcards and quiz"]] : [])];
   if (isNote && S.tab !== "mynotes") S.tab = "mynotes";
+  if (!tabs.some(t => t[0] === S.tab)) S.tab = "transcript";
   if (!isNote) main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
     h("button", { class: "tab", role: "tab", "aria-selected": S.tab === k ? "true" : "false", onclick: () => { S.tab = k; S.err = ""; S.info = ""; S.editNotes = false; render(); requestAnimationFrame(() => { const m = $("main"), tb = m && m.querySelector(".tabs"); if (tb && m.scrollTop < tb.offsetTop) m.scrollTo({ top: tb.offsetTop, behavior: "smooth" }); }); } }, t))));
   const panel = h("div", { class: "panel" + (isNote ? " solo" : ""), role: "tabpanel" });
@@ -3490,7 +3605,7 @@ function homeView(){
   const secs = week.reduce((n, l) => n + (l.duration || 0), 0);
   const box = h("div", { class: "home" },
     h("h1", null, live.length ? hello + "." : "Listen to the lecturer. Bizofy writes it down."),
-    live.length ? null : h("p", { class: "lede" }, "Record a class or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into structured notes, a summary, flashcards and a quiz. Pambizo, in the margin, answers your questions about it."),
+    live.length ? null : h("p", { class: "lede" }, "Record a class, a meeting, a sermon or an interview, or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into notes, a summary, flashcards and a quiz that fit what it was. Pambizo, in the margin, answers your questions about it."),
     S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
     S.info ? h("p", { class: "notice info", role: "status" }, S.info) : null,
     h("div", { class: "row" }, h("button", { class: "btn solid rec-now", onclick: async () => { try { await newLecture(); startRec(); } catch (e){ fail(e); } } }, h("i"), "Record now"), h("button", { class: "btn", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
@@ -3707,8 +3822,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.4", RELEASED = "26 September 2026";
+const VERSION = "2.6.5", RELEASED = "28 September 2026";
 const CHANGES = [
+  ["2.6.5", "28 Sep 2026", ["Recording types: lecture, meeting, sermon or talk, interview or research. Pick it beside the course name, or set it per course in Settings", "Each type changes the words, the AI prompts, Pambizo's quick actions and the export headings: minutes with decisions and action items for meetings, scriptures and application for sermons, quotes and themes for interviews", "Flashcards and quiz become reflection questions for sermons and step aside for meetings and interviews", "From a link: paste a YouTube, Vimeo or podcast address. Bizofy saves it with the recording, fetches the title and thumbnail, and shows the steps to bring the transcript over", "Pasting YouTube's copied transcript (a time on one line, the words on the next) now keeps the times and joins the captions into paragraphs"]],
   ["2.6.4", "26 Sep 2026", ["Bigger reading windows: the lecture header scrolls away and only the tabs stay pinned, so the transcript and notes get nearly the whole screen. The top strip never moves"]],
   ["2.6.3", "26 Sep 2026", ["My notes, AI notes, Summary and Flashcards now scroll inside their own window, like the transcript, so the page never stretches and the top strip stays in place"]],
   ["2.6.2", "25 Sep 2026", ["Fix: the silence watch could pause a live class when the phone screen dimmed or the tab was in the background, because the voice detector stopped with the screen. It now listens in the background too", "Pausing by itself is now off by default: Bizofy only asks. If you turn it on, it resumes by itself the moment voices are heard, and marks the gap"]],
@@ -3777,6 +3893,7 @@ function renderPrefs(){
     field("When Bizofy opens", "gen.openOn", "select", [["home", "Show the home screen"], ["last", "Open the last lecture I worked on"]]),
     field("Folder for new lectures", "gen.defaultFolder", "text", "Leave blank to use the course name"),
     field("Course for new lectures", "gen.defaultCourse", "text", "Leave blank to type it each time"),
+    field("What new recordings are, unless the course says otherwise", "gen.defaultType", "select", TYPE_LIST),
     field("Ask before deleting or removing audio", "gen.confirm", "check"),
     field("Show this week's numbers on the home screen", "gen.homeStats", "check"),
     field("Show recent lectures on the home screen", "gen.homeTiles", "check"));
@@ -3823,6 +3940,7 @@ function renderCourses(){
     const cp = courseProfile(c), sel = (label, key, opts, sub) => h("label", null, label, h("select", { onchange: e => setCourseProfile(c, sub ? { notes: { ...(cp.notes || {}), [key]: e.target.value } } : { [key]: e.target.value === "true" ? true : e.target.value === "false" ? false : e.target.value }).then(renderCourses) },
       opts.map(([v, n]) => { const o = h("option", { value: String(v) }, n); const cur = sub ? (cp.notes || {})[key] : cp[key]; if (String(cur == null ? "" : cur) === String(v)) o.selected = true; return o; })));
     return h("details", { class: "sub", open: cs.length === 1 }, h("summary", null, c),
+      sel("Recordings in this course are", "type", [["", "Same as general"], ...TYPE_LIST]),
       sel("Language spoken", "language", [["", "Same as general"], ...LANGS.filter(l => l[0] !== "auto"), ["auto", "Detect"]]),
       sel("AI for this course", "ai", [["", "Same as general"], ["claude", "Claude"], ["groq", "Groq"], ["custom", "Other service"]]),
       sel("AI notes detail", "detail", [["", "Same as general"], ["brief", "Brief"], ["standard", "Standard"], ["thorough", "Thorough"]], true),
