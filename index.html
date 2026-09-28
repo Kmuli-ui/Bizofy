@@ -645,6 +645,9 @@ main{height:100%;overflow:auto;overscroll-behavior:contain;padding-bottom:24px}
 .pane-scroll{overflow:visible;height:auto!important;padding:2px 0 0;margin:0}
 @media (min-width:761px){.side{height:100%;top:0}}
 @media (min-width:1181px){.pam{height:100%;top:0}}
+/* 2.6.7: one finger scroll. Until the header has rolled away, the transcript box is not a scroller of its own, so a swipe or wheel over it moves the page; once the tabs are pinned the box scrolls, and at its top a swipe down chains back to the page. */
+.seg-scroll{overscroll-behavior:auto}
+main.seg-park .seg-scroll{overflow:hidden}
 body.focus .app{height:100vh;height:100dvh}
 body.focus main{padding-top:56px}
 body.focus .pane-scroll,body.focus .seg-scroll{height:auto!important}
@@ -3548,7 +3551,15 @@ function sizeSegs(){
   const box = V.box; if (!box || !box.isConnected) return;
   const main = $("main"), tabs = main.querySelector(".tabs"), gap = tabs ? box.getBoundingClientRect().top - tabs.getBoundingClientRect().bottom : 120;
   box.style.height = Math.max(260, main.clientHeight - (tabs ? tabs.offsetHeight : 0) - gap - 44) + "px";
+  parkSegs();
 }
+// while the page can still scroll down (header visible), the transcript box hands scrolling to the page
+function parkSegs(){
+  const main = $("main"), box = V.box; if (!main) return;
+  const max = main.scrollHeight - main.clientHeight, parked = !!(box && box.isConnected && !document.body.classList.contains("focus")) && max > 8 && main.scrollTop < max - 4;
+  main.classList.toggle("seg-park", parked);
+}
+$("main").addEventListener("scroll", () => requestAnimationFrame(parkSegs), { passive: true });
 // the other tabs get the same window: header, recorder and tabs stay put, only the content scrolls
 function sizePane(){}
 window.addEventListener("resize", () => { sizeSegs(); sizePane(); measure(); updateScrubber(); });
@@ -3826,8 +3837,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.6", RELEASED = "28 September 2026";
+const VERSION = "2.6.7", RELEASED = "28 September 2026";
 const CHANGES = [
+  ["2.6.7", "28 Sep 2026", ["The page scrolls again with a finger or wheel over the transcript: the transcript box hands scrolling to the page until the header has rolled away, and a swipe down at its top brings the header back"]],
   ["2.6.6", "28 Sep 2026", ["Pambizo no longer freezes the app on long answers: the reply is painted a few times a second instead of on every word, and the panel scrolls only when you are already at the bottom"]],
   ["2.6.5", "28 Sep 2026", ["Recording types: lecture, meeting, sermon or talk, interview or research. Pick it beside the course name, or set it per course in Settings", "Each type changes the words, the AI prompts, Pambizo's quick actions and the export headings: minutes with decisions and action items for meetings, scriptures and application for sermons, quotes and themes for interviews", "Flashcards and quiz become reflection questions for sermons and step aside for meetings and interviews", "From a link: paste a YouTube, Vimeo or podcast address. Bizofy saves it with the recording, fetches the title and thumbnail, and shows the steps to bring the transcript over", "Pasting YouTube's copied transcript (a time on one line, the words on the next) now keeps the times and joins the captions into paragraphs"]],
   ["2.6.4", "26 Sep 2026", ["Bigger reading windows: the lecture header scrolls away and only the tabs stay pinned, so the transcript and notes get nearly the whole screen. The top strip never moves"]],

@@ -1,5 +1,5 @@
 {
-  "version": "2.6.6",
+  "version": "2.6.7",
   "url": "./",
-  "notes": "Pambizo no longer freezes the app on long answers. Also 2.6.5: recording types and From a link."
+  "notes": "The page scrolls again with a finger or wheel over the transcript."
 }
