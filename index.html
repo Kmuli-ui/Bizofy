@@ -2466,7 +2466,7 @@ function watchQuiet(){
   if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
   if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { S: () => S, parseText, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { S: () => S, parseText, set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -2679,7 +2679,11 @@ async function ask(text, label){
   let answer = "";
   try {
     askCtl = new AbortController();
-    answer = await askAI(lec, question, S.scope === "course" && lec.course ? "course" : "lecture", askCtl.signal, t => { answer = t; const b = $("pending"); if (b){ b._has = true; b.textContent = t; b.scrollIntoView({ block: "end" }); } }, aiNote);
+    // paint the streamed answer at most a few times a second: painting every token froze phones on long answers
+    let timer = null, shown = 0;
+    const paint = () => { timer = null; const b = $("pending"); if (!b || shown === answer.length) return; shown = answer.length; b._has = true; b.textContent = answer; const log = $("pamLog"); if (log && log.scrollHeight - log.scrollTop - log.clientHeight < 160 + b.offsetHeight) log.scrollTop = log.scrollHeight; };
+    answer = await askAI(lec, question, S.scope === "course" && lec.course ? "course" : "lecture", askCtl.signal, t => { answer = t; if (!timer) timer = setTimeout(paint, 150); }, aiNote);
+    if (timer) clearTimeout(timer);
   } catch (e){
     if (e.name !== "AbortError" && !answer.trim()){ if (!text) S.draft = question; S.pamErr = e.message; }
   }
@@ -3822,8 +3826,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.5", RELEASED = "28 September 2026";
+const VERSION = "2.6.6", RELEASED = "28 September 2026";
 const CHANGES = [
+  ["2.6.6", "28 Sep 2026", ["Pambizo no longer freezes the app on long answers: the reply is painted a few times a second instead of on every word, and the panel scrolls only when you are already at the bottom"]],
   ["2.6.5", "28 Sep 2026", ["Recording types: lecture, meeting, sermon or talk, interview or research. Pick it beside the course name, or set it per course in Settings", "Each type changes the words, the AI prompts, Pambizo's quick actions and the export headings: minutes with decisions and action items for meetings, scriptures and application for sermons, quotes and themes for interviews", "Flashcards and quiz become reflection questions for sermons and step aside for meetings and interviews", "From a link: paste a YouTube, Vimeo or podcast address. Bizofy saves it with the recording, fetches the title and thumbnail, and shows the steps to bring the transcript over", "Pasting YouTube's copied transcript (a time on one line, the words on the next) now keeps the times and joins the captions into paragraphs"]],
   ["2.6.4", "26 Sep 2026", ["Bigger reading windows: the lecture header scrolls away and only the tabs stay pinned, so the transcript and notes get nearly the whole screen. The top strip never moves"]],
   ["2.6.3", "26 Sep 2026", ["My notes, AI notes, Summary and Flashcards now scroll inside their own window, like the transcript, so the page never stretches and the top strip stays in place"]],

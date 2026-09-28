@@ -1,5 +1,5 @@
 {
-  "version": "2.6.5",
+  "version": "2.6.6",
   "url": "./",
-  "notes": "Recording types (lecture, meeting, sermon, interview) and From a link: paste a YouTube address, then paste its transcript."
+  "notes": "Pambizo no longer freezes the app on long answers. Also 2.6.5: recording types and From a link."
 }
