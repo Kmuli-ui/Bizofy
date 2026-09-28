@@ -643,8 +643,11 @@ main{height:100%;overflow:auto;overscroll-behavior:contain;padding-bottom:24px}
 .tabs{position:sticky;top:0;z-index:4;background:var(--paper);margin-top:14px}
 .deck.is-live{top:0}
 .pane-scroll{overflow:visible;height:auto!important;padding:2px 0 0;margin:0}
-@media (min-width:761px){.side{height:100%;top:0}}
-@media (min-width:1181px){.pam{height:100%;top:0}}
+/* 2.6.8: the three columns are grid items in one fixed-height row, so each is exactly one screen tall and scrolls inside itself. (height:100% on a grid item resolves to "auto" when the row is not sized, which let Pambizo and the library grow past the screen on wide monitors.) */
+.app{grid-template-rows:minmax(0,1fr)}
+@media (min-width:761px){.side{position:static;height:auto;min-height:0;top:0;overflow:hidden}}
+@media (min-width:1181px){.pam{position:static;height:auto;min-height:0;top:0;overflow:hidden}}
+@media (min-width:1181px){body.rail-side.peek-open .side{position:fixed;height:auto}}
 /* 2.6.7: one finger scroll. Until the header has rolled away, the transcript box is not a scroller of its own, so a swipe or wheel over it moves the page; once the tabs are pinned the box scrolls, and at its top a swipe down chains back to the page. */
 .seg-scroll{overscroll-behavior:auto}
 main.seg-park .seg-scroll{overflow:hidden}
@@ -2469,7 +2472,7 @@ function watchQuiet(){
   if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
   if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { S: () => S, parseText, set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { S: () => S, parseText, render: () => render(), set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -3837,8 +3840,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.7", RELEASED = "28 September 2026";
+const VERSION = "2.6.8", RELEASED = "28 September 2026";
 const CHANGES = [
+  ["2.6.8", "28 Sep 2026", ["On wide screens Pambizo and the library no longer grow past the bottom of the window: each column is one screen tall and scrolls inside itself, so the Pambizo message box is always in reach"]],
   ["2.6.7", "28 Sep 2026", ["The page scrolls again with a finger or wheel over the transcript: the transcript box hands scrolling to the page until the header has rolled away, and a swipe down at its top brings the header back"]],
   ["2.6.6", "28 Sep 2026", ["Pambizo no longer freezes the app on long answers: the reply is painted a few times a second instead of on every word, and the panel scrolls only when you are already at the bottom"]],
   ["2.6.5", "28 Sep 2026", ["Recording types: lecture, meeting, sermon or talk, interview or research. Pick it beside the course name, or set it per course in Settings", "Each type changes the words, the AI prompts, Pambizo's quick actions and the export headings: minutes with decisions and action items for meetings, scriptures and application for sermons, quotes and themes for interviews", "Flashcards and quiz become reflection questions for sermons and step aside for meetings and interviews", "From a link: paste a YouTube, Vimeo or podcast address. Bizofy saves it with the recording, fetches the title and thumbnail, and shows the steps to bring the transcript over", "Pasting YouTube's copied transcript (a time on one line, the words on the next) now keeps the times and joins the captions into paragraphs"]],
