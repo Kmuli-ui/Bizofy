@@ -89,8 +89,40 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .lec small{display:block;color:var(--slate);font-weight:400;font-size:var(--t-2);margin-top:1px}
 .hit{font-family:var(--read);font-size:var(--t-1);color:var(--slate);padding:4px 10px 4px 22px}
 .hit-t{font-family:var(--display);font-size:var(--t-2);font-variant-numeric:tabular-nums;margin-right:6px;color:var(--ink)}
-.new-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.new-row .btn{padding:9px 6px;white-space:nowrap;text-align:center}
+.new-menu{position:relative}
+.new-menu>summary{display:block;text-align:center;list-style:none;cursor:pointer;width:100%;box-sizing:border-box}
+.new-menu>summary::-webkit-details-marker{display:none}
+.new-menu .menu-list{position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:min(300px,86vw);padding:6px}
+.home-new .menu-list{left:0;top:calc(100% + 6px)}
+.new-item{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;color:inherit;font-family:inherit}
+.new-item:hover,.new-item:focus-visible{background:var(--sheet)}
+.new-item b{font-weight:700;font-size:var(--t0)}
+.new-item small{color:var(--slate);font-size:var(--t-2)}
+.clips{margin-top:28px;border-top:1.5px solid var(--rule);padding-top:14px}
+.clips-head{font-size:var(--t0);font-weight:800;margin:0 0 10px}
+.clip{border:1.5px solid var(--rule);border-radius:10px;padding:8px 12px;margin:0 0 10px;background:var(--sheet)}
+.clip>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-weight:700;list-style:none}
+.clip>summary::-webkit-details-marker{display:none}
+.clip>summary::before{content:"▸";color:var(--slate);margin-right:6px}
+.clip[open]>summary::before{content:"▾"}
+.clip-title{flex:1;min-width:0}
+.clip-meta{display:flex;gap:8px;align-items:center;font-weight:500;font-size:var(--t-2);color:var(--slate);white-space:nowrap}
+.badge{border:1px solid var(--line);border-radius:999px;padding:1px 8px;font-weight:600}
+.badge.pambizo{background:var(--hi)}
+.clip .notes{margin-top:6px}
+.clip-tools{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.clip-name{width:100%;margin:8px 0 6px;font-weight:700}
+.actions .act-in{flex:1;min-width:0}
+.acts{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.act{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start;padding:8px 10px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sheet)}
+.act input[type=checkbox]{width:20px;height:20px;margin-top:6px}
+.act-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.act-text{width:100%;font-weight:600;border:0;background:none;padding:4px 0;font:inherit;color:inherit}
+.act.done .act-text{text-decoration:line-through;color:var(--slate)}
+.act-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.act-owner,.act-due{width:130px;max-width:44%;font-size:var(--t-1);padding:3px 8px}
+.quotes li{margin:6px 0}
+@media (max-width:760px){.clip-meta{white-space:normal}}
 .linkish{border:0;background:none;padding:0;color:var(--slate);font-size:var(--t-2);text-decoration:underline;text-underline-offset:2px;text-align:left}
 .linkish:hover{color:var(--ink)}
 .views{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
@@ -363,19 +395,10 @@ button.brand{border:0;background:none;padding:0;text-align:left;color:inherit;fo
   body.no-pam .app{grid-template-columns:var(--side-w) minmax(0,1fr) 0}
   body.no-side.no-pam .app{grid-template-columns:0 minmax(0,1fr) 0}
   body.no-side .side,body.no-pam .pam{display:none}
-  body.rail-side .app{grid-template-columns:56px minmax(0,1fr) var(--pam-w)}
-  body.rail-side.no-pam .app{grid-template-columns:56px minmax(0,1fr) 0}
-  body.rail-side .side{width:56px;overflow:visible}
-  body.rail-side.peek-open .side{position:fixed;top:52px;left:0;bottom:0;width:var(--side-w);height:auto;z-index:12;background:var(--paper);box-shadow:18px 0 50px rgba(10,20,40,.22);overflow:hidden}
-  body.rail-side.peek-open .side-top,body.rail-side.peek-open #list,body.rail-side.peek-open .side-bottom{display:flex}
-  body.rail-side.peek-open #list{display:block}
-  body.rail-side.peek-open .rail{display:none}
-  body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .side .resizer{display:none}
-  body.rail-side .rail{display:flex}
   body.no-side .peek,body.no-pam .peek{display:flex}
   body.no-side .peek-side,body.no-pam .peek-pam{visibility:visible}
 }
-@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} body.rail-side .app{grid-template-columns:56px minmax(0,1fr)} body.rail-side .side{width:56px} body.rail-side .side-top,body.rail-side #list,body.rail-side .side-bottom,body.rail-side .side .resizer{display:none} body.rail-side .rail{display:flex} body.rail-side.peek-open .side{position:fixed;top:52px;left:0;bottom:0;width:var(--side-w);height:auto;z-index:12;background:var(--paper);box-shadow:18px 0 50px rgba(10,20,40,.22)} body.rail-side.peek-open .side-top,body.rail-side.peek-open .side-bottom{display:flex} body.rail-side.peek-open #list{display:block} body.rail-side.peek-open .rail{display:none} }
+@media (min-width:761px) and (max-width:1180px){ body.no-side .app{grid-template-columns:0 minmax(0,1fr)} body.no-side .side{display:none} }
 .list-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mini{border:1.5px solid var(--rule);border-radius:6px;background:var(--sheet);padding:3px 6px;font-size:var(--t-2);max-width:100%}
 .lec-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;border-radius:0 6px 6px 0}
@@ -556,7 +579,6 @@ body.hide-marks .seg .mk{visibility:hidden}
 body.focus .seg-scroll{height:calc(100dvh - 40px)!important}
 
 /* 2.5.2: rail, folders, filters */
-.rail{display:none;flex-direction:column;align-items:center;gap:6px;padding:12px 0;height:100%}
 .rail-btn{width:40px;height:40px;border:1.5px solid var(--rule);background:var(--sheet);border-radius:10px;font-size:var(--t1);color:var(--slate);line-height:1}
 .rail-btn:hover{color:var(--ink);border-color:var(--ink)}
 .rail-gap{flex:1}
@@ -647,7 +669,6 @@ main{height:100%;overflow:auto;overscroll-behavior:contain;padding-bottom:24px}
 .app{grid-template-rows:minmax(0,1fr)}
 @media (min-width:761px){.side{position:static;height:auto;min-height:0;top:0;overflow:hidden}}
 @media (min-width:1181px){.pam{position:static;height:auto;min-height:0;top:0;overflow:hidden}}
-@media (min-width:1181px){body.rail-side.peek-open .side{position:fixed;height:auto}}
 /* 2.6.7: one finger scroll. Until the header has rolled away, the transcript box is not a scroller of its own, so a swipe or wheel over it moves the page; once the tabs are pinned the box scrolls, and at its top a swipe down chains back to the page. */
 .seg-scroll{overscroll-behavior:auto}
 main.seg-park .seg-scroll{overflow:hidden}
@@ -683,7 +704,7 @@ body.focus .seg-scroll{height:calc(100dvh - 130px)!important}
   <aside class="side" id="side">
     <div class="resizer right" id="sideGrip" title="Drag to resize" aria-hidden="true"></div>
     <div class="side-top">
-      <div class="new-row"><button class="btn solid" id="newBtn">New lecture</button><button class="btn" id="newNoteBtn">New note</button></div>
+      <details class="menu new-menu" id="newMenu"><summary class="btn solid" id="newBtn">+ New</summary><div class="menu-list" id="newList"></div></details>
       <input class="search" id="search" type="search" placeholder="Search lectures and transcripts" aria-label="Search lectures and transcripts">
       <div class="filters" id="filters" role="group" aria-label="Show only"></div>
       <div class="list-tools" id="listTools" hidden></div>
@@ -697,13 +718,7 @@ body.focus .seg-scroll{height:calc(100dvh - 130px)!important}
       <div class="row between"><button class="btn quiet" id="settingsBtn">Settings</button></div>
       <div class="ver" id="ver"></div>
     </div>
-    <div class="rail" id="rail">
-      <button class="rail-btn" id="railNew" title="New lecture">+</button>
-      <button class="rail-btn" id="railSearch" title="Search">⌕</button>
-      <button class="rail-btn" id="railHome" title="Home">⌂</button>
-      <div class="rail-gap"></div>
-      <button class="rail-btn" id="railSettings" title="Settings">⚙</button>
-    </div>
+    
   </aside>
   <main id="main"></main>
   <aside class="pam" id="pam" aria-label="Pambizo, the AI workspace"></aside>
@@ -1335,7 +1350,11 @@ function parseJson(text){
 }
 
 const transcriptText = lec => lec.segments.map(s => (s.flag ? "[!] " : "") + (s.t != null ? "[" + fmt(s.t) + "] " : "") + s.text).join("\n");
-const myNotesMd = lec => (lec.myNotes && lec.myNotes.html ? htmlToMd(lec.myNotes.html).trim() : "");
+const myNotesMd = (lec, all) => (lec.myNotes && lec.myNotes.html ? htmlToMd(lec.myNotes.html).trim() : "") + (all && (lec.clips || []).length ? (lec.myNotes && lec.myNotes.html ? "\n\n" : "") + lec.clips.map(c => "## " + c.title + "\n" + c.md.trim()).join("\n\n") : "");
+const actionsMd = lec => (lec.actions || []).map(a => "- [" + (a.done ? "x" : " ") + "] " + a.text + (a.owner ? " — " + a.owner : "") + (a.due ? " (by " + a.due + ")" : "")).join("\n");
+const summaryMd = lec => { const s = lec.summary, T = typeOf(lec); if (!s) return ""; return s.overview + "\n\n### Key points\n" + s.keyPoints.map(k => "- " + k).join("\n") + (s.definitions.length ? "\n\n### Definitions\n" + s.definitions.map(d => "- **" + d.term + "**: " + d.meaning).join("\n") : "") + (s.actionItems.length ? "\n\n### " + T.todo + "\n" + s.actionItems.map(a => "- [ ] " + a).join("\n") : "") + (s.examHints.length ? "\n\n### " + T.exam + "\n" + s.examHints.map(a => "- " + a).join("\n") : ""); };
+const cardsMd = lec => (lec.study ? lec.study.flashcards.map(c => "- **" + c.q.replace(/\*/g, "") + "**\n  " + c.a).join("\n") : "");
+const themesMd = lec => (lec.themes ? lec.themes.themes.map(t => "### " + t.name + "\n" + t.gist + (t.quotes.length ? "\n" + t.quotes.map(q => "- " + (q.t != null ? "[" + fmt(q.t) + "] " : "") + "“" + q.text + "”").join("\n") : "")).join("\n\n") : "");
 const hasContent = lec => !!lec && (lec.segments.length > 0 || myNotesMd(lec).length > 40);
 const fullText = lec => transcriptText(lec) + (myNotesMd(lec) ? "\n\nThe student's own written notes:\n" + myNotesMd(lec) : "") + ((lec.marks || []).length ? "\n\nThe student's own notes taken during the lecture:\n" + lec.marks.map(m => (m.t != null ? "[" + fmt(m.t) + "] " : "") + m.text).join("\n") : "");
 const headerText = lec => { const T = typeOf(lec); return T.group + ": " + (lec.course || "not given") + "\n" + (lec.kind === "note" ? "Note: " : T.label + ": ") + lec.title + "\nDate: " + new Date(lec.createdAt).toDateString() + "\n" + (lec.source && lec.source.url ? "Source: " + lec.source.url + (lec.source.title ? " (" + lec.source.title + ")" : "") + "\n" : ""); };
@@ -1399,6 +1418,14 @@ const TYPES = {
     voice: "an interview or research conversation", summaryExtra: "follow-up questions and tasks for the researcher", hintsExtra: "the main themes that emerged", notesShape: "field notes: the questions asked, what the interviewee said on each, notable direct quotes with their times, and emerging themes",
     chips: [["Key quotes", "Pull out the eight most telling direct quotes from this interview, each with its [m:ss] time and a line on why it matters."], ["Themes", "What themes emerge from this interview? List each with the moments that support it."], ["Follow-up questions", "Which questions should I ask in a follow-up interview, based on what was said and what was left unclear?"], ["Neutral summary", "Summarise what the interviewee said without interpretation, in their own framing."], ["Contradictions", "Point out anything the interviewee said that seems to conflict with something else they said, with the times."]] }
 };
+TYPES.lecture.tabs = ["transcript", "mynotes", "notes", "summary", "study"];
+TYPES.meeting.tabs = ["transcript", "mynotes", "notes", "summary", "actions"];
+TYPES.sermon.tabs = ["transcript", "mynotes", "notes", "summary", "actions", "study"];
+TYPES.interview.tabs = ["transcript", "mynotes", "notes", "summary", "themes"];
+TYPES.lecture.actionsTab = "Action points"; TYPES.meeting.actionsTab = "Action points"; TYPES.sermon.actionsTab = "Application"; TYPES.interview.actionsTab = "Follow-ups";
+TYPES.meeting.actionsHint = "Who does what, by when. Pull them from the summary, let the AI find them, or type them in.";
+TYPES.sermon.actionsHint = "What the speaker asked listeners to do or change this week.";
+TYPES.lecture.actionsHint = "Readings, deadlines and tasks."; TYPES.interview.actionsHint = "Follow-up questions and tasks for the researcher.";
 const typeOf = lec => TYPES[(lec && lec.type) || (lec && courseProfile(lec.course).type) || pref("gen.defaultType")] || TYPES.lecture;
 const typeLabel = lec => typeOf(lec).label;
 const typeWord = lec => ({ meeting: "meeting", sermon: "talk", interview: "interview" })[typeOf(lec) === TYPES.lecture ? "lecture" : (lec && lec.type) || Object.keys(TYPES).find(k => TYPES[k] === typeOf(lec))] || "lecture";
@@ -1420,6 +1447,22 @@ async function makeStudy(lec, note){
   lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
     quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
     madeAt: Date.now() };
+}
+async function makeActions(lec, note){
+  const T = typeOf(lec);
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 2500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
+    system: "You extract " + T.actionsTab.toLowerCase() + " from " + T.voice + ": " + T.summaryExtra + "." + RULES + ' Reply with only a JSON object: {"items": [{"text": "what is to be done, one line", "owner": "name or role if said, else empty string", "due": "date or deadline as said, else empty string", "t": "m:ss where it was said"}]}. Only what was actually said or agreed; an empty array if none.',
+    messages: [{ role: "user", content: "Write the JSON now." }] }), note));
+  const items = (Array.isArray(r.items) ? r.items : []).filter(a => a && a.text).map(a => ({ id: newId("a"), text: String(a.text).trim().slice(0, 600), owner: String(a.owner || "").slice(0, 80), due: String(a.due || "").slice(0, 40), done: false, t: /^\d{1,2}(:\d\d){1,2}$/.test(String(a.t || "").trim()) ? parseTs(String(a.t).trim()) : null }));
+  const have = new Set((lec.actions || []).map(a => a.text.toLowerCase()));
+  lec.actions = [...(lec.actions || []), ...items.filter(a => !have.has(a.text.toLowerCase()))];
+  lec.actionsAt = Date.now();
+}
+async function makeThemes(lec, note){
+  const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
+    system: "You analyse an interview or research conversation for a researcher. Use only what was said." + RULES + ' Reply with only a JSON object: {"themes": [{"name": "3 to 6 words", "gist": "one or two sentences on what the interviewee said about it", "quotes": [{"t": "m:ss", "text": "a verbatim quote of one to three sentences"}]}]} with 3 to 8 themes, each with 1 to 4 quotes, in order of importance.',
+    messages: [{ role: "user", content: "Write the JSON now." }] }), note));
+  lec.themes = { themes: (Array.isArray(r.themes) ? r.themes : []).filter(t => t && t.name).map(t => ({ name: String(t.name).slice(0, 120), gist: String(t.gist || "").slice(0, 600), quotes: (Array.isArray(t.quotes) ? t.quotes : []).filter(q => q && q.text).map(q => ({ t: /^\d{1,2}(:\d\d){1,2}$/.test(String(q.t || "").trim()) ? parseTs(String(q.t).trim()) : null, text: String(q.text).slice(0, 700) })) })), madeAt: Date.now() };
 }
 async function makeOutline(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 1800, context: ctx, onWait: (s, why) => note(waitText(s, why)),
@@ -1488,14 +1531,20 @@ function mdBlocks(md){
 }
 const runsOf = t => String(t).split(/(\*\*[^*]+\*\*|(?<![*\w])\*[^*\n]+\*(?![*\w]))/).filter(Boolean).map(x => (/^\*\*[^*]+\*\*$/.test(x) ? { b: true, t: x.slice(2, -2) } : /^\*[^*]+\*$/.test(x) ? { i: true, t: x.slice(1, -1) } : { t: x }));
 const plain = t => runsOf(t).map(r => r.t).join("");
-const SECTIONS = [["outline", "Outline"], ["notes", "AI notes"], ["summary", "Summary"], ["mine", "My notes"], ["marks", "Timestamped notes"], ["cards", "Flashcards"], ["quiz", "Quiz"], ["transcript", "Transcript"]];
-const hasSection = (lec, k) => k === "outline" ? !!(lec.outline && lec.outline.chapters.length) : k === "notes" ? !!(lec.notes && lec.notes.md.trim()) : k === "summary" ? !!lec.summary : k === "mine" ? !!myNotesMd(lec) : k === "marks" ? (lec.marks || []).length > 0
+const SECTIONS = [["outline", "Outline"], ["notes", "AI notes"], ["summary", "Summary"], ["actions", "Action points"], ["themes", "Themes and quotes"], ["mine", "My notes"], ["marks", "Timestamped notes"], ["cards", "Flashcards"], ["quiz", "Quiz"], ["transcript", "Transcript"]];
+const hasSection = (lec, k) => k === "outline" ? !!(lec.outline && lec.outline.chapters.length) : k === "notes" ? !!(lec.notes && lec.notes.md.trim()) : k === "summary" ? !!lec.summary : k === "mine" ? !!myNotesMd(lec, true) : k === "actions" ? (lec.actions || []).length > 0 : k === "themes" ? !!(lec.themes && lec.themes.themes.length) : k === "marks" ? (lec.marks || []).length > 0
   : k === "cards" ? !!(lec.study && lec.study.flashcards.length) : k === "quiz" ? !!(lec.study && lec.study.quiz.length) : lec.segments.length > 0;
 function buildDoc(lec, only){
   const want = k => (!only || only.includes(k)) && hasSection(lec, k);
   const B = [{ k: "title", t: lec.title }, { k: "meta", t: (lec.kind === "note" ? "" : typeLabel(lec) + ". ") + (lec.course ? lec.course + ", " : "") + new Date(lec.createdAt).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + (lec.source && lec.source.url ? ". Source: " + lec.source.url : "") }];
   if (want("outline")) B.push({ k: "h1", t: "Outline" }, ...lec.outline.chapters.map(c => ({ k: "seg", ts: fmt(c.t), t: c.title + (c.gist ? ". " + c.gist : "") })));
-  if (want("mine")) B.push({ k: "h1", t: "My notes" }, ...mdBlocks(myNotesMd(lec)));
+  if (want("mine")){
+    B.push({ k: "h1", t: "My notes" });
+    if (myNotesMd(lec)) B.push(...mdBlocks(myNotesMd(lec)));
+    (lec.clips || []).forEach(c => B.push({ k: "h2", t: c.title }, { k: "p", t: "_" + clipSource(c.source) + ", " + new Date(c.addedAt).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) + "_" }, ...mdBlocks(c.md)));
+  }
+  if (want("actions")) B.push({ k: "h1", t: typeOf(lec).actionsTab }, ...lec.actions.map(a => ({ k: "todo", done: !!a.done, t: a.text + (a.owner ? " — " + a.owner : "") + (a.due ? " (by " + a.due + ")" : "") })));
+  if (want("themes")) B.push({ k: "h1", t: "Themes and quotes" }, ...mdBlocks(themesMd(lec)));
   if (want("notes")) B.push({ k: "h1", t: typeOf(lec).notesLabel }, ...mdBlocks(lec.notes.md));
   const s = lec.summary;
   if (want("summary")){
@@ -1867,7 +1916,7 @@ async function api(method, url, body, note){
   if (p[0] !== "lectures") throw new AppError("Not found.");
   if (!p[1]){
     if (method === "GET") return [...DB.lectures.values()].map(metaOf).sort((a, b) => b.createdAt - a.createdAt);
-    const lec = { id: newId("l"), course: String(b.course || pref("gen.defaultCourse") || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", type: TYPES[b.type] ? b.type : (courseProfile(b.course || pref("gen.defaultCourse")).type || pref("gen.defaultType") || "lecture"), folder: String(b.folder || pref("gen.defaultFolder") || "").slice(0, 80), archived: false, language: (courseProfile(b.course || pref("gen.defaultCourse")).language) || pref("rec.language") || "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, summary: null, study: null, notes: null, chat: [] };
+    const lec = { id: newId("l"), course: String(b.course || pref("gen.defaultCourse") || "").slice(0, 120), title: String(b.title || "Untitled lecture").slice(0, 200), kind: b.kind === "note" ? "note" : "lecture", type: TYPES[b.type] ? b.type : (courseProfile(b.course || pref("gen.defaultCourse")).type || pref("gen.defaultType") || "lecture"), folder: String(b.folder || pref("gen.defaultFolder") || "").slice(0, 80), archived: false, language: (courseProfile(b.course || pref("gen.defaultCourse")).language) || pref("rec.language") || "auto", createdAt: Date.now(), duration: 0, segments: [], marks: [], audio: [], sessions: [], myNotes: null, clips: [], actions: [], themes: null, summary: null, study: null, notes: null, chat: [] };
     DB.lectures.set(lec.id, lec); await DB.save(lec); return lec;
   }
   const lec = getLec(p[1]);
@@ -1887,6 +1936,10 @@ async function api(method, url, body, note){
       if (typeof b.title === "string") lec.title = b.title.trim().slice(0, 200) || "Untitled lecture";
       if (typeof b.language === "string") lec.language = b.language.slice(0, 8);
       if (typeof b.type === "string" && TYPES[b.type]) lec.type = b.type;
+      if (Array.isArray(b.clips)) lec.clips = b.clips.filter(c => c && typeof c.md === "string").slice(0, 200).map(c => ({ id: String(c.id || newId("c")), title: String(c.title || "Untitled").slice(0, 160), source: String(c.source || "you").slice(0, 20), md: String(c.md).slice(0, 60000), addedAt: +c.addedAt || Date.now(), open: c.open !== false }));
+      if (b.clip && typeof b.clip.md === "string" && b.clip.md.trim()){ lec.clips = lec.clips || []; lec.clips.push({ id: newId("c"), title: String(b.clip.title || "Untitled").slice(0, 160), source: String(b.clip.source || "you").slice(0, 20), md: String(b.clip.md).slice(0, 60000), addedAt: Date.now(), open: true }); }
+      if (Array.isArray(b.actions)) lec.actions = b.actions.filter(a => a && typeof a.text === "string" && a.text.trim()).slice(0, 300).map(a => ({ id: String(a.id || newId("a")), text: String(a.text).trim().slice(0, 600), owner: String(a.owner || "").slice(0, 80), due: String(a.due || "").slice(0, 40), done: !!a.done, t: Number.isFinite(a.t) ? a.t : null }));
+      if (b.themes === null) lec.themes = null;
       if (b.source === null) delete lec.source;
       else if (b.source && typeof b.source === "object" && typeof b.source.url === "string") lec.source = { url: b.source.url.slice(0, 500), site: String(b.source.site || "").slice(0, 20), id: String(b.source.id || "").slice(0, 40), title: String(b.source.title || "").slice(0, 200), thumb: String(b.source.thumb || "").slice(0, 300), author: String(b.source.author || "").slice(0, 120) };
       if (typeof b.notes === "string") lec.notes = b.notes.trim() ? { md: b.notes, madeAt: (lec.notes && lec.notes.madeAt) || Date.now(), edited: true } : null;
@@ -1914,10 +1967,10 @@ async function api(method, url, body, note){
     await DB.save(lec); return lec;
   }
   if (p[2] === "audio" && p[4] === "transcribe") return transcribePart(lec.id, Number(p[3]));
-  if (p[2] === "summary" || p[2] === "study" || p[2] === "notes" || p[2] === "outline"){
+  if (p[2] === "summary" || p[2] === "study" || p[2] === "notes" || p[2] === "outline" || p[2] === "actions" || p[2] === "themes"){
     if (!lec.segments.length) throw new AppError("Add a transcript first.");
-    AI_CTX.task = p[2]; AI_CTX.course = lec.course;
-    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : makeNotes)(lec, note || (() => {}));
+    AI_CTX.task = p[2] === "actions" || p[2] === "themes" ? "summary" : p[2]; AI_CTX.course = lec.course;
+    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : p[2] === "actions" ? makeActions : p[2] === "themes" ? makeThemes : makeNotes)(lec, note || (() => {}));
     await DB.save(lec); return lec;
   }
   throw new AppError("Not found.");
@@ -2472,7 +2525,7 @@ function watchQuiet(){
   if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
   if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { S: () => S, parseText, render: () => render(), set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { S: () => S, parseText, render: () => render(), md: lec => toMarkdown(lec), docx: lec => toDocx(lec), set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -2703,7 +2756,7 @@ function openExport(){
   const lec = S.cur; if (!lec) return;
   const have = SECTIONS.filter(([k]) => hasSection(lec, k));
   if (!S.exportSel) S.exportSel = SECTIONS.map(s => s[0]);
-  $("expParts").replaceChildren(...SECTIONS.map(([k, label]) => { const on = have.some(x => x[0] === k);
+  $("expParts").replaceChildren(...SECTIONS.map(([k, label]) => { const on = have.some(x => x[0] === k); label = k === "notes" ? typeOf(lec).notesLabel : k === "actions" ? typeOf(lec).actionsTab : label;
     const box = h("input", { type: "checkbox", value: k, disabled: !on }); box.checked = on && S.exportSel.includes(k);
     return h("label", { class: "check" + (on ? "" : " off") }, box, label + (on ? "" : " (none yet)")); }));
   $("expSrt").disabled = $("expVtt").disabled = !lec.segments.some(s => s.t != null);
@@ -3072,7 +3125,7 @@ function notesPanel(lec){
   const gate = aiGate(lec, "notes", "Write AI notes", "Write the AI notes again", has);
   if (!S.busy.notes){
     gate.append(h("button", { class: "btn quiet", onclick: () => { S.editNotes = true; S.notesDraft = has ? lec.notes.md : ""; render(); } }, has ? "Edit" : "Write them yourself"));
-    if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"));
+    if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"), addBtn(lec, () => lec.notes.md, typeOf(lec).notesLabel, "notes"));
   }
   box.append(gate);
   if (has) box.append(notesView(lec.notes.md));
@@ -3083,16 +3136,55 @@ function summaryPanel(lec){
   const s = lec.summary, box = h("div", { class: "read" });
   box.append(aiGate(lec, "summary", "Summarize this " + typeLabel(lec).toLowerCase().replace(" or talk", "").replace(" or research", ""), "Summarize again", !!s));
   if (!s) return box;
+  if (!S.busy.summary) box.querySelector(".gate").append(addBtn(lec, () => summaryMd(lec), "Summary", "summary"));
   const list = (title, items, cls) => (items.length ? [h("h2", null, title), h("ul", { class: cls || null }, items.map(i => h("li", { class: cls === "todo" ? "todo" : null }, i)))] : []);
   box.append(h("h2", null, "Overview"), h("p", null, s.overview), ...list("Key points", s.keyPoints));
   if (s.definitions.length) box.append(h("h2", null, "Definitions"), h("dl", null, s.definitions.map(d => [h("dt", null, d.term), h("dd", null, d.meaning)])));
   box.append(...list(typeOf(lec).todo, s.actionItems, "todo"), ...list(typeOf(lec).exam, s.examHints));
   return box;
 }
+function actionsPanel(lec){
+  const T = typeOf(lec), items = lec.actions || [], box = h("div", { class: "read actions" });
+  const save = async next => { try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { actions: next }), true); render(); } catch (e){ fail(e); } };
+  const gate = aiGate(lec, "actions", "Find " + T.actionsTab.toLowerCase() + " with AI", "Look for more with AI", items.length > 0);
+  if (!S.busy.actions){
+    if (lec.summary && lec.summary.actionItems.length) gate.append(h("button", { class: "btn quiet", onclick: () => { const have = new Set(items.map(a => a.text.toLowerCase())); save([...items, ...lec.summary.actionItems.filter(t => !have.has(t.toLowerCase())).map(t => ({ id: newId("a"), text: t, owner: "", due: "", done: false, t: null }))]); } }, "Pull from the summary"));
+    if (items.length) gate.append(addBtn(lec, () => actionsMd(lec), T.actionsTab, "actions"));
+  }
+  box.append(h("p", { class: "hint", style: "margin:0 0 8px" }, T.actionsHint || ""), gate);
+  const draft = h("input", { type: "text", class: "act-in", placeholder: "Add " + (T.actionsTab === "Application" ? "something to live out" : "an action point") + " and press Enter", "aria-label": "New action point", onkeydown: e => { if (e.key === "Enter" && draft.value.trim()){ save([...items, { id: newId("a"), text: draft.value.trim(), owner: "", due: "", done: false, t: null }]); } } });
+  box.append(h("div", { class: "row" }, draft, h("button", { class: "btn", onclick: () => { if (draft.value.trim()) save([...items, { id: newId("a"), text: draft.value.trim(), owner: "", due: "", done: false, t: null }]); } }, "Add")));
+  if (!items.length) return box;
+  const open = items.filter(a => !a.done), done = items.filter(a => a.done);
+  const row = a => h("div", { class: "act" + (a.done ? " done" : "") },
+    h("input", { type: "checkbox", "aria-label": "Done", onchange: e => save(items.map(x => x.id === a.id ? { ...x, done: e.target.checked } : x)) }),
+    h("div", { class: "act-body" },
+      h("input", { type: "text", class: "act-text", value: a.text, "aria-label": "Action point", onchange: e => save(items.map(x => x.id === a.id ? { ...x, text: e.target.value.trim() || x.text } : x)) }),
+      h("div", { class: "act-meta" },
+        h("input", { type: "text", class: "act-owner", value: a.owner, placeholder: T.label === "Meeting" ? "Owner" : "Who", "aria-label": "Owner", onchange: e => save(items.map(x => x.id === a.id ? { ...x, owner: e.target.value.trim() } : x)) }),
+        h("input", { type: "text", class: "act-due", value: a.due, placeholder: "By when", "aria-label": "Due", onchange: e => save(items.map(x => x.id === a.id ? { ...x, due: e.target.value.trim() } : x)) }),
+        a.t != null ? h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(a.t) }, fmt(a.t)) : null,
+        h("button", { class: "linkish", "aria-label": "Remove", onclick: () => save(items.filter(x => x.id !== a.id)) }, "Remove"))));
+  const list = h("div", { class: "acts" }, open.map(row));
+  list.querySelectorAll("input[type=checkbox]").forEach((cb, i) => { cb.checked = open[i].done; });
+  box.append(list);
+  if (done.length){ const dl = h("div", { class: "acts" }, done.map(row)); dl.querySelectorAll("input[type=checkbox]").forEach(cb => { cb.checked = true; }); box.append(h("details", { class: "sub" }, h("summary", null, "Done (" + done.length + ")"), dl)); }
+  return box;
+}
+function themesPanel(lec){
+  const t = lec.themes, box = h("div", { class: "read" });
+  const gate = aiGate(lec, "themes", "Find themes and quotes", "Look again", !!t);
+  if (t && !S.busy.themes) gate.append(addBtn(lec, () => themesMd(lec), "Themes and quotes", "themes"));
+  box.append(h("p", { class: "hint", style: "margin:0 0 8px" }, "What came up, with the interviewee's own words and the moment each was said."), gate);
+  if (!t) return box;
+  t.themes.forEach(th => box.append(h("h2", null, th.name), h("p", null, th.gist), th.quotes.length ? h("ul", { class: "quotes" }, th.quotes.map(q => h("li", null, q.t != null ? h("button", { class: "tsl", title: "Go to this moment", onclick: () => jumpTo(q.t) }, fmt(q.t)) : null, " “" + q.text + "”"))) : null));
+  return box;
+}
 function studyPanel(lec){
   const st = lec.study, box = h("div");
   box.append(aiGate(lec, "study", typeOf(lec).studyBtn || "Make flashcards and a quiz", "Make a new set", !!st));
   if (!st) return box;
+  if (!S.busy.study && st.flashcards.length) box.querySelector(".gate").append(addBtn(lec, () => cardsMd(lec), typeOf(lec).study || "Flashcards", "study"));
   box.append(h("div", { class: "cards" }, st.flashcards.map(c => {
     let back = false;
     const label = h("b", null, "Question"), body = h("span", null, c.q);
@@ -3128,22 +3220,47 @@ const CHIPS = [
   ["Explain simply", "Explain the main idea of this lecture in simple terms, with one everyday example."],
   ["Likely exam questions", "Write five likely exam questions from this lecture, each with a brief model answer."]
 ];
-async function addToMyNotes(md, btn){
-  const lec = S.cur; if (!lec) return;
+const CLIP_SOURCES = { you: "Your own", pambizo: "Pambizo", notes: "AI notes", summary: "Summary", study: "Flashcards", actions: "Action points", themes: "Themes and quotes", transcript: "Transcript" };
+const clipSource = s => CLIP_SOURCES[s] || "Added";
+// every tab can send its content here; each addition is kept as its own section, nothing is merged or replaced
+async function addToMyNotes(md, btn, title, source){
+  const lec = S.cur; if (!lec || !String(md || "").trim()) return;
+  const was = btn ? btn.textContent : "";
   try {
-    const ed = S.tab === "mynotes" ? $("editor") : null, box = ed ? cleanHtml(ed.innerHTML) : cleanHtml(lec.myNotes ? lec.myNotes.html : "");
-    box.append(...mdToNodes(md).childNodes);
-    const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: box.innerHTML });
+    const out = await api("PATCH", "/api/lectures/" + lec.id, { clip: { title: title || clipSource(source), source: source || "you", md: String(md) } });
     if (S.tab === "mynotes") adopt(out); else adopt(out, true);
-    if (btn){ btn.textContent = "Added"; setTimeout(() => (btn.textContent = "Add to My notes"), 1600); }
-  } catch (e){ S.pamErr = e.message; renderPam(); }
+    if (btn){ btn.textContent = "Added to My notes"; setTimeout(() => (btn.textContent = was), 1800); }
+    toast("Added to My notes as “" + (title || clipSource(source)) + "”.", () => { S.tab = "mynotes"; render(); }, "Open");
+  } catch (e){ S.err = e.message; render(); }
+}
+const addBtn = (lec, md, title, source, cls) => h("button", { class: cls || "btn quiet", title: "Keep a copy in My notes, as its own section", onclick: ev => addToMyNotes(typeof md === "function" ? md() : md, ev.currentTarget, title, source) }, "Add to My notes");
+function clipCard(lec, c, i){
+  const all = lec.clips || [], save = async next => { try { adopt(await api("PATCH", "/api/lectures/" + lec.id, { clips: next })); } catch (e){ fail(e); } };
+  const card = h("details", { class: "clip", open: c.open !== false, ontoggle: e => { c.open = e.target.open; DB.save(lec).catch(() => {}); } });
+  const title = h("span", { class: "clip-title" }, c.title);
+  card.append(h("summary", null, title, h("span", { class: "clip-meta" }, h("span", { class: "badge " + c.source }, clipSource(c.source)), new Date(c.addedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" }))));
+  if (S.clipEdit === c.id){
+    const ta = h("textarea", { class: "notes-edit", "aria-label": "Section text, in Markdown", value: c.md });
+    const name = h("input", { type: "text", class: "clip-name", value: c.title, "aria-label": "Section title" });
+    card.append(name, ta, h("div", { class: "row" },
+      h("button", { class: "btn solid", onclick: () => { S.clipEdit = null; save(all.map(x => x.id === c.id ? { ...x, title: name.value.trim() || x.title, md: ta.value } : x)); } }, "Save"),
+      h("button", { class: "btn quiet", onclick: () => { S.clipEdit = null; render(); } }, "Cancel")));
+    return card;
+  }
+  card.append(notesView(c.md), h("div", { class: "clip-tools" },
+    h("button", { class: "linkish", onclick: () => { S.clipEdit = c.id; render(); } }, "Edit"),
+    i > 0 ? h("button", { class: "linkish", onclick: () => { const n = all.slice(); [n[i - 1], n[i]] = [n[i], n[i - 1]]; save(n); } }, "Move up") : null,
+    i < all.length - 1 ? h("button", { class: "linkish", onclick: () => { const n = all.slice(); [n[i + 1], n[i]] = [n[i], n[i + 1]]; save(n); } }, "Move down") : null,
+    h("button", { class: "linkish", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(c.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"),
+    h("button", { class: "linkish", onclick: () => { if (!okAsk("Remove the section “" + c.title + "” from My notes?")) return; save(all.filter(x => x.id !== c.id)); } }, "Remove")));
+  return card;
 }
 function answerNode(lec, m){
   const copy = ev => { const b = ev.currentTarget; navigator.clipboard.writeText(m.content).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); };
   return h("div", { class: "answer" + (m.pinned ? " pinned" : "") }, notesView(m.content),
     h("div", { class: "answer-tools" },
       h("button", { class: "linkish", onclick: copy }, "Copy"),
-      h("button", { class: "linkish", onclick: ev => addToMyNotes(m.content, ev.currentTarget) }, "Add to My notes"),
+      h("button", { class: "linkish", onclick: ev => { const chat = lec.chat || [], i = chat.indexOf(m), q = [...chat.slice(0, i)].reverse().find(x => x.role === "user"); addToMyNotes(m.content, ev.currentTarget, q ? (q.label || q.content).replace(/\s+/g, " ").trim().slice(0, 90) : "Pambizo answer", "pambizo"); } }, "Add to My notes"),
       h("button", { class: "linkish", "aria-pressed": m.pinned ? "true" : "false", onclick: async () => { m.pinned = !m.pinned; await DB.save(lec).catch(() => {}); renderPam(); } }, m.pinned ? "Unpin" : "Pin")));
 }
 function renderPam(){
@@ -3216,7 +3333,7 @@ function saveMyNotes(lec, ed, now){
 }
 function myNotesPanel(lec){
   const box = h("div", { class: "mynotes" });
-  const ed = h("div", { class: "editor read", id: "editor", contenteditable: "true", spellcheck: "true", role: "textbox", "aria-multiline": "true", "aria-label": "My notes", "data-placeholder": lec.kind === "note" ? "Start writing…" : "Write your own notes for this lecture…" });
+  const ed = h("div", { class: "editor read", id: "editor", contenteditable: "true", spellcheck: "true", role: "textbox", "aria-multiline": "true", "aria-label": "My notes", "data-placeholder": lec.kind === "note" ? "Start writing…" : "Write your own notes for this " + typeWord(lec) + "…" });
   if (lec.myNotes && lec.myNotes.html) ed.append(...cleanHtml(lec.myNotes.html).childNodes);
   const cmd = (name, arg) => () => { ed.focus(); document.execCommand(name, false, arg || null); saveMyNotes(lec, ed); };
   const tool = (label, title, fn, cls) => h("button", { class: "tool" + (cls ? " " + cls : ""), title, "aria-label": title, onmousedown: e => e.preventDefault(), onclick: fn }, label);
@@ -3250,10 +3367,14 @@ function myNotesPanel(lec){
         try { S.polish = { id: lec.id, md: await polishNotes(lec, k, aiNote) }; } catch (e){ S.err = e.message; }
         S.busy.polish = false; render();
       } }, POLISH[k][0])),
-      lec.myNotesPrev ? h("button", { class: "linkish", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: lec.myNotesPrev }); delete out.myNotesPrev; await DB.save(out); adopt(out); } catch (e){ fail(e); } } }, "Bring back my earlier version") : null);
+      lec.myNotesPrev ? h("button", { class: "linkish", onclick: async () => { try { const out = await api("PATCH", "/api/lectures/" + lec.id, { myNotes: lec.myNotesPrev }); delete out.myNotesPrev; await DB.save(out); adopt(out); } catch (e){ fail(e); } } }, "Bring back my earlier version") : "");
     if (!S.status.ai) ai.append(h("span", { class: "hint" }, "Add an AI key in Settings first."));
   }
   box.append(ai);
+  const clips = lec.clips || [];
+  box.append(h("div", { class: "clips" },
+    h("h2", { class: "clips-head" }, "Sections added from other tabs", h("span", { class: "hint" }, clips.length ? " · " + clips.length + (clips.length === 1 ? " section" : " sections") + ", in your order. Each one is kept and exported under its own heading." : "")),
+    clips.length ? clips.map((c, i) => clipCard(lec, c, i)) : h("p", { class: "hint" }, "Nothing added yet. Every other tab, and each Pambizo answer, has an “Add to My notes” button; what you add lands here as its own section, and Word, PDF and Markdown exports include it under My notes.")));
   return box;
 }
 
@@ -3406,8 +3527,11 @@ function renderMain(){
     main.append(h("div", { class: "note-row" }, noteIn, h("button", { class: "btn", onclick: addMark }, "Add note")));
   }
 
-  const T = typeOf(lec);
-  const tabs = isNote ? [["mynotes", "My notes"]] : [["transcript", "Transcript"], ["mynotes", "My notes"], ["notes", T.notesLabel], ["summary", "Summary"], ...(T.study || (lec.study && lec.study.flashcards && lec.study.flashcards.length) ? [["study", T.study || "Flashcards and quiz"]] : [])];
+  const T = typeOf(lec), TAB_NAMES = { transcript: "Transcript", mynotes: "My notes", notes: T.notesLabel, summary: "Summary", study: T.study || "Flashcards and quiz", actions: T.actionsTab, themes: "Themes & quotes" };
+  const keys = isNote ? ["mynotes"] : T.tabs.slice();
+  if (!isNote && !keys.includes("study") && lec.study && lec.study.flashcards && lec.study.flashcards.length) keys.push("study");
+  if (!isNote && !keys.includes("actions") && (lec.actions || []).length) keys.push("actions");
+  const tabs = keys.map(k => [k, TAB_NAMES[k]]);
   if (isNote && S.tab !== "mynotes") S.tab = "mynotes";
   if (!tabs.some(t => t[0] === S.tab)) S.tab = "transcript";
   if (!isNote) main.append(h("div", { class: "tabs", role: "tablist" }, tabs.map(([k, t]) =>
@@ -3415,7 +3539,7 @@ function renderMain(){
   const panel = h("div", { class: "panel" + (isNote ? " solo" : ""), role: "tabpanel" });
   if (S.err) panel.append(h("p", { class: "notice err", role: "alert", style: "margin:0 0 14px" }, S.err));
   if (S.tab === "transcript") panel.append(transcriptPanel(lec));
-  else { const pane = h("div", { class: "pane-scroll", id: "pane" }, S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : myNotesPanel(lec)); panel.append(pane); requestAnimationFrame(sizePane); }
+  else { const pane = h("div", { class: "pane-scroll", id: "pane" }, S.tab === "summary" ? summaryPanel(lec) : S.tab === "study" ? studyPanel(lec) : S.tab === "notes" ? notesPanel(lec) : S.tab === "actions" ? actionsPanel(lec) : S.tab === "themes" ? themesPanel(lec) : myNotesPanel(lec)); panel.append(pane); requestAnimationFrame(sizePane); }
   main.append(panel);
   if (!isNote) liveLine();
 }
@@ -3579,17 +3703,17 @@ function applyTheme(){
   if (t.density === "compact") root.dataset.density = "compact"; else delete root.dataset.density;
   root.style.setProperty("--side-w", Math.max(220, Math.min(440, t.sideW || 272)) + "px");
   root.style.setProperty("--pam-w", Math.max(300, Math.min(620, t.pamW || 384)) + "px");
-  const sm = t.sideMode === "rail" || t.sideMode === "hidden" || (!t.sideMode && t.hideSide) ? "rail" : "open";
-  document.body.classList.remove("no-side"); document.body.classList.toggle("rail-side", sm === "rail");
+  const sm = t.sideMode === "rail" || t.sideMode === "hidden" || (!t.sideMode && t.hideSide) ? "hidden" : "open";
+  document.body.classList.remove("rail-side", "peek-open"); document.body.classList.toggle("no-side", sm === "hidden");
   const st = $("sideToggle"), pt = $("pamToggle"); if (st) st.setAttribute("aria-pressed", sm === "open" ? "true" : "false"); if (pt) pt.setAttribute("aria-pressed", t.hidePam ? "false" : "true"); document.body.classList.toggle("no-pam", !!t.hidePam);
   const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = getComputedStyle(root).getPropertyValue("--deck").trim() || "#14233B";
   try { localStorage.setItem("bizofy.theme", JSON.stringify({ mode: t.mode || "auto", palette: root.dataset.palette, density: t.density || "" })); } catch (e){}
 }
 darkQuery.addEventListener("change", () => applyTheme());
 async function setTheme(patch){ DB.settings.theme = { ...(DB.settings.theme || {}), ...patch }; applyTheme(); await DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); }
-function togglePanel(which){ if (which === "pam") return setTheme({ hidePam: !(DB.settings.theme || {}).hidePam }); setSideMode(sideMode() === "open" ? "rail" : "open"); }
-const sideMode = () => ((DB.settings.theme || {}).sideMode === "rail" || (DB.settings.theme || {}).sideMode === "hidden" || (!(DB.settings.theme || {}).sideMode && (DB.settings.theme || {}).hideSide) ? "rail" : "open");
-function setSideMode(m){ document.body.classList.remove("peek-open"); setTheme({ sideMode: m, hideSide: m !== "open" }); if (m === "open") setTimeout(scrollCurrentIntoView, 50); else if (!DB.settings.railHint){ DB.settings.railHint = true; DB.tx("kv", "readwrite", s => s.put(DB.settings, "settings")).catch(() => {}); toast("Your library is now a slim rail. The icon at the top left brings it back, or hover the rail to peek."); } }
+function togglePanel(which){ if (which === "pam") return setTheme({ hidePam: !(DB.settings.theme || {}).hidePam }); setSideMode(sideMode() === "open" ? "hidden" : "open"); }
+const sideMode = () => ((DB.settings.theme || {}).sideMode === "rail" || (DB.settings.theme || {}).sideMode === "hidden" || (!(DB.settings.theme || {}).sideMode && (DB.settings.theme || {}).hideSide) ? "hidden" : "open");
+function setSideMode(m){ setTheme({ sideMode: m === "open" ? "open" : "hidden", hideSide: m !== "open" }); if (m === "open") setTimeout(scrollCurrentIntoView, 50); }
 function goHome(){ if (REC.on) return; stopPlayer(); S.cur = null; S.err = ""; closeDrawers(); render(); }
 function hookGrips(){
   [["sideGrip", "sideW", 1], ["pamGrip", "pamW", -1]].forEach(([id, key, dir]) => {
@@ -3626,7 +3750,7 @@ function homeView(){
     live.length ? null : h("p", { class: "lede" }, "Record a class, a meeting, a sermon or an interview, or drop in a recording. Bizofy transcribes it, lets you highlight what matters, and turns it into notes, a summary, flashcards and a quiz that fit what it was. Pambizo, in the margin, answers your questions about it."),
     S.err ? h("p", { class: "notice err", role: "alert" }, S.err) : null,
     S.info ? h("p", { class: "notice info", role: "status" }, S.info) : null,
-    h("div", { class: "row" }, h("button", { class: "btn solid rec-now", onclick: async () => { try { await newLecture(); startRec(); } catch (e){ fail(e); } } }, h("i"), "Record now"), h("button", { class: "btn", onclick: () => newLecture().catch(fail) }, "New lecture"), h("button", { class: "btn", onclick: () => newLecture({ kind: "note", title: "Untitled note" }).catch(fail) }, "New note"),
+    h("div", { class: "row" }, h("button", { class: "btn solid rec-now", onclick: async () => { try { await newLecture(); startRec(); } catch (e){ fail(e); } } }, h("i"), "Record now"), h("details", { class: "menu new-menu home-new" }, h("summary", { class: "btn" }, "+ New"), h("div", { class: "menu-list" }, newMenuItems())),
       last ? h("button", { class: "btn", onclick: () => openLecture(last.id).catch(fail) }, "Continue “" + (last.title.length > 34 ? last.title.slice(0, 32) + "…" : last.title) + "”") : null));
   if (live.length && pref("gen.homeStats")){
     box.append(h("div", { class: "stats" }, stat(week.filter(l => l.kind !== "note").length, week.filter(l => l.kind !== "note").length === 1 ? "lecture this week" : "lectures this week"), stat(secs >= 3600 ? (secs / 3600).toFixed(1) + " h" : Math.round(secs / 60) + " min", "recorded this week"), stat(live.filter(l => l.hasNotes).length, "with notes"), stat(live.length, "in your library")));
@@ -3716,9 +3840,9 @@ async function renderStorage(){
 
 /* ---------- undo toast ---------- */
 let toastTimer = null;
-function toast(text, undo){
+function toast(text, undo, label){
   const t = $("toast"); clearTimeout(toastTimer);
-  t.replaceChildren(h("span", null, text), undo ? h("button", { class: "linkish", onclick: async () => { t.hidden = true; try { await undo(); S.list = await api("GET", "/api/lectures"); render(); } catch (e){ fail(e); } } }, "Undo") : h("span", { hidden: true }), h("button", { class: "toast-x", "aria-label": "Dismiss", onclick: () => (t.hidden = true) }, "×"));
+  t.replaceChildren(h("span", null, text), undo ? h("button", { class: "linkish", onclick: async () => { t.hidden = true; try { await undo(); if (!label){ S.list = await api("GET", "/api/lectures"); render(); } } catch (e){ fail(e); } } }, label || "Undo") : h("span", { hidden: true }), h("button", { class: "toast-x", "aria-label": "Dismiss", onclick: () => (t.hidden = true) }, "×"));
   t.hidden = false; toastTimer = setTimeout(() => (t.hidden = true), 8000);
 }
 /* ---------- find and replace in one transcript ---------- */
@@ -3840,8 +3964,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.6.8", RELEASED = "28 September 2026";
+const VERSION = "2.7.0", RELEASED = "28 September 2026";
 const CHANGES = [
+  ["2.7.0", "28 Sep 2026", ["My notes is now a set of sections: every tab (AI notes, Summary, Flashcards, Action points, Themes) and every Pambizo answer has “Add to My notes”. Each addition is kept as its own titled section with a source badge; edit, reorder, remove, and export them to Word, PDF, Markdown or text under My notes", "One “+ New” button in the library and on the home screen lists the recording types: Lecture, Meeting, Sermon or talk, Interview or research, Plain note", "Each type opens with its own tabs: meetings get Minutes and Action points; sermons get Sermon notes, Application and Reflection questions; interviews get Field notes and Themes & quotes", "Action points is a real checklist: owner, due date, tick when done; pull items from the summary, let the AI find them, or type them", "Simpler panels: the library and Pambizo are simply open or closed, one button each, on every screen size. The slim rail and hover peek are gone", "The lecture header rolls away and the tabs stay pinned, on one scroll"]],
   ["2.6.8", "28 Sep 2026", ["On wide screens Pambizo and the library no longer grow past the bottom of the window: each column is one screen tall and scrolls inside itself, so the Pambizo message box is always in reach"]],
   ["2.6.7", "28 Sep 2026", ["The page scrolls again with a finger or wheel over the transcript: the transcript box hands scrolling to the page until the header has rolled away, and a swipe down at its top brings the header back"]],
   ["2.6.6", "28 Sep 2026", ["Pambizo no longer freezes the app on long answers: the reply is painted a few times a second instead of on every word, and the panel scrolls only when you are already at the bottom"]],
@@ -4005,17 +4130,18 @@ function runSearch(){
   searchTimer = setTimeout(async () => { try { S.search = await api("GET", "/api/search?q=" + encodeURIComponent(q) + "&view=" + S.view); renderList(); } catch (x){} }, 220);
 }
 $("search").addEventListener("input", runSearch);
-$("newNoteBtn").addEventListener("click", () => { closeDrawers(); newLecture({ kind: "note", title: "Untitled note" }).catch(fail); });
-$("railNew").addEventListener("click", () => newLecture().catch(fail));
-$("railSearch").addEventListener("click", () => { setSideMode("open"); setTimeout(() => $("search").focus(), 50); });
-$("railHome").addEventListener("click", goHome);
-$("railSettings").addEventListener("click", () => openSettings());
+// + New: every recording type and a plain note
+const NEW_KINDS = () => [...TYPE_LIST.map(([k, t]) => [k, t, TYPES[k].newHint]), ["note", "Plain note", "Just a page to write on"]];
+TYPES.lecture.newHint = "Class: notes, summary, flashcards and quiz"; TYPES.meeting.newHint = "Minutes, decisions and action points"; TYPES.sermon.newHint = "Sermon notes, application and reflection"; TYPES.interview.newHint = "Field notes, themes and quotes";
+function startNew(kind){
+  closeDrawers(); $("newMenu").open = false;
+  return (kind === "note" ? newLecture({ kind: "note", title: "Untitled note" }) : newLecture({ type: kind, title: "Untitled " + TYPES[kind].label.toLowerCase().replace(" or talk", "").replace(" or research", "") })).catch(fail);
+}
+function newMenuItems(){ return NEW_KINDS().map(([k, t, hint]) => h("button", { class: "new-item", "data-kind": k, onclick: () => startNew(k) }, h("b", null, t), h("small", null, hint))); }
+$("newList").replaceChildren(...newMenuItems());
 $("brandBtn").addEventListener("click", () => { closeDrawers(); goHome(); });
-$("sideToggle").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); return; } setSideMode(sideMode() === "open" ? "rail" : "open"); });
+$("sideToggle").addEventListener("click", () => { if (window.innerWidth <= 760){ document.body.classList.toggle("show-side"); document.body.classList.remove("show-pam"); return; } setSideMode(sideMode() === "open" ? "hidden" : "open"); });
 $("pamToggle").addEventListener("click", () => { if (window.innerWidth <= 1180){ document.body.classList.toggle("show-pam"); document.body.classList.remove("show-side"); return; } togglePanel("pam"); });
-// hover the rail to peek at the full library
-$("side").addEventListener("mouseenter", () => { if (sideMode() === "rail" && window.innerWidth > 760) document.body.classList.add("peek-open"); });
-$("side").addEventListener("mouseleave", () => document.body.classList.remove("peek-open"));
 // phones: swipe in from the left edge opens the library; swipe a row to reveal actions
 let tx0 = null, ty0 = null, swipeRow = null;
 document.addEventListener("touchstart", e => { const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY; swipeRow = e.target.closest && e.target.closest(".lec-row"); }, { passive: true });
@@ -4071,7 +4197,7 @@ $("list").addEventListener("keydown", e => {
   const all = [...$("list").querySelectorAll(".lec, .frow, .hit")], i = all.indexOf(document.activeElement); if (i < 0) return;
   e.preventDefault(); const n = all[i + (e.key === "ArrowDown" ? 1 : -1)]; if (n) n.focus(); else if (e.key === "ArrowUp") $("search").focus();
 });
-$("newBtn").addEventListener("click", () => { closeDrawers(); newLecture().catch(fail); });
+document.addEventListener("click", e => { const m = $("newMenu"); if (m && m.open && !m.contains(e.target)) m.open = false; });
 $("settingsBtn").addEventListener("click", openSettings);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible"){ checkRec(); if (typeof syncWake === "function") syncWake(); } if (REC.on && !REC.wake && document.visibilityState === "visible" && navigator.wakeLock) navigator.wakeLock.request("screen").then(w => { REC.wake = w; w.addEventListener("release", () => { if (REC.wake === w) REC.wake = null; }); }).catch(() => {}); });
 

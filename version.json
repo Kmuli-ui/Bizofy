@@ -1,5 +1,5 @@
 {
-  "version": "2.6.8",
+  "version": "2.7.0",
   "url": "./",
-  "notes": "Pambizo and the library stay within the screen on wide monitors; the message box is always in reach."
+  "notes": "My notes keeps every addition as its own section; one + New button lists Lecture, Meeting, Sermon, Interview and Note, each with its own tabs; Action points checklist; simpler panels."
 }
