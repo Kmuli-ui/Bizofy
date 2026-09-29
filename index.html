@@ -122,6 +122,18 @@ main{padding:30px clamp(18px,3.4vw,48px) 72px;min-width:0;max-width:940px;width:
 .act-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .act-owner,.act-due{width:130px;max-width:44%;font-size:var(--t-1);padding:3px 8px}
 .quotes li{margin:6px 0}
+.part{border:1.5px solid var(--rule);border-radius:10px;padding:8px 14px;margin:0 0 12px;background:var(--sheet)}
+.part>summary{display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;font-weight:800;font-size:var(--t1);list-style:none}
+.part>summary::-webkit-details-marker{display:none}
+.part>summary::before{content:"▸";color:var(--slate);margin-right:6px;font-size:var(--t0)}
+.part[open]>summary::before{content:"▾"}
+.part.tail{padding-top:0}
+.hint-row{margin:-6px 0 12px}
+.hint-in{flex:1;min-width:0;font-size:var(--t-1)}
+.gaps{border:1.5px solid var(--hi);border-radius:10px;padding:10px 14px;margin:0 0 14px;background:var(--sheet)}
+.gaps h3{margin:0 0 6px;font-size:var(--t0)}
+.gaps ul{margin:0 0 10px;padding-left:18px}
+.sub-checks{grid-column:1/-1;margin:-6px 0 6px 26px;display:flex;flex-direction:row;flex-wrap:wrap;gap:4px 18px;font-size:var(--t-1)}
 @media (max-width:760px){.clip-meta{white-space:normal}}
 .linkish{border:0;background:none;padding:0;color:var(--slate);font-size:var(--t-2);text-decoration:underline;text-underline-offset:2px;text-align:left}
 .linkish:hover{color:var(--ink)}
@@ -1434,7 +1446,7 @@ const TYPE_LIST = Object.keys(TYPES).map(k => [k, TYPES[k].label]);
 const RULES = " Lines starting with [!] were marked important by the listener: give them priority. Use only what the transcript says.";
 async function makeSummary(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3000, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: "You write a short summary of " + typeOf(lec).voice + " for " + typeOf(lec).who + "." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["6 to 12 strings"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["' + typeOf(lec).summaryExtra + '; empty array if none"], "examHints": ["' + typeOf(lec).hintsExtra + '; empty array if none"]}',
+    system: "You write a short summary of " + typeOf(lec).voice + " for " + typeOf(lec).who + "." + RULES + ' Reply with only a JSON object of this shape: {"overview": "2-4 sentences", "keyPoints": ["' + (lecEnd(lec) > 50 * 60 ? "12 to 24 strings, in order, covering the whole recording from start to end" : "6 to 12 strings") + '"], "definitions": [{"term": "", "meaning": ""}], "actionItems": ["' + typeOf(lec).summaryExtra + '; empty array if none"], "examHints": ["' + typeOf(lec).hintsExtra + '; empty array if none"]}',
     messages: [{ role: "user", content: "Write the JSON summary now." }] }), note));
   lec.summary = { overview: String(r.overview || ""), keyPoints: strs(r.keyPoints),
     definitions: (Array.isArray(r.definitions) ? r.definitions : []).filter(d => d && d.term).map(d => ({ term: String(d.term), meaning: String(d.meaning || "") })),
@@ -1442,7 +1454,7 @@ async function makeSummary(lec, note){
 }
 async function makeStudy(lec, note){
   const r = parseJson(await withContext(lec, "lecture", ctx => llm({ json: true, max: 3500, context: ctx, onWait: (s, why) => note(waitText(s, why)),
-    system: (typeOf(lec).study && lec.type === "sermon" ? "You write reflection material from a sermon or talk for a listener: flashcards become question-and-answer pairs on its main points, and the quiz checks understanding of what was said." : "You write study material from " + typeOf(lec).voice + " that tests understanding, not trivia.") + RULES + ({ easy: " Keep the questions straightforward: recall of key facts and definitions.", hard: " Make the questions demanding: application, comparison and reasoning, not recall." }[pref("ai.study.difficulty")] || "") + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with ' + (+pref("ai.study.cards") || 12) + " flashcards and " + (+pref("ai.study.quiz") || 6) + ' quiz questions. "answer" is the index (0-3) of the correct option; vary its position.',
+    system: (typeOf(lec).study && lec.type === "sermon" ? "You write reflection material from a sermon or talk for a listener: flashcards become question-and-answer pairs on its main points, and the quiz checks understanding of what was said." : "You write study material from " + typeOf(lec).voice + " that tests understanding, not trivia.") + RULES + ({ easy: " Keep the questions straightforward: recall of key facts and definitions.", hard: " Make the questions demanding: application, comparison and reasoning, not recall." }[pref("ai.study.difficulty")] || "") + ' Reply with only a JSON object: {"flashcards": [{"q": "", "a": ""}], "quiz": [{"q": "", "options": ["exactly four"], "answer": 0, "why": "one sentence"}]} with ' + (+pref("ai.study.cards") || 12) + " flashcards and " + (+pref("ai.study.quiz") || 6) + ' quiz questions. "answer" is the index (0-3) of the correct option; vary its position.' + (lecEnd(lec) > 50 * 60 ? " Draw the cards and questions evenly from the whole recording, start to end, not only from the beginning." : ""),
     messages: [{ role: "user", content: "Write the JSON study material now." }] }), note));
   lec.study = { flashcards: (Array.isArray(r.flashcards) ? r.flashcards : []).filter(c => c && c.q).map(c => ({ q: String(c.q), a: String(c.a || "") })),
     quiz: (Array.isArray(r.quiz) ? r.quiz : []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length > 1).map(q => ({ q: String(q.q), options: q.options.map(String), answer: Math.min(q.options.length - 1, Math.max(0, Number(q.answer) || 0)), why: String(q.why || "") })),
@@ -1482,10 +1494,76 @@ const notesStyle = course => {
 };
 const notesEnd = (course, lec) => { const n = { ...pref("ai.notes"), ...(courseProfile(course).notes || {}) }, T = typeOf(lec); return (n.actions ? " Finish with '## " + T.todo + "' as '- [ ] ' items (" + T.summaryExtra + "; write '- None mentioned' if there are none)" : "") + (n.review ? (n.actions ? " and then" : " Finish with") + " '## Questions to review' with 3 to 6 bullets" : "") + (n.actions || n.review ? "." : ""); };
 const NOTES_STYLE = " Write in Markdown only: '## ' for each main topic (end the heading with the [m:ss] time where it starts), '### ' for subtopics, '- ' bullets with nested bullets indented by two spaces, and **bold** for key terms. Be complete but tight: notes, not prose.";
-async function makeNotes(lec, note){
+// Long recordings are written in parts of about 28 minutes (18 when the notes are set to thorough), following the outline's chapter starts when there is one.
+const PART_MIN = () => ({ brief: 40, thorough: 18 }[pref("ai.notes.detail")] || 28);
+const lecEnd = lec => Math.max(lec.duration || 0, ...lec.segments.map(s => (s.t || 0) + 1));
+function planParts(lec){
+  const end = lecEnd(lec), timed = lec.segments.filter(s => s.t != null).length > lec.segments.length / 2;
+  const words = lec.segments.reduce((n, s) => n + s.text.split(/\s+/).length, 0);
+  if (!timed){ // no times: split by words instead
+    const per = PART_MIN() * 130, n = Math.ceil(words / per);
+    if (n < 2) return null;
+    const plan = []; let acc = 0, from = 0;
+    lec.segments.forEach((s, i) => { acc += s.text.split(/\s+/).length; if (acc >= per && i < lec.segments.length - 1 && plan.length < n - 1){ plan.push({ n: plan.length + 1, from, to: i + 1, byIndex: true }); from = i + 1; acc = 0; } });
+    plan.push({ n: plan.length + 1, from, to: lec.segments.length, byIndex: true });
+    return plan;
+  }
+  const size = PART_MIN() * 60;
+  if (end < size * 1.25) return null;
+  const n = Math.round(end / size), step = end / n, starts = [0];
+  const chaps = (lec.outline && lec.outline.chapters || []).map(c => c.t).filter(t => t > 0);
+  for (let i = 1; i < n; i++){ const ideal = i * step; const near = chaps.filter(t => Math.abs(t - ideal) <= 6 * 60 && t > starts[starts.length - 1] + 8 * 60).sort((a, b) => Math.abs(a - ideal) - Math.abs(b - ideal))[0]; starts.push(near != null ? near : Math.round(ideal)); }
+  return starts.map((from, i) => ({ n: i + 1, from, to: i + 1 < starts.length ? starts[i + 1] : end + 1 }));
+}
+const partSegs = (lec, p) => (p.byIndex ? lec.segments.slice(p.from, p.to) : lec.segments.filter(s => (s.t == null ? false : s.t >= p.from && s.t < p.to)));
+const partText = (lec, p) => partSegs(lec, p).map(s => (s.flag ? "[!] " : "") + (s.t != null ? "[" + fmt(s.t) + "] " : "") + s.text).join("\n");
+const partRange = (lec, p) => (p.byIndex ? "" : fmt(p.from) + "–" + fmt(Math.min(p.to, lecEnd(lec))));
+const partLabel = (lec, p) => "Part " + p.n + (partRange(lec, p) ? " · " + partRange(lec, p) : "") + (p.title ? " · " + p.title : "");
+const headingsOf = md => md.split("\n").filter(l => /^#{2,3} /.test(l)).map(l => l.replace(/\s*\[\d{1,2}:\d\d(:\d\d)?\]\s*$/, "")).join("\n").slice(0, 1200);
+async function writePart(lec, p, prev, hint, note){
+  const c = cfg(), T = typeOf(lec), text = partText(lec, p);
+  const raw = await llm({ max: c.ai === "claude" ? 5000 : 3000, onWait: (s, why) => note(waitText(s, why) + " Part " + p.n + "."),
+    context: headerText(lec) + (partRange(lec, p) ? "This is part " + p.n + " (" + partRange(lec, p) + ") of the recording.\n" : "This is part " + p.n + " of the recording.\n") + (prev ? "Headings already written for the part before this one (do not repeat them, continue from where they end):\n" + prev + "\n" : "") + "\nTranscript of this part:\n" + text,
+    system: "You turn one part of the transcript of " + T.voice + " into " + T.notesShape + ". Cover this part completely: every point, example, figure, name and caveat in it deserves a line; this is one part of several, so there is room." + RULES + notesStyle(lec.course) + " Begin with one line 'TITLE: ' followed by a title of 3 to 7 words for this part, then the notes. Do not add an introduction, a conclusion, action points or questions to review." + (hint ? " The reader asks: " + hint.slice(0, 400) : ""),
+    messages: [{ role: "user", content: "Write the notes for this part now." }] });
+  let md = raw.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(), title = "";
+  const m = md.match(/^\s*\**TITLE:?\**\s*(.+?)\s*$/m); if (m){ title = m[1].replace(/["“”*#]/g, "").trim().slice(0, 90); md = md.replace(m[0], "").trim(); }
+  return { n: p.n, from: p.from, to: p.to, byIndex: !!p.byIndex, title, md, madeAt: Date.now() };
+}
+const joinParts = (lec, parts) => parts.map(p => "## " + partLabel(lec, p) + "\n\n" + p.md.replace(/^## /gm, "### ").replace(/^### (.*)$/gm, (s, t) => "### " + t)).join("\n\n");
+async function makeNotesInParts(lec, note, opt){
+  const c = cfg(), T = typeOf(lec), wait = (s, why) => note(waitText(s, why));
+  const old = lec.notes && lec.notes.parts ? lec.notes : null;
+  const plan = opt.part && old ? old.plan : planParts(lec);
+  if (!plan) return false;
+  const parts = opt.part && old ? old.parts.filter(p => p.n !== opt.part) : [];
+  const todo = plan.filter(p => opt.part ? p.n === opt.part : true);
+  lec.notes = { md: "", madeAt: (old && old.madeAt) || Date.now(), plan, parts: parts.slice(), busy: true, failed: [] };
+  for (const p of todo){
+    note("Writing part " + p.n + " of " + plan.length + (plan.length > 3 ? ". Long recordings take a few minutes." : "."));
+    const prev = parts.filter(x => x.n === p.n - 1).map(x => headingsOf(x.md))[0] || "";
+    try { const part = await writePart(lec, p, prev, opt.hint, note); parts.push(part); }
+    catch (e){ lec.notes.failed.push(p.n); if (parts.length === 0 && !opt.part) throw e; note("Part " + p.n + " failed: " + e.message); }
+    parts.sort((a, b) => a.n - b.n);
+    lec.notes.parts = parts.slice(); lec.notes.md = joinParts(lec, parts);
+    await DB.save(lec); if (typeof window !== "undefined" && window.onNotesPart) window.onNotesPart(lec);
+  }
+  const n = { ...pref("ai.notes"), ...(courseProfile(lec.course).notes || {}) };
+  if ((n.actions || n.review) && parts.length && !lec.notes.failed.length){
+    note("Collecting " + T.todo.toLowerCase() + ".");
+    const seed = parts.map(p => "## " + partLabel(lec, p) + "\n" + p.md.split("\n").filter(l => /^#{2,3} |\[ \]|deadline|due|read|assign|submit|exam|test|next week|by /i.test(l)).join("\n")).join("\n").slice(0, 14000);
+    try { lec.notes.tail = (await llm({ max: 700, onWait: wait, system: "From these notes on " + T.voice + " (all parts), write" + (n.actions ? " '## " + T.todo + "' as '- [ ] ' items (" + T.summaryExtra + "; '- None mentioned' if none)" : "") + (n.actions && n.review ? ", then" : "") + (n.review ? " '## Questions to review' with 4 to 8 '- ' bullets that span the whole recording" : "") + ". Markdown only, nothing else.", messages: [{ role: "user", content: seed }] })).replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(); } catch (e){}
+  }
+  lec.notes.md = joinParts(lec, parts) + (lec.notes.tail ? "\n\n" + lec.notes.tail : "");
+  lec.notes.busy = false; lec.notes.madeAt = Date.now(); delete lec.notes.gaps;
+  return true;
+}
+async function makeNotes(lec, note, opt){
+  opt = opt || {};
+  if (opt.part || planParts(lec)){ if (await makeNotesInParts(lec, note, opt)) return; }
   const c = cfg(), wait = (s, why) => note(waitText(s, why));
   const whole = () => llm({ max: c.ai === "claude" ? 8000 : 4000, onWait: wait, context: headerText(lec) + "\nTranscript:\n" + fullText(lec),
-    system: "You turn the transcript of " + typeOf(lec).voice + " into " + typeOf(lec).notesShape + "." + RULES + notesStyle(lec.course) + notesEnd(lec.course, lec),
+    system: "You turn the transcript of " + typeOf(lec).voice + " into " + typeOf(lec).notesShape + "." + RULES + notesStyle(lec.course) + notesEnd(lec.course, lec) + (opt.hint ? " The reader asks: " + opt.hint.slice(0, 400) : ""),
     messages: [{ role: "user", content: "Write the notes now." }] });
   let md;
   if (!(c.ai !== "claude" && DB.settings.groqSmall)){
@@ -1504,6 +1582,32 @@ async function makeNotes(lec, note){
     md += "\n\n" + await llm({ max: 500, onWait: wait, system: "From these notes on " + typeOf(lec).voice + ", write '## " + typeOf(lec).todo + "' as '- [ ] ' items (" + typeOf(lec).summaryExtra + "; '- None mentioned' if none), then '## Questions to review' with 3 to 6 '- ' bullets. Markdown only, nothing else.", messages: [{ role: "user", content: md.slice(0, 9000) }] });
   }
   lec.notes = { md: md.replace(/^```(?:markdown|md)?\s*|\s*```\s*$/g, "").trim(), madeAt: Date.now() };
+}
+// compares the notes with the transcript and lists what the notes skipped
+async function checkNotes(lec, note){
+  if (!lec.notes || !lec.notes.md) throw new AppError("Write the AI notes first.");
+  const T = typeOf(lec), plan = lec.notes.parts ? lec.notes.plan : [{ n: 1, from: 0, to: lecEnd(lec) + 1 }];
+  const gaps = [];
+  for (const p of plan){
+    const part = lec.notes.parts ? lec.notes.parts.find(x => x.n === p.n) : { md: lec.notes.md };
+    if (!part) continue;
+    note(plan.length > 1 ? "Checking part " + p.n + " of " + plan.length + "…" : "Comparing the notes with the transcript…");
+    const r = parseJson(await llm({ json: true, max: 1500, onWait: (s, why) => note(waitText(s, why)),
+      context: "Notes:\n" + part.md.slice(0, 20000) + "\n\nTranscript" + (plan.length > 1 ? " of this part" : "") + ":\n" + (lec.notes.parts ? partText(lec, p) : fullText(lec)),
+      system: "You check study notes against the transcript of " + T.voice + " they were written from. List only substantive points, examples, figures, names, definitions or instructions that appear in the transcript but are missing from the notes. Ignore small talk and repetition. Use only what the transcript says." + ' Reply with only a JSON object: {"missing": [{"t": "m:ss where it was said, or empty", "point": "one line, in note form"}]} with at most 12 items, or an empty array if the notes are complete.',
+      messages: [{ role: "user", content: "Write the JSON now." }] }));
+    (Array.isArray(r.missing) ? r.missing : []).filter(x => x && x.point).forEach(x => gaps.push({ n: p.n, t: /^\d{1,2}(:\d\d){1,2}$/.test(String(x.t || "").trim()) ? parseTs(String(x.t).trim()) : null, point: String(x.point).slice(0, 300) }));
+  }
+  lec.notes.gaps = { items: gaps, at: Date.now() };
+}
+function addGaps(lec){
+  const g = lec.notes && lec.notes.gaps; if (!g || !g.items.length) return;
+  const line = x => "- " + x.point + (x.t != null ? " [" + fmt(x.t) + "]" : "");
+  if (lec.notes.parts){
+    lec.notes.parts.forEach(p => { const mine = g.items.filter(x => x.n === p.n); if (mine.length) p.md = p.md.trim() + "\n\n### Also covered\n" + mine.map(line).join("\n"); });
+    lec.notes.md = joinParts(lec, lec.notes.parts) + (lec.notes.tail ? "\n\n" + lec.notes.tail : "");
+  } else lec.notes.md = lec.notes.md.trim() + "\n\n## Also covered\n" + g.items.map(line).join("\n");
+  delete lec.notes.gaps; lec.notes.edited = true;
 }
 function askAI(lec, question, scope, signal, onText, note){
   AI_CTX.task = "pambizo"; AI_CTX.course = lec.course;
@@ -1545,7 +1649,14 @@ function buildDoc(lec, only){
   }
   if (want("actions")) B.push({ k: "h1", t: typeOf(lec).actionsTab }, ...lec.actions.map(a => ({ k: "todo", done: !!a.done, t: a.text + (a.owner ? " — " + a.owner : "") + (a.due ? " (by " + a.due + ")" : "") })));
   if (want("themes")) B.push({ k: "h1", t: "Themes and quotes" }, ...mdBlocks(themesMd(lec)));
-  if (want("notes")) B.push({ k: "h1", t: typeOf(lec).notesLabel }, ...mdBlocks(lec.notes.md));
+  if (want("notes")){
+    B.push({ k: "h1", t: typeOf(lec).notesLabel });
+    if (lec.notes.parts && lec.notes.parts.length){
+      const pick = only ? only.filter(k => k.startsWith("notes:")).map(k => +k.slice(6)) : [];
+      lec.notes.parts.filter(p => !pick.length || pick.includes(p.n)).forEach(p => B.push({ k: "h2", t: partLabel(lec, p) }, ...mdBlocks(p.md).map(b => (b.k === "h2" ? { ...b, k: "h3" } : b))));
+      if (lec.notes.tail && (!pick.length || pick.length === lec.notes.parts.length)) B.push(...mdBlocks(lec.notes.tail));
+    } else B.push(...mdBlocks(lec.notes.md));
+  }
   const s = lec.summary;
   if (want("summary")){
     B.push({ k: "h1", t: "Summary" }, { k: "p", t: s.overview }, { k: "h2", t: "Key points" }, ...s.keyPoints.map(t => ({ k: "li", t })));
@@ -1943,6 +2054,7 @@ async function api(method, url, body, note){
       if (b.source === null) delete lec.source;
       else if (b.source && typeof b.source === "object" && typeof b.source.url === "string") lec.source = { url: b.source.url.slice(0, 500), site: String(b.source.site || "").slice(0, 20), id: String(b.source.id || "").slice(0, 40), title: String(b.source.title || "").slice(0, 200), thumb: String(b.source.thumb || "").slice(0, 300), author: String(b.source.author || "").slice(0, 120) };
       if (typeof b.notes === "string") lec.notes = b.notes.trim() ? { md: b.notes, madeAt: (lec.notes && lec.notes.madeAt) || Date.now(), edited: true } : null;
+      if (b.notePart && lec.notes && lec.notes.parts){ const part = lec.notes.parts.find(x => x.n === +b.notePart.n); if (part){ if (typeof b.notePart.md === "string") part.md = b.notePart.md; if (typeof b.notePart.title === "string") part.title = b.notePart.title.slice(0, 90); part.edited = true; lec.notes.md = joinParts(lec, lec.notes.parts) + (lec.notes.tail ? "\n\n" + lec.notes.tail : ""); lec.notes.edited = true; } }
       if (b.clearChat) lec.chat = [];
       await DB.save(lec);
     }
@@ -1967,10 +2079,13 @@ async function api(method, url, body, note){
     await DB.save(lec); return lec;
   }
   if (p[2] === "audio" && p[4] === "transcribe") return transcribePart(lec.id, Number(p[3]));
+  if (p[2] === "notes" && p[3] === "check"){ AI_CTX.task = "notes"; AI_CTX.course = lec.course; await checkNotes(lec, note || (() => {})); await DB.save(lec); return lec; }
+  if (p[2] === "notes" && p[3] === "addgaps"){ addGaps(lec); await DB.save(lec); return lec; }
   if (p[2] === "summary" || p[2] === "study" || p[2] === "notes" || p[2] === "outline" || p[2] === "actions" || p[2] === "themes"){
     if (!lec.segments.length) throw new AppError("Add a transcript first.");
     AI_CTX.task = p[2] === "actions" || p[2] === "themes" ? "summary" : p[2]; AI_CTX.course = lec.course;
-    await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : p[2] === "actions" ? makeActions : p[2] === "themes" ? makeThemes : makeNotes)(lec, note || (() => {}));
+    if (p[2] === "notes") await makeNotes(lec, note || (() => {}), { hint: String((b && b.hint) || "").trim(), part: b && +b.part || 0 });
+    else await (p[2] === "summary" ? makeSummary : p[2] === "study" ? makeStudy : p[2] === "outline" ? makeOutline : p[2] === "actions" ? makeActions : makeThemes)(lec, note || (() => {}));
     await DB.save(lec); return lec;
   }
   throw new AppError("Not found.");
@@ -2525,7 +2640,7 @@ function watchQuiet(){
   if (quietFor > pauseAt && !REC.warned.long){ REC.warned.long = true; notify("Bizofy is still recording", "Nothing has been heard for " + fmt(quietFor) + ". Stop it if class is over."); chime(); }
   if (quietFor > warnAt && !REC.quietNotice){ REC.quietNotice = true; const box = $("quietBox"); if (box){ box.hidden = false; $("quietText").textContent = "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Still recording?" + (pref("rec.quietPause") === true ? " It will pause by itself in " + Math.round((pauseAt - quietFor) / 60 + 0.5) + " minutes." : " Recording continues either way."); } notify("Bizofy: is the class still on?", "Nothing has been heard for " + Math.round(quietFor / 60) + " minutes. Bizofy will pause soon."); chime(); }
 }
-window.__bizofyTest = { S: () => S, parseText, render: () => render(), md: lec => toMarkdown(lec), docx: lec => toDocx(lec), set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
+window.__bizofyTest = { S: () => S, parseText, render: () => render(), md: (lec, only) => toMarkdown(lec, only), docx: lec => toDocx(lec), set: async (k, v) => { DB.settings[k] = v; await DB.saveSettings(); S.status = await api("GET", "/api/status"); render(); }, level: v => (REC._fakeLevel = v), elapse: secs => (REC.startMs -= secs * 1000), active: () => DB.settings.recActive, quiet: secs => { REC.lastVoice = Date.now() - secs * 1000; cancelAnimationFrame(REC.raf); }, base: v => (REC.base = v), state: () => ({ on: REC.on, paused: REC.paused, marks: (DB.lectures.get(REC.lecId || (S.cur || {}).id) || {}).marks }) };
 function quietClear(){ REC.quietNotice = false; const box = $("quietBox"); if (box) box.hidden = true; }
 function notify(title, body){
   if (document.visibilityState === "visible" || !("Notification" in window)) return;
@@ -2723,12 +2838,13 @@ window.addEventListener("online", () => { if (S.cur && !REC.on && (S.cur.audio |
 
 /* ---------- AI ---------- */
 function aiNote(t){ S.note = t; const n = $("aiNote"); if (n) n.textContent = t; const p = $("pending"); if (p && !p._has) p.textContent = t; }
-async function make(kind){
+async function make(kind, body){
   const lec = S.cur; if (S.busy[kind]) return;
   S.busy[kind] = true; S.err = ""; S.note = ""; render();
-  try { const out = await api("POST", "/api/lectures/" + lec.id + "/" + kind, null, aiNote); S.busy[kind] = false; adopt(out); }
+  try { const out = await api("POST", "/api/lectures/" + lec.id + "/" + kind, body || null, aiNote); S.busy[kind] = false; adopt(out); }
   catch (e){ S.busy[kind] = false; fail(e); }
 }
+window.onNotesPart = lec => { if (S.cur && S.cur.id === lec.id && S.tab === "notes") render(); };
 async function ask(text, label){
   const lec = S.cur, question = (text || S.draft).trim();
   if (!lec || !question || S.busy.ask) return;
@@ -2758,7 +2874,9 @@ function openExport(){
   if (!S.exportSel) S.exportSel = SECTIONS.map(s => s[0]);
   $("expParts").replaceChildren(...SECTIONS.map(([k, label]) => { const on = have.some(x => x[0] === k); label = k === "notes" ? typeOf(lec).notesLabel : k === "actions" ? typeOf(lec).actionsTab : label;
     const box = h("input", { type: "checkbox", value: k, disabled: !on }); box.checked = on && S.exportSel.includes(k);
-    return h("label", { class: "check" + (on ? "" : " off") }, box, label + (on ? "" : " (none yet)")); }));
+    const lab = h("label", { class: "check" + (on ? "" : " off") }, box, label + (on ? "" : " (none yet)"));
+    if (k === "notes" && on && lec.notes.parts && lec.notes.parts.length > 1) return [lab, h("div", { class: "checks sub-checks" }, lec.notes.parts.map(p => { const pb = h("input", { type: "checkbox", value: "notes:" + p.n }); pb.checked = !S.exportNoteParts || S.exportNoteParts.includes(p.n); return h("label", { class: "check" }, pb, partLabel(lec, p)); }))];
+    return lab; }).flat());
   $("expSrt").disabled = $("expVtt").disabled = !lec.segments.some(s => s.t != null);
   $("expCsv").disabled = !hasSection(lec, "cards");
   $("expErr").hidden = true; $("exportDlg").showModal();
@@ -2771,7 +2889,10 @@ async function exportAs(kind){
     if (kind === "srt" || kind === "vtt") saveFile(name + "." + kind, kind === "srt" ? toSrt(lec) : toVtt(lec), kind === "vtt" ? "text/vtt" : "application/x-subrip");
     else if (kind === "csv") saveFile(name + " flashcards.csv", toCsv(lec), "text/csv");
     else {
-      if (!picked.length) throw new AppError("Tick at least one part to export.");
+      const partPick = picked.filter(k => k.startsWith("notes:")).map(k => +k.slice(6));
+      if (!picked.filter(k => !k.startsWith("notes:")).length) throw new AppError("Tick at least one part to export.");
+      if (picked.includes("notes") && lec.notes && lec.notes.parts && lec.notes.parts.length > 1 && !partPick.length) throw new AppError("Tick at least one part of the notes, or untick the notes.");
+      S.exportNoteParts = partPick.length ? partPick : null;
       S.exportSel = SECTIONS.map(s => s[0]).filter(k => picked.includes(k) || !hasSection(lec, k));
       const tag = picked.length === 1 ? " " + SECTIONS.find(s => s[0] === picked[0])[1].toLowerCase() : "";
       if (kind === "txt") saveFile(name + tag + ".txt", toTxt(lec, picked));
@@ -3122,14 +3243,46 @@ function notesPanel(lec){
         h("button", { class: "btn quiet", onclick: () => { S.editNotes = false; render(); } }, "Cancel")));
     return box;
   }
-  const gate = aiGate(lec, "notes", "Write AI notes", "Write the AI notes again", has);
+  const parts = has && lec.notes.parts && lec.notes.parts.length ? lec.notes.parts : null, plan = planParts(lec);
+  const gate = aiGate(lec, "notes", "Write AI notes" + (plan ? " (in " + plan.length + " parts)" : ""), "Write the AI notes again", has);
+  const hintIn = h("input", { type: "text", class: "hint-in", placeholder: "Optional: what to focus on, for example “the ICER formula and exam tips”", "aria-label": "What the notes should focus on", value: S.notesHint || "", oninput: e => (S.notesHint = e.target.value) });
   if (!S.busy.notes){
-    gate.append(h("button", { class: "btn quiet", onclick: () => { S.editNotes = true; S.notesDraft = has ? lec.notes.md : ""; render(); } }, has ? "Edit" : "Write them yourself"));
-    if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"), addBtn(lec, () => lec.notes.md, typeOf(lec).notesLabel, "notes"));
+    const again = gate.querySelector("button"); if (again) again.onclick = () => make("notes", { hint: (S.notesHint || "").trim() });
+    if (!parts) gate.append(h("button", { class: "btn quiet", onclick: () => { S.editNotes = true; S.notesDraft = has ? lec.notes.md : ""; render(); } }, has ? "Edit" : "Write them yourself"));
+    if (has) gate.append(h("button", { class: "btn quiet", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(lec.notes.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"), addBtn(lec, () => lec.notes.md, typeOf(lec).notesLabel, "notes"),
+      h("button", { class: "btn quiet", title: "Compare the notes with the transcript and list what they skipped", disabled: !S.status.ai, onclick: () => make("notes/check") }, "Missed anything?"));
   }
-  box.append(gate);
-  if (has) box.append(notesView(lec.notes.md));
-  else if (!S.busy.notes && lec.segments.length) box.append(h("p", { class: "hint" }, "AI notes break the lecture into topics, subtopics, bullet points and action points. The summary stays short; this is the full version. Your own writing lives in My notes."));
+  box.append(gate, S.busy.notes ? "" : h("div", { class: "row hint-row" }, hintIn));
+  if (S.busy["notes/check"]) box.append(h("p", { class: "hint", id: "aiNote", role: "status" }, S.note || "Comparing the notes with the transcript…"));
+  const gaps = has && lec.notes.gaps;
+  if (gaps && !S.busy["notes/check"]) box.append(h("div", { class: "gaps" }, h("h3", null, gaps.items.length ? "The notes skipped " + gaps.items.length + (gaps.items.length === 1 ? " point" : " points") : "Nothing missed"),
+    gaps.items.length ? h("ul", null, gaps.items.map(x => h("li", null, x.t != null ? h("button", { class: "tsl", onclick: () => jumpTo(x.t) }, fmt(x.t)) : null, " " + x.point + (parts ? " (part " + x.n + ")" : "")))) : h("p", { class: "hint" }, "The notes cover what the transcript says."),
+    h("div", { class: "row" }, gaps.items.length ? h("button", { class: "btn solid", onclick: async () => { try { adopt(await api("POST", "/api/lectures/" + lec.id + "/notes/addgaps")); toast("Added under “Also covered” in the notes."); } catch (e){ fail(e); } } }, "Add these to the notes") : null,
+      h("button", { class: "btn quiet", onclick: async () => { delete lec.notes.gaps; await DB.save(lec); render(); } }, "Dismiss"))));
+  if (parts){
+    if (has && lec.notes.failed && lec.notes.failed.length && !S.busy.notes) box.append(h("p", { class: "notice err" }, "Part " + lec.notes.failed.join(", ") + " could not be written. Use “Rewrite this part” on it below, or try again later."));
+    const plan = lec.notes.plan || [];
+    box.append(h("p", { class: "hint" }, "Written in " + plan.length + " parts so every stretch of the recording gets full attention. Each part can be rewritten, edited or added to My notes on its own."));
+    plan.forEach(p => {
+      const part = parts.find(x => x.n === p.n);
+      const card = h("details", { class: "part", open: (S.partOpen || {})[p.n] !== false, ontoggle: e => { S.partOpen = S.partOpen || {}; S.partOpen[p.n] = e.target.open; } });
+      card.append(h("summary", null, h("span", { class: "part-title" }, partLabel(lec, part || p)), part && part.edited ? h("span", { class: "hint" }, "edited") : null));
+      if (!part){ card.append(S.busy.notes ? h("p", { class: "hint" }, "Writing…") : h("div", { class: "row" }, h("p", { class: "hint" }, "Not written."), h("button", { class: "btn quiet", onclick: () => make("notes", { part: p.n, hint: (S.notesHint || "").trim() }) }, "Write this part"))); box.append(card); return; }
+      if (S.partEdit === p.n){
+        const ta = h("textarea", { class: "notes-edit", "aria-label": "Notes for this part, in Markdown", value: part.md }), name = h("input", { type: "text", class: "clip-name", value: part.title || "", placeholder: "Title for this part", "aria-label": "Part title" });
+        card.append(name, ta, h("div", { class: "row" }, h("button", { class: "btn solid", onclick: async () => { try { S.partEdit = null; adopt(await api("PATCH", "/api/lectures/" + lec.id, { notePart: { n: p.n, md: ta.value, title: name.value.trim() } })); } catch (e){ fail(e); } } }, "Save"), h("button", { class: "btn quiet", onclick: () => { S.partEdit = null; render(); } }, "Cancel")));
+        box.append(card); return;
+      }
+      card.append(notesView(part.md), S.busy.notes ? "" : h("div", { class: "clip-tools" },
+        h("button", { class: "linkish", onclick: () => make("notes", { part: p.n, hint: (S.notesHint || "").trim() }) }, "Rewrite this part"),
+        h("button", { class: "linkish", onclick: () => { S.partEdit = p.n; render(); } }, "Edit"),
+        h("button", { class: "linkish", onclick: ev => { const b = ev.currentTarget; navigator.clipboard.writeText(part.md).then(() => { b.textContent = "Copied"; setTimeout(() => (b.textContent = "Copy"), 1500); }).catch(() => {}); } }, "Copy"),
+        h("button", { class: "linkish", onclick: ev => addToMyNotes(part.md, ev.currentTarget, partLabel(lec, part), "notes") }, "Add to My notes")));
+      box.append(card);
+    });
+    if (lec.notes.tail) box.append(h("div", { class: "part tail" }, notesView(lec.notes.tail)));
+  } else if (has) box.append(notesView(lec.notes.md));
+  else if (!S.busy.notes && lec.segments.length) box.append(h("p", { class: "hint" }, "AI notes break the " + typeWord(lec) + " into topics, subtopics, bullet points and action points. The summary stays short; this is the full version." + (plan ? " This recording is long, so the notes will be written in " + plan.length + " parts of about " + PART_MIN() + " minutes each." : "") + " Your own writing lives in My notes."));
   return box;
 }
 function summaryPanel(lec){
@@ -3964,8 +4117,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.7.0", RELEASED = "28 September 2026";
+const VERSION = "2.7.1", RELEASED = "29 September 2026";
 const CHANGES = [
+  ["2.7.1", "29 Sep 2026", ["Long recordings get notes in parts: about 28 minutes each (18 when notes are set to thorough), following the outline's chapters. Every part gets the AI's full attention, so a two-hour class no longer ends up with forty-minute notes", "Each part is saved on its own with its time range and a title: rewrite one part, edit it, copy it, or add it to My notes; if one part fails the others are kept", "Export lets you tick which parts of the notes to include; Word, PDF and Markdown give each part its own heading", "“Missed anything?” compares the notes with the transcript, lists what they skipped, and adds the points in with one click", "A focus line under the notes button: tell the AI what to concentrate on when writing or rewriting", "Summaries and flashcards of long recordings now draw from start to end, not only the beginning", "Reminder: Settings → AI → “After a lecture” can write the outline, summary and notes by itself when you press Stop"]],
   ["2.7.0", "28 Sep 2026", ["My notes is now a set of sections: every tab (AI notes, Summary, Flashcards, Action points, Themes) and every Pambizo answer has “Add to My notes”. Each addition is kept as its own titled section with a source badge; edit, reorder, remove, and export them to Word, PDF, Markdown or text under My notes", "One “+ New” button in the library and on the home screen lists the recording types: Lecture, Meeting, Sermon or talk, Interview or research, Plain note", "Each type opens with its own tabs: meetings get Minutes and Action points; sermons get Sermon notes, Application and Reflection questions; interviews get Field notes and Themes & quotes", "Action points is a real checklist: owner, due date, tick when done; pull items from the summary, let the AI find them, or type them", "Simpler panels: the library and Pambizo are simply open or closed, one button each, on every screen size. The slim rail and hover peek are gone", "The lecture header rolls away and the tabs stay pinned, on one scroll"]],
   ["2.6.8", "28 Sep 2026", ["On wide screens Pambizo and the library no longer grow past the bottom of the window: each column is one screen tall and scrolls inside itself, so the Pambizo message box is always in reach"]],
   ["2.6.7", "28 Sep 2026", ["The page scrolls again with a finger or wheel over the transcript: the transcript box hands scrolling to the page until the header has rolled away, and a swipe down at its top brings the header back"]],

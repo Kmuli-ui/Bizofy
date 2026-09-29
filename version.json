@@ -1,5 +1,5 @@
 {
-  "version": "2.7.0",
+  "version": "2.7.1",
   "url": "./",
-  "notes": "My notes keeps every addition as its own section; one + New button lists Lecture, Meeting, Sermon, Interview and Note, each with its own tabs; Action points checklist; simpler panels."
+  "notes": "Long recordings get AI notes in parts, each saved, rewritable and exportable on its own; Missed anything? check; focus line for the notes."
 }
