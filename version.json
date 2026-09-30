@@ -1,5 +1,5 @@
 {
-  "version": "2.7.1",
+  "version": "2.7.2",
   "url": "./",
-  "notes": "Long recordings get AI notes in parts, each saved, rewritable and exportable on its own; Missed anything? check; focus line for the notes."
+  "notes": "AMR voice-recorder files can now be dropped in; Bizofy decodes them on the device before transcribing."
 }

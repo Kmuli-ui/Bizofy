@@ -1148,6 +1148,37 @@ function wavBlob(samples, rate){
   for (let i = 0; i < samples.length; i++){ const x = Math.max(-1, Math.min(1, samples[i])); v.setInt16(44 + i * 2, x < 0 ? x * 0x8000 : x * 0x7fff, true); }
   return new Blob([buf], { type: "audio/wav" });
 }
+/* AMR (phone voice-recorder files): decoded on the device with a small open-source decoder fetched once, then handed on as WAV parts */
+const AMR_URLS = ["https://cdn.jsdelivr.net/npm/benz-amr-recorder@1.1.5/src/amrnb.js", "https://unpkg.com/benz-amr-recorder@1.1.5/src/amrnb.js"];
+const isAmr = file => /\.amr$/i.test(file.name) || file.type === "audio/amr" || file.type === "audio/AMR";
+async function amrLib(note){
+  let src = await DB.tx("kv", "readonly", st => st.get("amrlib")).catch(() => null);
+  if (!src){
+    note("Fetching the AMR decoder (about 1 MB, only this once)…");
+    for (const url of AMR_URLS){ try { const r = await fetch(url); if (r.ok){ src = await r.text(); break; } } catch (e){} }
+    if (!src || !/AMR/.test(src)) throw new AppError("The AMR decoder could not be downloaded. Check the connection and try again, or convert the file to MP3 or M4A first.");
+    DB.tx("kv", "readwrite", st => st.put(src, "amrlib")).catch(() => {});
+  }
+  return "var module = {};\n" + src + "\n;module.exports();";
+}
+async function decodeAmr(file, note){
+  const bytes = new Uint8Array(await file.arrayBuffer()), head = String.fromCharCode(...bytes.slice(0, 9));
+  if (!head.startsWith("#!AMR")) throw new AppError(file.name + " is not an AMR recording Bizofy can read. Try exporting it from the recorder app as MP3 or M4A.");
+  if (head.startsWith("#!AMR-WB")) throw new AppError(file.name + " is AMR-WB (wideband), which Bizofy cannot decode yet. Export it from the recorder app as MP3 or M4A, or convert it with VLC.");
+  const lib = await amrLib(note);
+  note("Decoding " + file.name + " on this device…");
+  const url = URL.createObjectURL(new Blob([lib], { type: "text/javascript" })), w = new Worker(url);
+  try {
+    const samples = await new Promise((res, rej) => { w.onmessage = e => res(e.data && e.data.amr); w.onerror = e => rej(new Error(e.message || "decode failed")); w.postMessage({ command: "decode", buffer: bytes }); });
+    if (!samples || !samples.length) throw new AppError(file.name + " could not be decoded. Export it from the recorder app as MP3 or M4A.");
+    return samples; // Float32Array, 8000 Hz mono
+  } finally { w.terminate(); URL.revokeObjectURL(url); }
+}
+async function amrPieces(file, note){
+  const samples = await decodeAmr(file, note), rate = 8000, per = SPLIT_SEC * rate, parts = [];
+  for (let at = 0; at < samples.length; at += per) parts.push({ blob: wavBlob(samples.subarray(at, Math.min(samples.length, at + per)), rate), dur: (Math.min(samples.length, at + per) - at) / rate, name: file.name.replace(/\.amr$/i, "") + (samples.length > per ? " part " + (parts.length + 1) : "") + ".wav" });
+  return parts;
+}
 async function splitAudio(file){
   const RATE = 16000, Ctx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
   let decoded;
@@ -2773,7 +2804,7 @@ async function addText(raw){
   const segs = parseText(raw); if (!segs.length) return;
   try { S.paste = ""; S.linkOpen = false; adopt(await api("POST", "/api/lectures/" + S.cur.id + "/segments", { segments: segs })); } catch (e){ fail(e); }
 }
-const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i, LECT_RE = /\.bizofy$/i;
+const AUDIO_RE = /\.(mp3|m4a|mp4|wav|webm|ogg|oga|flac|aac|mpga|mpeg|mov|amr)$/i, TEXT_RE = /\.(txt|md|vtt|srt)$/i, LECT_RE = /\.bizofy$/i;
 function setUp(label, value){
   S.up = { label, value };
   const l = $("upLabel"), bar = $("upBar");
@@ -2783,7 +2814,8 @@ function setUp(label, value){
 async function uploadOne(lec, file, tag){
   setUp(tag + "Reading " + file.name + "…", null);
   let pieces = [{ blob: file, dur: 0, name: file.name }];
-  if (file.size > MAX_DIRECT){ setUp(tag + "Splitting " + file.name + " into 10-minute parts. This can take a few minutes…", null); pieces = await splitAudio(file); }
+  if (isAmr(file)) pieces = await amrPieces(file, t => setUp(tag + t, null));
+  else if (file.size > MAX_DIRECT){ setUp(tag + "Splitting " + file.name + " into 10-minute parts. This can take a few minutes…", null); pieces = await splitAudio(file); }
   const base = Math.ceil(lec.duration || 0), ns = [];
   for (let i = 0; i < pieces.length; i++){
     const n = addPart(lec, pieces[i].blob.type || file.type || "audio/mpeg", base + i * SPLIT_SEC, pieces[i].dur, [], pieces[i].name || "part.wav");
@@ -2810,7 +2842,7 @@ async function handleFiles(list){
     return render();
   }
   const files = [...list].filter(f => AUDIO_RE.test(f.name) || TEXT_RE.test(f.name) || /^(audio|video|text)\//.test(f.type));
-  if (!files.length){ S.err = "Bizofy reads audio and video files (MP3, WAV, M4A, MP4) and transcripts (.txt, .srt, .vtt)."; return render(); }
+  if (!files.length){ S.err = "Bizofy reads audio and video files (MP3, WAV, M4A, AMR, MP4) and transcripts (.txt, .srt, .vtt)."; return render(); }
   if (REC.on){ S.err = "Stop the recording before you add files."; return render(); }
   if (S.busy.upload) return;
   const intoCurrent = !!S.cur;
@@ -3148,14 +3180,14 @@ const metaBits = lec => [lec.kind === "note" || !lec.type || lec.type === "lectu
   h("span", null, metaOf(lec).words.toLocaleString() + " words"), lec.duration ? h("span", null, fmt(lec.duration) + " recorded") : null];
 
 function dropZone(lec, slim){
-  const input = h("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,video/mp4,video/webm,video/quicktime,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.mov,.flac,.txt,.md,.vtt,.srt,.bizofy", onchange: e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ""; } });
+  const input = h("input", { type: "file", multiple: true, hidden: true, accept: "audio/*,video/mp4,video/webm,video/quicktime,.m4a,.mp3,.wav,.ogg,.webm,.mp4,.mov,.flac,.amr,.txt,.md,.vtt,.srt,.bizofy", onchange: e => { if (e.target.files.length) handleFiles(e.target.files); e.target.value = ""; } });
   const busy = S.busy.upload;
   return h("div", { class: "drop" + (slim && !busy ? " slim" : "") + (busy ? " busy" : ""), id: "drop" },
     input,
     busy ? [h("p", { class: "drop-title", id: "upLabel", role: "status" }, (S.up && S.up.label) || "Working…"), (() => { const p = h("progress", { id: "upBar", max: 1, "aria-label": "Progress" }); if (S.up && S.up.value != null) p.value = S.up.value; return p; })(),
       h("p", { class: "hint" }, "Keep this page open until it finishes.")]
     : [h("p", { class: "drop-title" }, slim ? (lec ? "Drop another recording or transcript here" : "Drop a recording or transcript here") : "Drop a recording here"),
-      slim ? null : h("p", { class: "hint" }, "MP3, WAV, M4A or MP4 from Zoom or your phone, or a transcript (.txt, .srt, .vtt). Several files at once is fine. Files over 25 MB are split on this device first."),
+      slim ? null : h("p", { class: "hint" }, "MP3, WAV, M4A, AMR or MP4 from Zoom or your phone, or a transcript (.txt, .srt, .vtt). Several files at once is fine. Files over 25 MB are split on this device first."),
       h("button", { class: slim ? "btn quiet" : "btn", disabled: REC.on, onclick: () => input.click() }, "Choose files")]);
 }
 function transcriptPanel(lec){
@@ -4117,8 +4149,9 @@ $("setForm").addEventListener("submit", async ev => {
 });
 
 /* ---------- version ---------- */
-const VERSION = "2.7.1", RELEASED = "29 September 2026";
+const VERSION = "2.7.2", RELEASED = "30 September 2026";
 const CHANGES = [
+  ["2.7.2", "30 Sep 2026", ["AMR files from phone voice recorders can be dropped in: Bizofy decodes them on the device (a small decoder is fetched once, about 1 MB) and transcribes them like any other audio. AMR-WB (wideband) files still need converting to MP3 or M4A first"]],
   ["2.7.1", "29 Sep 2026", ["Long recordings get notes in parts: about 28 minutes each (18 when notes are set to thorough), following the outline's chapters. Every part gets the AI's full attention, so a two-hour class no longer ends up with forty-minute notes", "Each part is saved on its own with its time range and a title: rewrite one part, edit it, copy it, or add it to My notes; if one part fails the others are kept", "Export lets you tick which parts of the notes to include; Word, PDF and Markdown give each part its own heading", "“Missed anything?” compares the notes with the transcript, lists what they skipped, and adds the points in with one click", "A focus line under the notes button: tell the AI what to concentrate on when writing or rewriting", "Summaries and flashcards of long recordings now draw from start to end, not only the beginning", "Reminder: Settings → AI → “After a lecture” can write the outline, summary and notes by itself when you press Stop"]],
   ["2.7.0", "28 Sep 2026", ["My notes is now a set of sections: every tab (AI notes, Summary, Flashcards, Action points, Themes) and every Pambizo answer has “Add to My notes”. Each addition is kept as its own titled section with a source badge; edit, reorder, remove, and export them to Word, PDF, Markdown or text under My notes", "One “+ New” button in the library and on the home screen lists the recording types: Lecture, Meeting, Sermon or talk, Interview or research, Plain note", "Each type opens with its own tabs: meetings get Minutes and Action points; sermons get Sermon notes, Application and Reflection questions; interviews get Field notes and Themes & quotes", "Action points is a real checklist: owner, due date, tick when done; pull items from the summary, let the AI find them, or type them", "Simpler panels: the library and Pambizo are simply open or closed, one button each, on every screen size. The slim rail and hover peek are gone", "The lecture header rolls away and the tabs stay pinned, on one scroll"]],
   ["2.6.8", "28 Sep 2026", ["On wide screens Pambizo and the library no longer grow past the bottom of the window: each column is one screen tall and scrolls inside itself, so the Pambizo message box is always in reach"]],
